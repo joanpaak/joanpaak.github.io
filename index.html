@@ -3,22 +3,272 @@
 
 <head>
   <title> Joni's Web Zone </title>
-   <base href="./" />
   <meta charset="UTF-8" />
+  <link href="style.css" rel="StyleSheet" type="text/css"  media="all" />
 </head>
 
 <body>
 
-  <header> Joni's Web Zon </header>
-   <div class="flex">
+<div class ="text_area">
+
+<header> Joni's Web Zone </header>
+
+<div class="navbar">
+
+  <ul>
+    <li class="navbar_item"><a href="#main">Main</a></li>
+    <li class="navbar_item"><a href="#repos">GitHub repos </a></li>
+    <li class="navbar_item"><a href="#tutorials">Tutorials</a></li>
+    <li class="navbar_item"><a href="#lyrics">Lyrics</a></li>
+    <li class="navbar_item"><a href="#midi">Midi</a></li>
+    <li class="navbar_item"><a href="#links">Links</a></li>
+  </ul>
+  
+</div>
+
+
+
   <main>
 
-<h1> Main</h1>
+    <h1> Main<a name="main"></a></h1>
 
-<p> There should be essays, lyrics and all sorts of stuff like that in here.</p>
+    <p> GitHub repositories and Tutorials contain random sciency stuff. Mostly pertaining to Signal Detection Theory and psychophysics.</p>
+    
+    <p>Lyrics are, well, lyrics written by me. They are in Finnish. If you don't speak (read?) Finnish, be glad that you are spared from witnessing these.</p>
+    
+    <p>Links! Why don't people anymore have links on their pages. I mean to other sites. Every page used to have one of these sections, I thought they were fun. So That's why there's one here, also.</p>
+    
+    <h1>GitHub repositories<a name="repos"></a></h1>
+    
+    <p>Click on the  names for short descriptions. Click on the arrows to go to the repository.</p>
+    
+      <button class="accordion">Bayesian inference in GRT <a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/General_Recognition_Theory_Bayes">>>></a></button>
+      <div class="panel">
+        
+        <p>
+          General Recognition Theory (GRT) is a multidimensional generalization of Signal Detection Theory. There have been some resources for Bayesian inference, but in my opinion they have been clunky to use (I mean no offence!). 
+        </p>
+        <p>
+          Stan is a modern and easy-to-use tool for Bayesian inference. Here I present simple Stan programs for analyzing the ubiquitous 2X2 identification experiment. 
+        </p>
 
- </main>
+      </div> 
+
+      <button class="accordion">Resample-Move algorithm in Java<a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/resample_move_particle_filter">>>></a></button>
+      <div class="panel">
+        
+        <p>
+        Bayesian models are routinely approximated using random sampling. One possible way of doing this is by using the Resample-Move algorithm. Here's a Java implementation of it.
+        </p>
+        
+     
+      </div>      
+    <!--
+      <button class="accordion">Bias in 2-AFC task</button>
+      <div class="panel">
+        
+        <p>
+          Have you ever wondered how bias in a 2-AFC task affects parameter estimates of a simple two-parameter psychometic function? Wonder no more! Here be simulations written in R.Check 'em out.
+        </p>
+
+      </div>    -->
+      
+    <h1>Tutorials<a name="tutorials"></a></h1>
+    
+    Nothing here yet, :(
+    
+    <h1>Lyrics<a name="lyrics"></a></h1>
+    
+      <button class="accordion">Loviatar</button>
+      <div class="panel">
+        
+        <pre class="lyrics">
+         Kiireiset jalat, sokean emon
+         liukastelevat kylmien kivien päällä
+         vapisevat kädet kokeilevat tietä
+         pistelevien oksien lävitse
+         
+         kova kohtu kivistää vatsaa
+         ei löydy paikkaa itsensä pistää
+         levätä, päästää pentunsa
+         vimmainen itku ajaa pakoon
+         
+         loitsuja mutistaan vakavina
+         kynsillään maata raapivat
+         koirat kuolaavine kuonoineen
+         lieassa uupumattoman joukon
+         
+         umpisilmät hakevat ymmärtäjää
+         joka käsistä pitelisi, hiukset sukisi
+         vatsanpoltteet sammuttaisi
+         lämpöisellä huolenpidolla
+         
+         kylmät kivet, nokiset lauteet
+         pakko on tähän vatsansa vajentaa
+         lapsensa jättää kiemurtamaan 
+         likaiselle kovalle lattialle
+         
+         vaimea vaikerrus hajoaa ilmaan 
+         on annettava itsensä
+         unohdettava kuka olen
+         on syötettävä oma lihansa
+         omat luut annettava kehdoksi
+         läski kumpareiksi koottava
+         veri koskiksi laskea kuohumaan
+         on kalpea iho pingotetttava ylle
+         elonpiirin harmaaksi taivaaksi
+         josta mahdoton lauluni
+         lankeaa koleana tihkuna niittyjen ylle
+         
+         lakoaa sen alle
+         jahtaava joukkokin
+         sekoittuu sammaliin
+         ja sulaa mullaksi
+         </pre>
+        </div>
+      
+      <button class="accordion">Suolet olen solminut</button>
+        <div class="panel">
+          <pre class="lyrics">
+          Suolet - suolet olen solminut
+          ihon ylle - ihon ylle kiristänyt
+          silmät - istuttanut kuoppiinsa
+          läskin - luihin sidoin roikkumaan
+          
+          Kuten pitikin
+          
+          Tähdet sytytin - taivaalta tuijottamaan
+          saman tulen - sytytin sieluihinsa
+          hengen puhalsin - hellästi henkäisten
+          soimaan - lauluna lehvästöissä
+          
+          Kaikki tehty kuten pitikin
+          
+          Ei niiltä - ei niiltä ollut tarkoitus
+          vuotaa - verta noista paikoista
+          ei kamalia - kamalia paukamia
+          kasvaa - hankalissa paikoissa
+          
+          Ei mielen harhailla - liukkaita polkuja
+          käden tarttua - mustiin verkkoihin
+          ei pakottaa - toista tuntevaa saada
+          alistumaan - omaa tahtoansa vastaan
+          
+          Jos itseni surmaan - uhraan oman kehoni
+          korjaisiko - virheeni korjaisiko
+          naulatkaa - naulatkaa lankkuihinne
+          lihani - ripustakaa näytille
+          
+          Rakastan - rakastan elämäänne
+          Rakastan - sitä mitä olette
+          Rakastan - joka ainoata teistä
+          Rakastan - ilman mitään vaatimusta
+          </pre>
+        </div>
+        
+      <button class="accordion">Musta parvi harmaalla taivaalla</button>
+      <div class="panel">
+      
+      <pre class="lyrics">
+        Musta parvi
+        harmaalla taivaalla
+        valuu hiljaa
+        pitkin tuulta
+        joka vaeltaa
+        kuolleena henkenä
+        vinkuu oksissa
+        kuin hento pyyntö
+        elämänsä hyvästelleen
+        hiljainen anelu
+        että pääsisi
+        viimein lähtemään
+        polun varrelta
+        puista varistaa
+        hengettömät lehdet
+        niiden alla
+        kuivaa maata
+        pitkät madot
+        kaivaa
+        
+        paljailla oksilla
+        huojuvat viimassa
+        höyheniset pussit
+        hengen pullistamat
+        linnut raakkuvat
+        silmät ammollaan
+        madonriekaleet
+        suissansa kiemurtavat
+        valmiina tyydyttämään
+        kiljuvat nokat
+        limaiset mahalaukut
+        täyttämään
+        
+        lihaisessa säkissä
+        kannan luustoni
+        metsän kehtoon
+        toukkien kalvamaan
+        touhukas pikkuväki
+        siellä koluaa
+        rankani puhtaaksi
+        niin sinä taidolla
+        vuolet kehostani
+        luisen kanteleen
+        jolla pyyntöjäsi
+        soitella
+        </pre>
+      
+      </div>
+      
+      
+    <h1>Midi files<a name="midi"></a></h1>
+    
+    <p>
+    Have you ever felt that the classic Doom games, made in the 90's, would need new music? Good! Here are some midi tracks that have been inspired by those games.
+    </p>
+    
+    <p>
+    <a href="Midi/Dead_cloud_trying_to_crawl_to_safety.mid">Dead cloud trying to crawl to safety</a>
+    </p>
+    
+    
+    <h1>Links<a name="links"></h1>
+    <p>
+    <a href="http://www.andrewgelman.com" target=”_blank”>Andrew Gelman's blog</a>
+    </p>
+    <p>
+    <a href="http://viikate.com/" target="_blank">Viikate (Finnish metal)</a>
+    </p>
+    <p>
+    <a href="https://www.lyijykomppania.com/">Lyijykomppani (Finnish metal)</a>
+    </p>
+    <p>
+    <a href="https://siskot.bandcamp.com/" target="_blank">Siskot (my band)</a>
+    <p>
+  </main>
   
- </div>
+  <footer>&copy; Copyright 2020 Joni Pääkkö</footer>
+
+  
+</div>
+
+<!-- https://www.w3schools.com/howto/howto_js_accordion.asp -->
+<script>
+var acc = document.getElementsByClassName("accordion");
+var i;
+
+for (i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling;
+    if (panel.style.display === "block") {
+      panel.style.display = "none";
+    } else {
+      panel.style.display = "block";
+    }
+  });
+}
+</script>
+
+
 </body>
 </html>
