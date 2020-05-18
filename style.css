@@ -136,3 +136,17 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
   display: none;
   overflow: hidden;
 }
+
+
+/* Scaling, if the screen gets too small */
+@media all and (max-width: 600px) {
+    .text_area{
+        padding-left: 0%;
+        padding-right: 0%;
+    }
+    
+    .navbar_item{
+        float: none;
+    }
+    
+}
