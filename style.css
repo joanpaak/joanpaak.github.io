@@ -74,6 +74,7 @@ footer{
     padding: 5px;
     margin-left: 2.5%;*/
     color: black;
+    font-weight: 900;
     text-decoration: none;
     text-align: left;
     width: 20%;
@@ -87,7 +88,8 @@ footer{
 }
 
 .link_to_repo:hover{
-    background-color:rgba(255, 0, 0, 0.1);
+    background-color:rgba(255, 150, 0, 0.1);
+    border-radius: 50px;
     transition: 0.4s;
 }
 
@@ -139,7 +141,7 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
   letter-spacing: 1.5px;
 }
 
-.active, .accordion:hover {
+.active, .accordion:hover, .accordion_repo:hover{
   background-color: rgba(213, 94, 0, 0.65);
 }
 
