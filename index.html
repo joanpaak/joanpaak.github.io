@@ -30,7 +30,7 @@
 
   <main>
 
-    <h1> Main<a name="main"></a></h1>
+    <h1 id="main"> Main</h1>
 
     <p> GitHub repositories and Tutorials contain random sciency stuff. Mostly pertaining to Signal Detection Theory and psychophysics, and also applied statistics.</p>
     
@@ -44,7 +44,11 @@
     
     <p>Click on the  names for short descriptions. Click on the arrows to go to the repository.</p>
     
-      <button class="accordion">Bayesian inference in GRT <a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/General_Recognition_Theory_Bayes">>>></a></button>
+    <div class="repo_link_bundle">
+      <button class="accordion_repo">Bayesian inference in GRT</button>
+      
+      <a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/General_Recognition_Theory_Bayes">>>></a>
+      
       <div class="panel">
         
         <p>
@@ -55,8 +59,13 @@
         </p>
 
       </div> 
+      
+     </div>
+     
 
-      <button class="accordion">Resample-Move algorithm in Java<a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/resample_move_particle_filter">>>></a></button>
+     <div class="repo_link_bundle">
+      <button class="accordion_repo">Resample-Move algorithm in Java</button>
+      <a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/resample_move_particle_filter">>>></a>
       <div class="panel">
         
         <p>
@@ -64,6 +73,7 @@
         </p>
         
      
+     </div>  
       </div>      
     <!--
       <button class="accordion">Bias in 2-AFC task</button>
@@ -75,11 +85,11 @@
 
       </div>    -->
       
-    <h1>Tutorials<a name="tutorials"></a></h1>
+    <h1 id="tutorials">Tutorials</h1>
     
     Nothing here yet, :(
     
-    <h1>Lyrics<a name="lyrics"></a></h1>
+    <h1 id="lyrics">Lyrics</h1>
     
       <button class="accordion">Loviatar</button>
       <div class="panel">
@@ -222,7 +232,7 @@
       </div>
       
       
-    <h1>Midi files<a name="midi"></a></h1>
+    <h1 id="midi">Midi files</h1>
     
     <p>
     Have you ever felt that the classic Doom games, made in the 90's, would need new music? Good! Here are two tracks that have been inspired by those games:
@@ -243,21 +253,28 @@
     <p><a href="Midi/Gonevitscha.mid">Konevitsan kirkonkellot</a></p>
     
     
+    <h1 id="links">Links</h1>
     
-    
-    <h1>Links<a name="links"></h1>
     <p>
-    <a href="http://www.andrewgelman.com" target=”_blank”>Andrew Gelman's blog</a>
+    <a href="http://runosto.net/" target="_blank">Runosto (old Finnish poetry)</a>
     </p>
+    
+    <p>
+    <a href="http://www.andrewgelman.com" target="_blank">Andrew Gelman's blog</a>
+    </p>
+    
     <p>
     <a href="http://viikate.com/" target="_blank">Viikate (Finnish metal)</a>
     </p>
+    
     <p>
     <a href="https://www.lyijykomppania.com/">Lyijykomppani (Finnish metal)</a>
     </p>
+    
     <p>
     <a href="https://siskot.bandcamp.com/" target="_blank">Siskot (my band)</a>
     </p>
+    
     <p>
     <a href="https://www.instagram.com/ilkikurinen_harakka/" target="_blank">Ilkikurinen harakka on Instagram</a>
     </p>
@@ -269,8 +286,27 @@
   
 </div>
 
-<!-- https://www.w3schools.com/howto/howto_js_accordion.asp -->
+<!--Modified from: https://www.w3schools.com/howto/howto_js_accordion.asp 
+ in accordion_repo:
+ var panel = this.nextElementSibling.nextElementSibling; is like that since, it
+ is expected that there's one element in between, that is, the arrow link
+ to the repository-->
 <script>
+var acc = document.getElementsByClassName("accordion_repo");
+var i;
+
+for (i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling.nextElementSibling;
+    if (panel.style.display === "block") {
+      panel.style.display = "none";
+    } else {
+      panel.style.display = "block";
+    }
+  });
+}
+
 var acc = document.getElementsByClassName("accordion");
 var i;
 
@@ -285,6 +321,8 @@ for (i = 0; i < acc.length; i++) {
     }
   });
 }
+
+
 </script>
 
 
