@@ -48,7 +48,7 @@ p, ol, h1, h2, h3, h4, header, footer{
 header{
     padding-top: 10%;
     text-align: center;
-    letter-spacing: 2.0px;
+    letter-spacing: 3.5px;
     font-size: 300%;
 }
 
@@ -88,8 +88,8 @@ footer{
 }
 
 .link_to_repo:hover{
-    background-color:rgba(255, 150, 0, 0.1);
-    border-radius: 50px;
+    background-color:rgba(255, 230, 0, 0.35);
+    border-radius: 0px;
     transition: 0.4s;
 }
 
@@ -115,9 +115,12 @@ footer{
     padding-bottom: 1%;
     padding-left: 2%; 
     padding-right: 2%;
+    
 }
 
 .navbar_item:hover{
+    /* Seems that you can have either a cool transition OR a cool radial gradient:*/
+    /*background-image: radial-gradient(ellipse, rgba(230, 159, 0, 0.65), rgba(230, 159, 0, 0.0), rgba(230, 159, 0, 0.0));*/
     background-color:  rgba(230, 159, 0, 0.65);
 }
 
@@ -127,7 +130,8 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
 */ 
 
 .accordion, .accordion_repo {
-  background-color: rgba(213, 94, 0, 0.1);
+    /*rgba(213, 94, 0, 0.1)*/
+  background-color: rgba(150, 94, 0, 0.2);
   color: black;
   font-size: 125%;
   cursor: pointer;
