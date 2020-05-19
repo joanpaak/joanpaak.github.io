@@ -198,9 +198,20 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
 
 /* Scaling, if the screen gets too small */
 @media all and (max-width: 600px) {
-    .text_area{
+    body{
         padding-left: 0%;
         padding-right: 0%;
+    }
+    
+    
+    pre.lyrics{
+        /*This doesn't seem to be necessarily needed:
+        overflow-x: scroll;*/
+    }
+    
+    .panel{
+        width: 100%;
+        padding: 0;
     }
     
     .navbar_item{
