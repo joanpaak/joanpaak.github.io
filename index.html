@@ -345,6 +345,40 @@ for(var i = 0; i < btt.length; i++){
 }
 
 
+// The page is initialized to a random colour:
+
+changeToRandomColour();
+
+// This is just some visual candy. This will make the 
+// background change colours randomly when the user moves
+// their cursor over p-elements:
+
+var pElements = document.getElementsByTagName("p");
+
+for(var i = 0; i < pElements.length; i++){
+  pElements[i].addEventListener('mouseenter', e=>{
+    changeToRandomColour();
+  });
+}
+
+function changeToRandomColour(){
+
+  var ind = Math.floor(Math.random() * 3);
+  var bodyElement = document.getElementsByTagName("body")[0];
+  
+  if(ind == 0){
+    bodyElement.style.backgroundColor = "rgba(230, 230, 0, 0.10)";
+  }
+  if(ind == 1){
+    bodyElement.style.backgroundColor = "rgba(200, 140, 5, 0.10)";
+  }
+  if(ind == 2){
+    bodyElement.style.backgroundColor = "rgba(150, 100, 5, 0.10)";
+  }
+}
+
+
+
 </script>
 
 </body>
