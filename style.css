@@ -32,9 +32,9 @@ h1{
     margin-bottom: 1%;
 }
 
-.back_to_top{
+.back_to_top, .back_to_top a{
     color: black;
-    font-size: 150%;
+    font-size: 125%;
     float: none;
     letter-spacing: 2.0px;   
     padding-top: 0.5%;
