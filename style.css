@@ -30,6 +30,7 @@ h1{
     letter-spacing: 1.5px;   
     padding-top: 30px;
     margin-bottom: 1%;
+    transition: 5s;
 }
 
 .back_to_top, .back_to_top a{
@@ -63,7 +64,12 @@ header{
     text-align: center;
     letter-spacing: 3.5px;
     font-size: 300%;
+    transition:5s;
     background-color: rgba(230, 150, 0, 0.1);
+}
+
+header:hover{
+    background-color: rgba(230, 150, 0, 0.3);
 }
 
 footer{
@@ -75,6 +81,11 @@ footer{
     background-color:  rgba(230, 159, 0, 0.40);
     letter-spacing: 1.5px;
     text-align: center;
+    transition: 4s;
+}
+
+footer:hover{
+    background-color:  rgba(230, 230, 0, 0.40);
 }
 
 
@@ -123,8 +134,14 @@ footer{
     padding-left: 10%;
     padding-bottom: 5%;
     font-size: 150%;
+    transition: 7s;
     
     /*background-color:  rgba(230, 0, 0, 0.05);*/
+}
+
+.navbar:hover{
+    
+    background-color:  rgba(230, 200, 5, 0.30);
 }
 
 .navbar_item{
