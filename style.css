@@ -1,13 +1,11 @@
 body{
     background-color: rgba(230, 230, 0, 0.10);
-}
-
-.text_area{
     padding-left: 10%;
     padding-right: 10%;
     display: flex;
     flex-direction: column;
 }
+
 
 /* Kaikki mihin tulee Palatino*/
 
@@ -36,21 +34,16 @@ h1{
 /* Leipäteksti:*/ 
 p, ol, h1, h2, h3, h4, header, footer{
     text-align: justify;
-    /*padding:  10;*/
-    /*margin-right: 0%;
-    margin-left: 20%;*/
-    /* 
-    margin-right: 12rem;
-    margin-left: 4rem;
-    */
 }
 
 
 header{
     padding-top: 10%;
+    padding-bottom:10%;
     text-align: center;
     letter-spacing: 3.5px;
     font-size: 300%;
+    background-color: rgba(230, 150, 0, 0.1);
 }
 
 footer{
@@ -59,7 +52,7 @@ footer{
     margin-bottom: 2.5%;
     padding-top: 2.5%;
     padding-bottom: 2.5%;
-    background-color:  rgba(230, 159, 0, 0.45);
+    background-color:  rgba(230, 159, 0, 0.40);
     letter-spacing: 1.5px;
     text-align: center;
 }
@@ -81,27 +74,22 @@ footer{
 .link_to_repo{
     font-size: 200%;
     float: none;
-    /*border-radius: 50px;
-    padding: 5px;
-    margin-left: 2.5%;*/
     color: black;
     font-weight: 900;
     text-decoration: none;
     text-align: left;
     width: 20%;
-    
     margin-bottom: 14px;
     text-align: left;
     border: none;
     outline: none;
-    transition: 0.4s;
+    transition: 0.8s;
     letter-spacing: 1.5px;
 }
 
 .link_to_repo:hover{
     background-color:rgba(255, 230, 0, 0.35);
     border-radius: 0px;
-    transition: 0.4s;
 }
 
 .navbar a{
@@ -111,16 +99,16 @@ footer{
 
 .navbar{
     padding-top: 10%;
-    padding-right: 0%;
-    /*width: 100%;*/
+    padding-left: 10%;
+    padding-bottom: 5%;
     font-size: 150%;
-    text-align: center;
+    
     /*background-color:  rgba(230, 0, 0, 0.05);*/
 }
 
 .navbar_item{
     list-style-type: none;
-    transition: 0.4s;
+    transition: 0.8s;
     float: left;
     padding-top: 1%;
     padding-bottom: 1%;
@@ -152,7 +140,7 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
   text-align: left;
   border: none;
   outline: none;
-  transition: 0.4s;
+  transition: 0.8s;
   letter-spacing: 1.5px;
 }
 
@@ -166,7 +154,7 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
   background-color: rgba(230, 230, 0, 0.15);
   display: none;
   overflow: hidden;
-  width:80%;
+  width:70%;
 }
 
 
