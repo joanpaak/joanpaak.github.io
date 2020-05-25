@@ -1,72 +1,25 @@
+/* MAIN DISPLAY:*/
+
+main{
+    margin-left: 20%;
+    margin-right: 20%;
+}
+
 body{
-    background-color: rgba(230, 230, 0, 0.10);
-    padding-left: 10%;
-    padding-right: 10%;
-    display: flex;
-    flex-direction: column;
-    transition: 10s;
+    background-color: rgba(250, 245, 242, 0.9);
+    margin: 0;
+    padding: 0;
 }
-
-
-/* Kaikki mihin tulee Palatino*/
-
-p, h3, h4, nav, ul, ol, .accordion, .accordion_repo, footer{
-    font-family: "Palatino Linotype";
-}
-
-pre.lyrics{
-    font-family: "Book Antiqua", serif;
-    letter-spacing: 1.5px;
-    /*background-color: rgba(230, 230, 0, 0.0);*/
-}
-
-/* Kaikki mihin arialia*/
-
-h1, h2{
-     font-family: "Arial", sans-serif;
-}
-
-h1{
-    float: none;
-    letter-spacing: 1.5px;   
-    padding-top: 30px;
-    margin-bottom: 1%;
-    transition: 5s;
-}
-
-.back_to_top, .back_to_top a{
-    color: black;
-    font-size: 125%;
-    float: none;
-    letter-spacing: 2.0px;   
-    padding-top: 0.5%;
-    padding-bottom: 0.5%;
-    transition: 0.8s;
-    border: none;
-    outline: none;
-    text-decoration: none;
-}
-
-
-.back_to_top:hover{
-    background-color: rgba(200, 50, 5, 0.2);
-    
-}
-
-/* Leipäteksti:*/ 
-p, ol, h1, h2, h3, h4, header, footer{
-    text-align: justify;
-}
-
 
 header{
     padding-top: 10%;
-    padding-bottom:10%;
+    padding-bottom: 10%;
     text-align: center;
-    letter-spacing: 3.5px;
-    font-size: 300%;
-    transition:5s;
-    background-color: rgba(230, 150, 0, 0.1);
+    font-size: 35pt;
+    letter-spacing: 5px;
+    background-color: rgba(230, 220, 200, 0.3);
+    transition: 2s;
+    box-shadow: 15px 10px 20px  rgba(80, 90, 100, 0.5);
 }
 
 header:hover{
@@ -74,31 +27,98 @@ header:hover{
 }
 
 footer{
-    margin:0;
     margin-top: 2.5%;
-    margin-bottom: 2.5%;
+    margin-bottom: 0;
     padding-top: 2.5%;
     padding-bottom: 2.5%;
-    background-color:  rgba(230, 159, 0, 0.40);
-    letter-spacing: 1.5px;
     text-align: center;
-    transition: 4s;
+    background-color:  rgba(240, 220, 10, 0.40);
+    letter-spacing: 1.5px;
+    transition: 2.5s;
 }
 
 footer:hover{
-    background-color:  rgba(230, 230, 0, 0.40);
+    background-color:  rgba(220, 220, 225, 0.30);
+}
+
+/* TOP NAVIGATION BAR: */
+
+nav{
+    background-color: rgba(255, 255, 230, 0.9);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    text-align: center;
+    font-family: "Times";
+    letter-spacing: 1.5px; 
+    transition: 0.8s;
+}
+
+nav:hover{
+    background-color: rgba(255, 255, 210, 1.0);
+}
+
+nav ul{
+    
+    display: inline-block;
+}
+
+nav ul li{
+       
+    list-style-type: none;
+    float: left;
+    padding-left: 10pt;
+    padding-right: 10pt;
+    font-size: 20pt;
+}
+
+nav ul li a{    
+    text-decoration: none;
+    text-shadow: 1px 1px rgb(0, 0, 0, 0.15);
+    color: black;
+    display: block;
+    transition: 0.8s;
+}
+
+nav ul li a:hover{
+    background-color: rgba(255, 150, 10, 0.1);
+}
+
+a{
+    color: black;
+    transition: 0.8s;
+}
+
+a:hover{
+    background-color: rgb(230, 220, 50, 0.3);
+}
+
+/* FONTS ETC */
+
+p, h3, h4, nav, ul, ol, .accordion, .accordion_repo, footer{
+    font-family: "Palatino Linotype";
+    font-size: 13pt;
+}
+
+p, ol, h1, h2, h3, h4{
+    text-align: justify;
+}
+
+
+pre.lyrics{
+    font-family: "Book Antiqua", serif;
+    letter-spacing: 1.5px;
 }
 
 
 .yellow_stripe{
-    /*background-color: rgba(255, 240, 10, 0.15)*/;
     border-radius: 0px;
     padding-top: 10px;
     padding-bottom: 10px;
-    border-top: 5px dotted rgba(175, 175, 0, 0.45);
-    border-bottom: 5px dotted rgba(175, 175, 0, 0.45);
+    border-top: 5px solid rgba(175, 175, 0, 0.45);
     
 }
+
 
 .repo_link_bundle{
     
@@ -125,42 +145,22 @@ footer:hover{
     border-radius: 0px;
 }
 
-.navbar a{
-    color: black;
-    text-decoration: none;
+
+
+h1, h2{
+     font-family: "Arial", sans-serif;
 }
 
-.navbar{
-    padding-top: 10%;
-    padding-left: 10%;
-    padding-bottom: 5%;
-    font-size: 150%;
-    transition: 7s;
-    
-    /*background-color:  rgba(230, 0, 0, 0.05);*/
+h1{
+    letter-spacing: 2.0px;   
+    padding-top: 12.5%;
+    margin-bottom: 1%;
 }
 
-.navbar:hover{
-    
-    background-color:  rgba(230, 200, 5, 0.30);
-}
+/**/
 
-.navbar_item{
-    list-style-type: none;
-    transition: 0.8s;
-    float: left;
-    padding-top: 1%;
-    padding-bottom: 1%;
-    padding-left: 2%; 
-    padding-right: 2%;
-    
-}
 
-.navbar_item:hover{
-    /* Seems that you can have either a cool transition OR a cool radial gradient:*/
-    /*background-image: radial-gradient(ellipse, rgba(230, 159, 0, 0.65), rgba(230, 159, 0, 0.0), rgba(230, 159, 0, 0.0));*/
-    background-color:  rgba(230, 159, 0, 0.65);
-}
+
 
 
 /* ACCORDION
@@ -197,11 +197,27 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
 }
 
 
-/* Scaling, if the screen gets too small */
+/* Scaly scaling*/
+
+@media all and (max-height: 400px){
+    nav{
+        position: static;
+    }
+}
+
 @media all and (max-width: 600px) {
     body{
         padding-left: 0%;
         padding-right: 0%;
+    }
+    
+    main{
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    nav{
+        position: static;
     }
     
     
