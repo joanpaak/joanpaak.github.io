@@ -27,9 +27,9 @@ footer{
     margin-top: 10%;
     margin-bottom: 0;
     padding-top: 5%;
-    padding-bottom: 7.5%;
+    padding-bottom: 15%;
     text-align: center;
-    background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(250, 240, 60, 0.40));
+    background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(250, 240, 160, 0.40), rgba(250, 240, 60, 0.40));
     letter-spacing: 1.5px;
 }
 
