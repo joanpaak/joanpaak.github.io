@@ -12,23 +12,16 @@ body{
 }
 
 header{
-    padding-top: 15%;
+    margin-top: 5%;
+    padding-top: 10%;
     padding-bottom: 10%;
     text-align: center;
     font-size: 35pt;
     letter-spacing: 5px;
     
     background-image: linear-gradient(rgba(255, 255, 230, 0.9), rgba(250, 245, 242, 0.9));
-    /*rgba(250, 240, 200, 0.90)*/
-    /*background-color: rgba(230, 220, 200, 0.3);*/
-    /*transition: 2s;
-    box-shadow: 15px 10px 20px  rgba(80, 90, 100, 0.5);
-    */
 }
 
-/*header:hover{
-    background-color: rgba(250, 190, 50, 0.3);
-}*/
 
 footer{
     margin-top: 10%;
@@ -36,15 +29,9 @@ footer{
     padding-top: 5%;
     padding-bottom: 7.5%;
     text-align: center;
-    /*background-color:  rgba(250, 240, 60, 0.40);*/
     background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(250, 240, 60, 0.40));
     letter-spacing: 1.5px;
-    /*transition: 2.5s;*/
 }
-/*
-footer:hover{
-    background-color:  rgba(230, 220, 225, 0.30);
-}*/
 
 /* TOP NAVIGATION BAR: */
 
@@ -162,11 +149,6 @@ h1{
     margin-bottom: 1%;
 }
 
-/**/
-
-
-
-
 
 /* ACCORDION
 https://www.w3schools.com/howto/howto_js_accordion.asp
@@ -229,11 +211,11 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
         position: static;
     }
     
-    
+    /*
     pre.lyrics{
-        /*This doesn't seem to be necessarily needed:
-        overflow-x: scroll;*/
-    }
+        This doesn't seem to be necessarily needed:
+        overflow-x: scroll;
+    }*/
     
     .panel{
         width: 100%;
