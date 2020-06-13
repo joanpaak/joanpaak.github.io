@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Joni's Web Zone</title>
+  <link href="style.css" rel="StyleSheet" type="text/css"  media="all" />
+</head>
+
+<body>
+
+<header>Joni's Web Zone</header>
+
+<nav>
+  <ul>
+     <li class="navbar_item"><a href="index.html#main">Main</a></li>
+     <li class="navbar_item"><a href="repos.html#repos">GitHub repos</a></li>
+     <li class="navbar_item"><a href="lyrics.html#main_title">Lyrics / Short stories</a></li>
+     <li class="navbar_item"><a href="midi.html#midi">Midi</a></li>
+     <li class="navbar_item"><a href="links.html#links">Links</a></li>
+  </ul>
+</nav>
+
+
+ <main>
+   
+    <h1 id="repos">GitHub repositories</h1>
+    
+     <p>I've collected some of the more finished repositories here. There are more on my GitHub page you can find from 
+     https://github.com/joanpaak/ but they are most likely really unfinished so I don't see why you'd bother.</p>
+     
+     <p>But! Take a look at these:</p>
+     
+     <p>Click on the  names for short descriptions. Click on the arrows to go to the repository.</p>
+    
+    <div class="repo_link_bundle">
+      <button class="accordion_repo">Bayesian inference in GRT</button>
+      
+      <a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/General_Recognition_Theory_Bayes">>>></a>
+      
+      <div class="panel">
+        
+        <p>
+          General Recognition Theory (GRT) is a multidimensional generalization of Signal Detection Theory. There have been some resources for Bayesian inference, but in my opinion they have been clunky to use (I mean no offence!). 
+        </p>
+        <p>
+          Stan is a modern and easy-to-use tool for Bayesian inference. Here I present simple Stan programs for analyzing the ubiquitous 2X2 identification experiment. 
+        </p>
+
+      </div> 
+      
+     </div>
+     
+
+     <div class="repo_link_bundle">
+      <button class="accordion_repo">Resample-Move algorithm in Java</button>
+      <a class="link_to_repo" target=”_blank” href="https://github.com/joanpaak/resample_move_particle_filter">>>></a>
+      <div class="panel">
+        
+        <p>
+        Bayesian models are routinely approximated using random sampling. One possible way of doing this is by using the Resample-Move algorithm. Here's a Java implementation of it.
+        </p>
+        
+     
+     </div>  
+     </div>    
+      
+</main>
+
+<footer>
+&copy; Copyright 2020 Joni Pääkkö
+</footer>
+
+<!--Modified from: https://www.w3schools.com/howto/howto_js_accordion.asp 
+ In accordion_repo:
+ var panel = this.nextElementSibling.nextElementSibling; is like that since, it
+ is expected that there's one element in between, that is, the arrow link
+ to the repository. The lyrics and other stuff  don't have such a link, so
+ they are defined a bit differently. -->
+<script>
+var acc = document.getElementsByClassName("accordion_repo");
+
+for (var i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling.nextElementSibling;
+    if (panel.style.display === "block") {
+      panel.style.display = "none";
+    } else {
+      panel.style.display = "block";
+    }
+  });
+}
+
+var acc = document.getElementsByClassName("accordion");
+
+for (var i = 0; i < acc.length; i++) {
+  acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling;
+    if (panel.style.display === "block") {
+      panel.style.display = "none";
+    } else {
+      panel.style.display = "block";
+    }
+  });
+}
+
+</script>
+
+</body>
+
+</html>

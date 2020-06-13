@@ -12,34 +12,39 @@ body{
 }
 
 header{
-    padding-top: 10%;
+    padding-top: 15%;
     padding-bottom: 10%;
     text-align: center;
     font-size: 35pt;
     letter-spacing: 5px;
-    background-color: rgba(230, 220, 200, 0.3);
-    transition: 2s;
+    
+    background-image: linear-gradient(rgba(255, 255, 230, 0.9), rgba(250, 245, 242, 0.9));
+    /*rgba(250, 240, 200, 0.90)*/
+    /*background-color: rgba(230, 220, 200, 0.3);*/
+    /*transition: 2s;
     box-shadow: 15px 10px 20px  rgba(80, 90, 100, 0.5);
+    */
 }
 
-header:hover{
-    background-color: rgba(230, 150, 0, 0.3);
-}
+/*header:hover{
+    background-color: rgba(250, 190, 50, 0.3);
+}*/
 
 footer{
-    margin-top: 2.5%;
+    margin-top: 10%;
     margin-bottom: 0;
-    padding-top: 2.5%;
-    padding-bottom: 2.5%;
+    padding-top: 5%;
+    padding-bottom: 7.5%;
     text-align: center;
-    background-color:  rgba(240, 220, 10, 0.40);
+    /*background-color:  rgba(250, 240, 60, 0.40);*/
+    background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(250, 240, 60, 0.40));
     letter-spacing: 1.5px;
-    transition: 2.5s;
+    /*transition: 2.5s;*/
 }
-
+/*
 footer:hover{
-    background-color:  rgba(220, 220, 225, 0.30);
-}
+    background-color:  rgba(230, 220, 225, 0.30);
+}*/
 
 /* TOP NAVIGATION BAR: */
 
@@ -51,11 +56,11 @@ nav{
     text-align: center;
     font-family: "Times";
     letter-spacing: 1.5px; 
-    transition: 0.8s;
+    transition: 0.4s;
 }
 
 nav:hover{
-    background-color: rgba(255, 255, 210, 1.0);
+    background-color: rgba(255, 255, 220, 1.0);
 }
 
 nav ul{
