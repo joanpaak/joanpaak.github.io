@@ -29,7 +29,7 @@ footer{
     padding-top: 5%;
     padding-bottom: 15%;
     text-align: center;
-    background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(250, 240, 160, 0.40), rgba(250, 240, 60, 0.40));
+    background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(250, 240, 160, 0.40), rgba(250, 240, 120, 0.40));
     letter-spacing: 1.5px;
 }
 
@@ -199,7 +199,15 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
     }
     
     header{
-        background-image: linear-gradient(rgba(250, 245, 242, 0.9), rgba(255, 255, 230, 0.9));
+        /*background-color: rgba(255, 255, 230, 0.9);*/
+        margin-top: 0;
+        background-image: linear-gradient(rgba(255, 255, 230, 0.9),
+        rgba(255, 255, 230, 0.9));
+    }
+    
+    footer{
+        padding-top: 30%;
+        padding-bottom: 30%;
     }
     
     main{
@@ -209,6 +217,7 @@ https://www.w3schools.com/howto/howto_js_accordion.asp
     
     nav{
         position: static;
+        background-image: linear-gradient(rgba(255, 255, 230, 0.9), rgba(250, 245, 242, 0.9));
     }
     
     /*
