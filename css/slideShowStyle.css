@@ -1,0 +1,85 @@
+/* DEFINITIES SHARED BY ALL */
+
+.slideShow{
+    margin-right: auto;
+    margin-left: auto;
+    width: 100%;
+    text-align: center;
+    border-top: solid black 2px;
+    border-bottom: solid black 2px;
+    margin-top: 5%;
+    margin-bottom: 5%;
+}
+
+.slideShow .indicator{
+    font-size: 1.4rem;
+    padding: 5px 15px;
+    cursor: pointer;
+    transition: 0.25s;
+    border: solid black 1px;
+    margin: 2px;
+}
+
+.slideShow .indicator:hover{
+    background-color: indianred;
+}
+
+.slideShow .activeIndicator{
+    background-color: firebrick;
+    color: white;
+
+}
+
+.slideShow .controls{
+    display: block;
+    border-bottom: solid black 1px;
+    
+}
+
+.slideShow .indicators{
+    display: block;
+    border-bottom: solid black 1px;
+}
+
+
+.slideShow .indicator{
+    display: inline-block;
+}
+
+.slideShow button{
+    border: solid black 1px;
+    background-color: beige;
+
+    margin: 4px;
+    font-size: 1.2rem;
+    padding: 5px 15px;
+    cursor: pointer;
+    transition: 0.1s;
+    font-family: garamond, serif;
+
+}
+
+.slideShow button:hover{
+    background-color: burlywood;
+    color: white;
+}
+
+.slideShow button:active{
+    background-color: firebrick;
+    color: white;
+}
+
+.slideShow p{
+    text-align: center;
+
+    padding: 0 5%;
+}
+
+.slideShow img{
+    max-width: unset;
+}
+
+.slideShow .slide pre{
+    text-align: left;
+  
+}

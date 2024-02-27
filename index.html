@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Joni's pseudoblog</title>
+        <style>
+
+            /* General styling*/
+            body{
+                margin: 0 10%;
+            }
+
+            header{
+                letter-spacing: 8px;
+                margin: 5% 0;
+            }
+
+            footer{
+                margin: 5% 0;
+                text-align: center;
+            }
+
+            h1{
+                font-family: "Times New Roman", Times, serif;
+                font-variant: small-caps;
+                text-align: center;
+                font-weight: 100;
+                font-size: 2rem;
+            }
+
+            h1 span{
+                vertical-align: middle;
+                font-size: 5rem;
+            }
+
+            /* Filters */
+
+            .filterContainer{
+                border: 1px solid black;
+                
+                position: relative;
+                margin-bottom: 2rem;
+                padding: 1rem 1.5rem;
+            }
+
+            .filterContainer h2{
+                font-weight: 100;
+                position: absolute;
+                top: -1.75rem;
+                left: 2rem;
+                background-color: white;
+                font-size: 1.25rem;
+            }
+
+            .tagCBContainer{
+                display: inline-block;
+                margin-right: 1rem;
+            }
+
+            /* The following are specific to the actual abstract container */
+
+            .divider{
+                text-align: center;
+                font-size: 2rem;
+            }
+
+            .abstractMainDiv{
+                margin-top: 4rem;
+            }
+
+            .description{
+                margin: 0 10%;
+                hyphens: auto;
+            }
+
+            img{
+            	float: left;
+    			max-width: 200px;
+    			padding: 10px;
+            }
+
+            .title{
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 1.75rem;
+                text-align: center;
+            }
+
+            .tags{
+                text-align: center;
+            }
+
+            .tags::before{
+                content: "Tags: ";
+            }
+
+            .description{
+                text-align: justify;
+                overflow: auto;
+            }
+
+            .link{
+                text-align: center;
+                font-variant: small-caps;
+                display: block;
+                margin: 10px 0;
+                color: black;
+            }
+
+            .verticalSpacer{
+                height: 2rem;
+            }
+        </style>
+
+    </head>
+
+    <header><h1><span>J</span>oni's<br><span>B</span>lathers</h1></header>
+
+    <main>
+        <body>
+            <p>Welcome to Joni's Blathers - a Pseudoblog. It's a <em>blog</em> in the sense that the texts here are informal like you'd find on a blog; it's a <em>pseudo</em> in the sense that this lacks the neat temporal organization blogs tend to have and it's too late to impose it on the texts now.</p>
+
+            <p>There're texts in English and in Finnish (suomi). Click on the checkboxes below to select what kind of stuff you'd like to see. If you see anything interesting, click on the link below the title and taglist and it'll open the text in a new window.</p>
+            
+            <div class="verticalSpacer""></div>
+
+            <div class="filterContainer" id="languageFilters">
+                <h2>Filter by language</h2>
+                <div class="tagCBContainer">
+                    <label>Suomi</label>
+                    <input type="checkbox" id="fiLangCheckbox" checked>
+                </div>
+                <div class="tagCBContainer">
+                    <label>English</label>
+                    <input type="checkbox" id="enLangCheckbox" checked>
+                </div>
+            </div>
+            <div class="filterContainer" id="tagFilters">
+                <h2>Filter by tags</h2>
+            </div>
+            <div id="abstractContainer"></div>
+        </body>
+    </main>
+
+    <footer>&copy; Joni Pääkkö</footer>
+    <script src="abstracts.js"></script>
+    <script src="mainClasses.js"></script>
+</html>

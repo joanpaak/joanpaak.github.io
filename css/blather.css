@@ -1,0 +1,127 @@
+:root{
+    --bodyBackgroundColor: rgb(255, 255, 246);
+    --highlightColor: rgb(235, 50, 25); /* rgb(235, 50, 25) Mainly for links*/
+}
+
+
+main{
+    margin-left:  10%;
+    margin-right: 10%;
+}
+
+footer{
+    text-align: center;
+    margin-top:    5%;
+    margin-bottom: 5%;
+}
+
+figure{
+    text-align: center;
+}
+
+
+a{
+    color: black;
+    transition: color 0.25s ease-in-out;
+}
+
+a:hover{
+    cursor: pointer;
+    color: var(--highlightColor);
+}
+
+
+h1{
+    font-family: 'Times New Roman', Times, serif;
+    font-variant:  small-caps;
+    text-align:    center;
+    font-size:     2rem;
+    font-weight:   100;
+    margin-top:    5%;
+    margin-bottom: 5%;
+}
+
+h2{
+    font-variant: small-caps;
+    font-weight: 100;
+}
+
+.quote{
+    font-style: italic;
+    margin: 1rem 5rem;
+}
+
+
+
+p{
+
+    text-align: justify;
+}
+
+
+
+
+/* 
+
+SPECIALTIES
+
+-Floating image div
+
+*/
+
+/*
+A floating image div is something like this
+<div class="floatingImgDiv">
+  <img src="image.png">
+  <div></div>
+</div>
+
+where the div element is taken to be a caption for the image.
+*/
+.floatingImgDiv{
+    float: left;
+    padding: 2rem;
+    width: min-content;
+}
+
+.floatingImgDiv div{
+    text-align: center;
+}
+
+.floatingImgDiv2{
+    float: right;
+    padding: 2rem;
+    width: min-content;    
+}
+
+.floatingImgDiv2 div{
+    text-align: center;
+}
+
+/*         */
+
+
+.equation{
+    text-align: center;
+    line-height: 175%;
+    font-size: 1.0rem;
+}
+
+pre{
+    font-size: 1.0rem;
+    background-color: darkslategray;
+    color:rgb(255, 255, 245);
+    overflow: auto;
+    padding-left: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+
+.R_eq{
+    text-align: center;
+    width:fit-content;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10px 15px;
+}
