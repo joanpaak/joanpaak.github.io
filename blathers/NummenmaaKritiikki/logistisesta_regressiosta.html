@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Logistinen regressio</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/blather.css">
+        
+    </head>
+    <body>
+
+        <main>
+
+            <h1>Logistinen regressio</h1>
+
+            <h2>Johdanto</h2>
+ 
+            <p>Käsittelen tässä kirjoituksessa kriittisesti sitä, kuinka Lauri Nummenmaan kirjoissa</p>
+
+            <ul>
+                <li>Nummenmaa, Lauri (2009). Käyttätymistieteiden tilastolliset menetelmät.</li>
+                <li>Nummenmaa, Lauri (2021). Tilastotieteen käsikirja.</li>
+            </ul>
+
+            <p>puhutaan logistisesta regressiosta. Molemmissa kirjoissa kyseiseen menetelmään liittyvät oletukset selitetään väärin, tai vähintään ristiriitaisesti. Suuri osa näistä ongelmista tuntuu liittyvän siihen, ettei kirjoittaja tunnu täysin ymmärtävän logistisen regression olevan yleistetty lineaarinen malli.</p> 
+            
+            <p>Käsittelen aluksi pidemmälti väitettä siitä, ettei logistinen regressio välittäisi muuttujien välisistä yhteyksistä.</p>
+            
+            <p>Kirjoissa nimittäin toistuu väärinkäsitys siitä, ettei logistisessa regressiossa tehtäisi oletuksia muuttujien jakaumista tai niiden välisistä yhteyksistä. Tässä pari lainausta tuosta uudemmasta kirjasta:</p>
+
+            <blockquote>"Toisin kuin lineaarisessa regressiossa, muuttujien välistä riippuvuussuhdetta ei oletetakaan lineaariseksi . . . kuten nimestäkin saattaa arvata, muuttujien välisiä yhteyksiä ei oleteta lineaarisiksi." (s. 584)
+            </blockquote> 
+              
+            <blockquote>
+            "Logististen regressiomallien suurin etu lineaarisiin verrattuna on se, että logistiset mallit tekevät huomattavasti vähemmän oletuksia kuin lineaariset mallit. Ensinnäkin logistinen regressiomalli ei tee mitään oletuksia mallissa käytettävien muuttujien jakaumista. Edelleen muuttujien välisten yhteyksien tyypistä ei oleteta mitään: yhteydet voivat olla lineaarisia, eksponentiaalisia tai vaikkapa logaritmisia." (s. 584 - 585)
+            </blockquote> 
+    
+            <p>Oletettavasti pohjautuen tähän virhekäsitykseen, ettei muuttujien välisten yhteyksien tyypistä välitettäisi logistisessa regressiossa, molemmissa kirjoissaan Nummenmaa ehdottaa logistiseen regressioon siirtymistä, jos muuttjien väliset yhteydet ovat epälineaarisia. Nummenmaa (2009, s. 316) kirjoittaa lineaarista regressiota käsittelevässä luvussa, että </p>
+            
+            <blockquote>"On myös mahdollista laatia malleja, joissa muuttujien väliset yhteydet oletaan esimerkiksi eksponentiaalisiksi, mutta tällaisia malleja ei käsitellä tällaisessa yhteydessä. Yleisesti ottaen <em>logistiseen regressioon</em> . . . siirtyminen on aivan toimivan ratkaisu siinä tapauksessa, että muuttujien väliset yhteydet osoittautuvat epälineaarisiksi. Tämä kuitenkin edellyttää sitä, että selitettävä muuttuja muunnetaan laatuero- tai järjestysasteikolle."</blockquote>
+
+            <p>Uudemmasa kirjassa Nummenmaa  (2021, s. 441) on liudentanut lausuntoa hieman, ja hän ei enää väitä, että tämä toimisi <em>yleisesti ottaen</em> vaan ainoastaan <em>usein</em>. On tietenkin hieman tulkinnanvaraista, kuinka tämä muutos sanamuodossa tulisi nähdä, liudentaako se lausuntoa vai mitä se tekee.</p>
+            
+            <p>Maininta selitettävän muuttujan luokittelusta, jotta päästään käyttämään logistista regressiota, löytyy myös logistista regressiota käsittelevästä luvusta (2021, s. 585):</p>
+                
+            <blockquote>
+                "Logististen mallien tekemistä oletuksista tärkein on, että selitettävä muuttuja on kaksi- tai useampiluokkainen. Tämäkään ei itse asiassa rajoita logististen mallien käyttöä kovinkaan paljon. Jos muuttuja on alun perin useampiluokkainen tai jatkuva, se voidaan tietenkin dikotomisoida . . . Selitettävät muuttujat voivat käytännössä olla millaisia hyvänsä."
+            </blockquote>
+                
+            <p>Lukijalle ei kuitenkaan tarjota <em>minkäänlaista</em> opastusta sen suhteen, milloin menettely kenties voisi toimia, eikä kummassakaan kirjassa kerrota, <em>kuinka</em> selitettävä muuttaja tulisi luokitella, tai miten näin saatuja parametriestimaatteja tulisi tulkita. Joskushan logistista regressiota tosiaankin <em>voidaan</em> käyttää ainakin <em>lineaarisen</em> regression korvikkeena, mutta tämä on erikoismenettely, jota ei voi pitää oletusarvoisena tapana korvata <em>epä</em>lineaarista regressiota, ja tuossa lineaarisessakin tapauksessa parametrien tulkintaan vaaditaan niitä koskevia suhteellisen monimutkaisia korjauksia.</p>
+
+            <p>Paljon siis jää lukijan oman tulkinnan varaan, enkä siksi voi olla mitenkään varma, mitä Nummenmaa tällä aivan tarkalleen ottaen tarkoittaa, mutta käsittelen tässä yhtä esimerkkiä, joka tuo erityisen osuvasti esille paitsi tuon ehdotetun menettelyn heikkoudet, niin myös sen, että esille otetut väitteet pidä paikkaansa.</p>
+   
+            <p>Kuvitellaanpa synteettinen datasetti, jossa selitettävä muuttuja on normaalisti jakautunut, ja jonka ehdollinen odotusarvo noudattaa toisen asteen polynomin muotoa:</p>
+
+            <div class="equation">
+                y &sim; N(a + b<sub>1</sub>x + b<sub>2</sub>x<sup>2</sup>, &sigma;)
+            </div>
+            
+            <p>Tällaisesta mallista tuotettu synteettinen datasetti on kuvattuna alla olevassa kuvaajassa; kuvaajassa kulkeva viiva näyttää normaalijakauman ehdolisen odotusarvon: näemme, että se muodostaa ylöspäin avautuvan paraabelin, ja kyseessä on siis epälineaarinen malli. Kuvaajan alta löytyy datasetin tuottamiseksi käytetty R-koodi.</p>
+
+            <figure>
+                <img src="figs/polynomial.png">
+            </figure>
+
+            <pre class="codeExample">
+set.seed(666)
+
+n = 100
+x = runif(n, -2, 2)
+y = rnorm(n,  x * 0.5 + x^2, 0.2)
+                
+plot(x, y)
+curve(x * 0.5 + x^2, add = T, lty = 1)</pre>
+
+            <p>Kuvitellaanpa nyt sitten, että emme osaisi sovittaa tähän aineistoon polynomiregressiomallia. Etenemme Nummenmaan ehdotuksen mukaan, eli luokittelemme selitettävän muuttujan (y-muuttuja) ja sitten käytämme logistista regressiota.</p>
+
+            <p>Kuten jo todettua, sille, miten tuo luokittelu tulisi tehdä, ei tarjota neuvoja, mutta jaetaan y-muuttuja vaikkapa mediaanin kohdalta kahteen ryhmään. Näin ikkäästen</p> 
+
+            <pre class="codeExample">
+y_bin = rep(0, length(y))
+y_bin[which(y > median(y))] = 1                
+            </pre>
+
+            <p>Nyt datasettimme näyttää tältä</p>
+
+            <figure>
+                <img src="figs/datasetcategorized.png">
+            </figure>     
+
+            <p>Selitettävä muuttuja todellakin on nyt jaettu kahteen luokkaan, ja tuo luokkin jakautuminen noudattaa likiarvoisesti tuota aineistossa ollutta paraabelimaista muotoa: kun x-muuttujan arvot ovat negatiivisia, on y-muuttujalla suuri todennäköisyys kuulua luokkaan yksi; kun liikumme kohti nollaa x-akselilla, todennäköisyys kuulua luokkaan yksi pienenee ja sitten se taas nousee. Tällainen aineisto voisi kuvata vaikkapa ihmisten responssia lääkkeeseen: pienillä annoksilla sillä ei ole vaikutusta, sopivalla annoksella se auttaa ja korkeilla annoksilla johtaa myrkytykseen. (Voisimme kuvitella, että alkuperäinen, ei-luokiteltu aineisto, on ikään kuin piilevä (latentti), että se kuvaisi aineen todellista vaikutusta, mutta havaintoaineistomme koostuu pelkästään dikotomisoiduista arvoista. Tällaisessa tilanteessa tietenkin logistinen regressio on oikea valinta - tosin lukekaapa vain hieman eteenpäin, kun kerron, miten se pitäisi oikeasti tehdä: aivan perusmallilla tästä ei selvitä.)</p> 
+            
+            <p>Jatkamme tässä vaiheessa eteenpäin Nummenmaan osoittamalla tiellä, ja sovitamme luokiteltuun ihan perinteisen logistisen regressiomallin</p>
+
+            <pre class="codeExample">
+fit = glm(y_bin ~ x, family=binomial(link=logit))              
+            </pre>
+
+            <p>Piirretäänpä tämän mallin tuottama käyrä tuohon alkuperäiseen aineistoon:</p>
+
+            <pre>
+plot(x, y)
+curve(plogis(coef(fit)[1] + x * coef(fit)[2]), add = T)
+            </pre>
+
+            <figure>
+                <img src="figs/fit_1_original_data.png">
+            </figure>
+
+            <p>Ei näytä kovin hyvältä! Pelkästään silmäilemällä tuota kuvaajaa näemme, ettemme ole onnistuneet luomaan mallia, joka kuvaisi alkuperäistä aineistoa järkevästi.</p>
+
+            <p>Mutta ehkäpä se kuvaakin sen luokitellun aineiston hyvin? Piirretäänpä käppyrä luokitellun datan päälle ja katsotaan näyttääkö se paremmalta. Tässä siis käyrän kuuluisi kuvata todennäköisyyttä sille, että havainto (pallot) kuuluu luokkaan 1:</p>
+
+            <figure>
+                <img src="figs/fit_1_cat_data.png">
+            </figure>
+
+            <p>Eipä oikeastaan: käyrä ei lainkaan ole pystynyt koppaamaan datasta sitä, että ensiksi todennäköisyys kuulua luokkaan 1 pienenee, ja sitten taas kasvaa. Tämä johtuu siitä, että, toisin kuin Nummenmaa väittää, logistinen regressio <em>todellakin tekee</em> oletuksia muuttujien välisistä yhteyksistä! Perinteinen logistinen regressio olettaa että, <em>logit-muunnettu todennäköisyys kuulua luokkaan 1 on lineaarinen</em>. Kaavana tämä on</p>
+
+            <div class="equation">
+                &Phi;<sup>-1</sup>(P[Luokka = 1]) = a + b<sub>1</sub>x
+            </div>
+
+            <p>jossa &Phi;<sup>-1</sup> on logit-funktio (tai yleisemmin ottaen mikä tahansa käänteinen kumulatiivinen jakaumafunktio).</p>
+
+            <p>Tämä tarkoittaa, että muuttujien välisen yhteyden täytyy olla monotoninen: todennäköisyyden täytyy joko kasvaa, pienentyä tai pysyä aloillaan. Esimerkiksi käyrämuotoisia tai muuten epälinearisia muutoksia todennäköisyyksissä näin ei voida mallintaa. Tai toki voidaan - tulokset voivat vain olla mitä sattuu, kuten tässä tapauksessa.</p>
+
+            <p>Voimme toki helposti tehdä logistisen regressiomallin, jossa &Phi;<sup>-1</sup>(P[Luokka = 1]) noudattaa vaikkapa toisen asteen polynomifunktiota:</p>
+
+            <div class="equation">
+                &Phi;<sup>-1</sup>(P[Luokka = 1]) = a + b<sub>1</sub>x + b<sub>2</sub>x<sup>2</sup>
+            </div>
+        
+            <p>Tällaisen mallin negatiivinen logaritminen uskottavuusfunktio on helppo kirjoittaa R'ssä, eikä hirvittävän vaikeaa ole myöskään löytää sille parhaiten sopivia parametrien arvoja käyttämällä numeerista optimointia:</p>
+
+            <pre>
+# Negatiivinen logaritminen uskottavuusfunktio logistiselle
+# regressiomallille, jossa on toiseen asteen termi. 
+# SYÖTE:
+# x, y = selittävä ja selitettävä muuttuja. y = [0, 1]
+# theta = parameterit, [a, b_1, b_2]
+# PALAUTE:
+# negatiivinen logaritminen uskottavuus
+negLL = function(theta, x, y){
+    p_1 = plogis(theta[1] + theta[2] * x  + theta[3] * x^2)
+    p_obs = p_1 * y + (1 - p_1) * (1 - y)
+    
+    return(-sum(log(p_obs)))
+  }
+
+fit2 = optim(runif(3, -2, 2), negLL, method = "BFGS", x = x, y = y_bin)
+            </pre>
+
+            <p>Katsotaanpa kuinka tämä sopii luokiteltuun aineistoon:</p>
+
+            <pre>
+plot(x, y_bin)
+curve(plogis(fit2$par[1] + fit2$par[2] *  x + fit2$par[3] * x^2), add = T)
+            </pre>
+
+            <figure>
+                <img src="figs/fit_2_cat_data.png">
+            </figure>
+
+            <p>Näyttää aika paljon paremmalta. Kun korjasimme oletuksemme muuttujien välisen yhteyden tyypistä - oletuksen, jota Nummenmaan mukaan logistinen regressio "ei tee" - mallimme alkaa jo sopia aineistoon. Mutta entäpä miten tämä sopii alkuperäiseen aineistoon? Tässähän oli tosiaan myös agendana jotenkin käyttää logistista regressiota epälineaarisen regression korvikkeena.</p>
+
+            <figure>
+                <img src="figs/fit_2_orig_data.png">
+            </figure>
+
+            <p>Ei näytä hyvältä, vaikkakin nyt tuo funktio pystyykin mukailemaan tuota käyrämuotoista muotoa hivenen paremmin.</p> 
+            
+            <p>Tämän esimerkin tarkoituksena on osoittaa kaksi asiaa.</p>
+
+            <p>Ensinnäkin se, että aineiston dikotomisointia ja logistisen regresion käyttämistä tuskin voi pitää järkevänä oletusratkaisuna jos tutkija kohtaa nonlineaarisia yhteyksiä. Tämä johtuu siitä, että - ja tämä on toinen asia, joka esimerkin on tarkoitus osoittaa - myös logistiseen regressioon kuuluu oletuksia muuttujien välisistä yhteyksistä. Jos yhteys on epälineaarinen, se täytyy ottaa huomioon.  Kuten näimme, vasta kun mallinsimme logit-muunnettua todennäköisyyttä oikeanlaisella funktiolla (sellaisella, jossa on mukana toisen asteen termi), saimme tulokseksi aineistoon sopivan käyrän.</p>
+
+
+            <p>Tämän osion alussa olleissa lainauksissa tehtiin myös väite, ettei logistinen regressio oleta mitään myöskään selitettävän muuttujan jakaumasta. Tämä on myös väärin. Logistinen regressiomalli on niin sanottu <em>yleistetty lineaarinen malli</em>. Voimme ajatella tavanomaisen regressiomallin toimivan kuten tässä äskeisessä esimerkissä: y-muuttujan oletetaan olevan normaalisti jakautunut, ja tämän normaalijakauman keskiarvo riippuu x-muuttujan arvoista esimerkiksi lineaarisen yhtälön mukaisesti. Tämän lisäksi normaalijakaumalla on keskihajontaparametri. Yleistettyjen lineaaristen mallien idea on, että voimme vaihtaa normaalijakauman tilalle jonkin toisen jakauman, logistisen regression tapauksessa siis yleensä joko bernoulli-, binomi-, tai multinomiaalisen jakauman. Läpi käydyssä esimerkissä jakauman mallina käytettiin bernoullijakaumaa.</p>
+
+
+            <h2>Muita kummallisuuksia</h2>
+
+            <p>Hyvin omituinen on myös väite että</p>
+
+            <blockquote>
+            "[l]ogistisen regression etuna on se, että selittävien muuttujien mitta-asteikoista ei tehdä mitään oletuksia, vaan ne voivat olla yhtä hyvin laatuero-, järjestys-, välimatka- tai suhdeasteikollisia" (2021, s.584)
+            </blockquote>
+
+            <p>Logistinen regressio on siis yleistetty lineaarinen malli, ja yllä oleva pätee <em>kaikkiin</em> yleistettyihin lineaarisiin malleihin - myös "tavallinen" lineaarinen regressio voidaan nähdä eritystapauksena näistä. Näin ollen, mainittu seikka ei ole mitenkään logistiseen regressioon rajautunut, ja siten onkin hieman epäselvää, että suhteessa mihin tuo on etu. Eikä se sitä siis ole, tällaista etua ei logistisessa regressiossa ole. Logistisen regression etu - jos se halutaan noin ilmaista - on se, että sillä voidaan mallintaa luokkiin jakautunutta aineistoa. </p>
+ 
+            <blockquote>
+            "Logistisessa regressioanalyysissä selitettävänä muuttujana on aina <b>logit-funktio</b> . . ." (s. 586)
+            </blockquote>
+
+            <p>En totta puhuen oikein edes ymmärrä, mitä tämä tarkoittaa. Onko lineaarisen regression selitettävänä muuttujana lineaarinen funktio? Ei tietenkään, eikä logistisessa regressiossa ole selitettävänä muuttujana "logit-funktiota". Logit-funktio on logistisessa regressiossa niin kutsuttu linkkifunktio, kuten aikaisemmin näimme: se "puristaa" lineaarisen funktion nollan ja ykkösen väliin, niin, että sitä voidaan käyttää todennäköisyden mallina. </p>
+            
+            <footer>
+                &copy; Joni Pääkkö (2021)
+            </footer>
+
+        <script src="" async defer></script>
+    </body>
+</html>

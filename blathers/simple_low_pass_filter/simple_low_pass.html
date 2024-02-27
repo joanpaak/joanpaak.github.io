@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <link rel="stylesheet" href="lowPassStyle.css">
+  <title>Simple low-pass filter</title>
+</head>
+
+<body>
+
+
+<main>
+
+<h1>Simple low-pass filter</h1>
+
+<h2>Introduction</h2>
+
+<p>A low-pass filter is a filter that removes high frequencies from a signal; or conversely, as the name implies, it lets low frequencies pass through while stopping others. In the case of music, this kind of a filter makes it sound somewhat darker or muffled. However, such filtering can be used for any kinds of time series data: sound is just one special case. Daily temperature readings would be an example of time-series data that is not musical.</p>
+
+<p>But how does a simple digital filter work? In this text, I will show how to construct a simple <em>first order low pass filter</em> from the ground up. I will walk you through the mathematics and show that the basic idea is actually very simple. This will hopefully demystify how digital filters work.</p>
+
+<p>I will discuss two kinds of filters that are commonly used: FIR and IIR filters. These stand for Finite Impulse Response and Infinite Impulse Response, respectively.</p>
+
+<p>But first, I'll introduce some concepts that are necessary to understand before venturing forth: 1) what's a sampled signal, 2) what are low and high frequencies and 3) what does a low frequency signal contaminated by high frequency noise look like. Feel free to skim through or skip altogether this part if these concepts are already familiar. </p>
+
+<h2>Some preliminaries</h2>
+
+<h3>What's a discrete/sampled signal?</h3>
+
+<p>If we record a sound with a computer, it is <em>sampled</em>. Sounds, as they travel in air, are continuous changes in pressure, and the microphone then changes these into continuous changes in voltage. When we record sound digitally, the computer takes samples of the these continuous changes in voltage; it looks at what the value is at some constant temporal interval, usually 44100 times a second. Consider the sine wave below, represented by the continuous line:</p>
+
+<div class="interactiveFigure">
+  <svg id="samplingVis" height="400"width="600"></svg>
+</div>
+
+<p>It is <em>sampled</em> at 20 discrete points, as shown by the dots. Each dot represents a pair of values, as you can see if you hover your mouse over them: a point in time (x value) and the value of the sine wave at that point (y value). The representation of this sine wave - on the computer - then consists of an array of those 20 numbers (here, rounded  to two decimals to save some space on the screen) which correspond to the dots:</p>
+
+<pre id="sampledSine"></pre>
+
+<p>Of course, I will remind you, that the sine wave here could represent for example the ambient temperature and the dots would perhaps represent samples taken by a research assistant at regular intervals.</p>
+
+<h3>High/Low frequencies</h3>
+
+<p>We are all familiar, I think, with the concept that there are high and low frequencies in music. However, there can be frequencies in other kinds of data too; I'll come back to that in the next, and last, section of this gantlet of preliminaries.</p>
+
+<p>The visualization below shows with a sine wave how different frequencies look like. You can use the slider below to adjust its frequency. When you move the slider to the right, the frequency gets higher. What happens?</p>
+
+<div class="interactiveFigure">
+  <svg id="varFreqVis" height="400" width="600"></svg>
+  <div class="controlSlice">
+    <label for="varFreqVisSlider">Frequency:</label>
+    <input type="range" min="2.0" max="10" value="2.0" step="0.1" id="varFreqVisSlider">
+    <div id="varFreqVisText"></div>
+  </div>
+</div>
+
+<p>It seems like the wave would be squished horizontally; or in other words: there are faster <em>changes</em> in the wave! The main takeaway from this section is that high frequencies correspond with fast changes in the signal.</p>
+
+<h3>Combinations of frequencies</h3>
+
+<p>When applying filters, we are usually interested not in single sine waves, but signals that contain mixtures of different frequencies. For example, day-to-day Covid-19 cases are "contaminated" by quick (high frequency) changes that result from e.g. differences in when hospitals report their cases. We are usually not interested in these high fluctuations between consecutive days, but in the overall slower (low frequency) pattern.</p>
+
+<p>Take a look at the visualization below. It shows, yet again, a sine wave signal. But hiding beneath it is some high frequency noise. Below the visualization is a slider form which you can increase the amplitude (strength) of a high frequency contaminant noise. Do just this and notice how the original signal gets distorted by higher frequency ripples that represent faster changes in the signal.</p>
+
+<div class="interactiveFigure">
+
+  <svg id="mixtureVis" height="400" width="600"></svg>
+
+  <div class="controlSlice">
+    <label for="mixtureVisSlider">Amplitude of the contaminant:</label>
+    <input type="range" min="0.0" max="1.0" value="0.0" step="0.01" id="mixtureVisSlider">    
+  </div>
+
+</div>
+
+<p>Next we will take a look at how one could filter out - or at least attenuate - such high frequency ripples using a simple 1st order FIR filter.</p>
+
+<h2>A 1st order FIR filter</h2>
+
+<p>A first order FIR (Finite Impulse Response) filter can be mathematically represented by the following equation:</p>
+
+<div class="equation">
+output<sub>i</sub> = a<sub>0</sub> input<sub>i</sub> + a<sub>1</sub> input<sub>i-1</sub>
+</div>
+
+<p>In which the <em>input</em> refers to the signal we want to filter and <em>output</em> refers to the filtered signal. The <em>i</em> subscripts are indices for the samples, for example when <em>i</em> = 1, we would look at the first sample of the input signal. There are two parameters, a<sub>0</sub>and a<sub>1</sub>, that determine how the filter works.</p> 
+
+<p>This might seem complicated at first, but let us break it down.</p>
+
+<p>Assume that we want to low-pass filter the array:</p>
+
+<pre>input = [0.2, 0.3, 1.2, 0.3, 0.2]</pre>
+
+<p>The output array is still empty:</p>
+
+<pre>output = []</pre>
+
+<p>Before going further, we must decide on some values for a<sub>0</sub> and a<sub>1</sub>. Let us decide that they are both 0.5. You'll get to try different values in a bit.</p>
+
+<p>We start from the index 1, that is <em>i</em> = 1. Looking at the formula above, this means that the first element we put into the output array is found by multiplying the first element of the input array with 0.5, then multiplying the zeroth element of the input array with 0.5 and finding their sum. Our first problem is that there is no zeroth element, but we can, arbitrarily, decide that the zeroth element is just the value 0. So we calculate: 0.5 * 0.2 + 0.5 * 0 = 0.1. Then we place this in the output array:</p>
+
+<pre>output = [0.1]</pre>
+
+<p>Now we move one index up, <em>i</em> is now 2. Again, we just apply the formula above: we multiply the second (i = 2) and first (i-1 = 1) elements of the input array with 0.5, sum them, and place the result (0.5 * 0.3 + 0.5 * 0.2 = 0.25) in the output array:</p>
+
+<pre>output = [0.1, 0.25]</pre>
+
+<p>We should continue this process until we've gone through the whole array. You might want to do that as an exercise, or not, it's up to you, but I will present the result here (also, the input array as a reminder for where we began from):</p>
+
+<pre>
+input =  [0.20, 0.30, 1.20, 0.30, 0.20]
+output = [0.10, 0.25, 0.75, 0.75, 0.25]</pre>
+
+<p>The important thing to notice here is that the sudden jump to 1.20 - fast change - is attenuated. Remember: sudden changes correspond with high frequencies. This simple filter works by making the values dependent on the previous, so when the value for the a<sub>1</sub> coefficient is greater than zero, we let the previous sample influence the current: it's as if there's an elastic band between them, one that pulls the sample towards the previous if it tries to move too fast.</p>
+
+<p>The visualization below shows a sine wave that's been contaminated by a high frequency noise, as in the example before: this is again the "ripple" that's breaking the otherwise smooth shape. Click on the Apply Filter button to, well, apply a filter like what was just described to it. By default the values for the coefficients are both the same: 0.5.</p> 
+
+<p>You are of course welcome to try other values for the coefficients: below the visualization you will find two sliders that you can use to change the values. When you have the filter applied, you will see the changes in real time; when you disable the filter, it will show you the original signal.</p>
+
+<p>Try, for example, changing the value of a<sub>1</sub> to -0.5 (while a<sub>0</sub> is about 0.5). What happens? The high frequency noise becomes more dominant. Now there isn't an elastic band between the successive samples, but rather a repelling force. This amplifies quick changes and the filter becomes instead a <em>high-pass</em> filter.</p>
+
+<div class="interactiveFigure">
+  <svg id="firVis" height="400" width="600"></svg>
+
+  <div class="controlSlice">
+    <label for="firVis_a0">a<sub>0</sub>:</label>
+    <input type="range" min="-1" max="1" value="0.5" step="0.001" id="firVis_a0">
+    <div id="firVis_a0_text"></div>
+  </div>
+
+  <div class="controlSlice">
+    <label for="firVis_a1">a<sub>1</sub>:</label>
+    <input type="range" min="-1" max="1" value="0.5" step="0.001" id="firVis_a1">
+    <div id="firVis_a1_text"></div>
+  </div>
+  
+  <button id="applyFIR">Apply Filter</button>
+  
+</div>
+
+<p>As you can see, the 1st order FIR filter can attenuate some of the high frequency noise, but it is not able to get rid of it completely. Next, we will take a look at a 1st order IIR filter: these kinds of filters are generally more effective.</p>
+
+<h2>A 1st order IIR filter</h2>
+
+<p>An IIR (Infinite Impulse Response) filter uses also the previously filtered samples. This is actually where the "infinite" part in its name comes from: since, in a way, it is also linked it its own output, it can produce feedback that just keeps going until the end of times.</p>
+
+<p>The equation for a 1st order IIR filter is</p>
+
+<div class="equation">
+output<sub>i</sub> = a<sub>0</sub> input<sub>i</sub> + a<sub>1</sub> input<sub>i-1</sub> - b<sub>1</sub> output<sub>i - 1</sub>
+</div>
+
+<p>I won't be walking you through this in such detail as before. I think you should be able to figure out - based on the previous walkthrough - how to apply this filter yourself. Instead, we will be studying its behaviour visually.</p>
+
+<p>As before, press the button below the visualization to toggle filtering on and off.</p>
+
+<div class="interactiveFigure">
+  <svg id="iirVis" height="400" width="600"></svg>
+
+  <div class="controlSlice">
+    <label for="iirVis_a0">a<sub>0</sub>:</label>
+    <input type="range" min="-1" max="1" value="0.5" step="0.01" id="iirVis_a0">
+    <div id="iirVis_a0_text"></div>
+  </div>
+
+  <div class="controlSlice">
+    <label for="iirVis_a1">a<sub>1</sub>:</label>
+    <input type="range" min="-1" max="1" value="0.5" step="0.01" id="iirVis_a1">
+    <div id="iirVis_a1_text"></div>
+  </div>
+  
+  <div class="controlSlice">
+    <label for="iirVis_b1">b<sub>1</sub>:</label>
+    <input type="range" min="-2" max="2" value="-0.5" step="0.01" id="iirVis_b1">
+    <div id="iirVis_b1_text"></div>
+  </div>
+  
+  <button id="applyIIR">Apply Filter</button>
+  
+</div>
+
+<p>As you can see, the IIR filter is somewhat more effective in getting rid of the high frequency content.</p>
+
+<p>But! See what happens if you adjust the parameter b<sub>1</sub> above 1. The output begins to behave very strangely. Even though IIR filter are generally more effective than FIR filters of the same order, they can also exhibit instability, so more care should be given to what parameter values one chooses to use.</p>
+
+<h2>A word about filter order</h2>
+
+<p>Maybe the fact that I explicitly called these <em>first</em> order filters might've already given away the fact that there can be filters beyond the first order. This indeed is the case. I won't go deep into this subject, I will just quickly show that a 2nd order FIR filter would look like this:</p>
+
+<div class="equation">
+output<sub>i</sub> = a<sub>0</sub> input<sub>i</sub> + a<sub>1</sub> input<sub>i-1</sub> + a<sub>2</sub> input<sub>i-2</sub>
+<div class="eqlab"> (2nd order FIR filter)</div>
+</div>
+
+
+<p>If you compare this with the equation for the first order FIR filter</p>
+
+<div class="equation">
+output<sub>i</sub> = a<sub>0</sub> input<sub>i</sub> + a<sub>1</sub> input<sub>i-1</sub>
+<div class="eqlab"> (1st order FIR filter)</div>
+</div>
+
+<p>you might be able to guess what the equation for a third order FIR filter would look like... (by the way, these work similarly for IIR filters, you  just also add b's to the equation).</p>
+
+<p>Generally speaking, the greater the order of the filter, the more effective it in a colloquial sense is. For example, if we increased the order of the FIR filter we explored earlier, it would be able to match the IIR filter in our test case.</p>
+
+<h2>The End</h2>
+
+<p>This text has been all about exploring the inner workings of simple first order filters and fiddling around with their parameters visually. I hope this introductory text has been able to make digital filters seem less mystical, that they don't work by using magic, but (relatively) simple mathematics.</p> 
+
+<p>Of course, in real life, we usually have some fairly clear objective in mind: we want to, for example, get rid of some pre-defined band of frequencies. There are ways to mathematically find what parameter values one should use if they, for example, want a 4th order notch filter that removes frequencies between 500Hz and 100Hz.</p>
+
+<p>I will come back to that topic, and show how one can use R's <em>signal</em> package to find those coefficients.</p>
+
+<h2>Sources</h2>
+
+<p class="bibEntry">Cipriani, A. & Giri, M. (2009). Electronic Music and Sound Design: Theory and Practice with Max/MSP. Vol. 1. ConTempoNet s.a.s, Rome - Italy.</p>
+
+<p class="bibEntry">Roads, C. (1996). The Computer Music Tutorial. The MIT Press.</p>
+
+<h3>Internet resources</h3>
+
+<p class="bibEntry">https://www.dsprelated.com/</p>
+
+</main>
+
+<footer>&copy; Joni Pääkkö</footer>
+
+<script src="../../js/graphicsLibrary/SVGVisualization.js"></script>
+<script src="lowpassJS.js"></script>
+
+</body>
+
+</html>

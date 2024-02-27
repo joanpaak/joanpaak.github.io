@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <link rel="stylesheet" href="roex_pr_css.css">
+  <title>The ROEX(r, p) filter</title>
+</head>
+<body>
+<main>
+
+  <h1>The ROEX filter</h1>
+
+  <h2>Inroduction</h2>
+  
+  <p>The inner ear is often modeled as a bank of filters called <em>auditory filters</em>. These model the frequency selectivity of our auditory system. Filters based on the rounded exponential (ROEX) function are commonly used as a model of auditory filters in the frequency domain. There are many different ROEX models: more complicated functions, with more parameters, try to catch the empirically observed data more closely; sometimes also the asymmetry of these filters is modeled..</p>
+  
+  <p>In this text I will discuss a symmetric two-parameter ROEX filter. I will walk you throught the equations that describe it, and how to implement these equations in R to predict thresholds, with a focus on the notched-noise experiment. This should provide background for those who are willing to venture further into different kinds of ROEX filters.</p>
+
+  <p>In the next part I will show how to do Bayesian inference on the parameters of the model. (As of now, it can be found from here: https://joanpaak.github.io/tutorials/auditory_filters/ROEX/ROEX_pr/roex_pr_statistics.html)</p>
+  
+  <h2>The ROEX(r, p) filter</h2>
+   
+  <p>The ROEX filter discussed in this text has two parameters that determine its shape: <em>r</em> and <em>p</em>. A filter of this type, with a center frequency (f<sub>0</sub>) of 1000Hz (or 1kHz) is shown visually in the demonstration below. You can change the values of  the parameters yourself and see how these affect the shape of the filter.</p>
+
+  <p>NOTE: The values for the parameter <em>r</em> are typically really low. For this reason the <em>r</em> parameter, when ever it is used in visualizations or R examples, will be on logarithmic scale: r<sub> log</sub> = 10 log10(r). Original values are recovered through the inverse transform: r = 10^(r<sub> log</sub>/10). All of the functions require the parameter on the original scale, so you will notice that inside the R functions the parameter has to be transformed back from the logarithmic scale. Anytime the parameter <em>r</em> is followed by the string <em>log</em> this means that it is on the log scale and if it isn't followed by that, then it's on the original scale.</p>
+
+  <div class="interactiveFigure">
+    <svg id="roexVis" height="400"></svg>
+    
+    <div class="controlSlice">
+      <label for="roexVis_r">r<sub>log</sub>:</label>
+      <input type="range" id="roexVis_r" min="-60" max="-10" step="0.1" value="-50">
+      <div id="roexVis_r_text"></div>
+    </div>
+
+    <div class="controlSlice">
+      <label for="roexVis_p">p:</label>
+      <input type="range" id="roexVis_p" min="10" max="35" step="0.1" value="15">
+      <div id="roexVis_p_text"></div>
+    </div>
+    
+  </div>
+  
+  <p>If you tried changing the parameter values, you probably noticed that the <em>r</em> parameter (mostly) affects the minimum value of the filter, or the skirts of the filter, while the <em>p</em> parameter affects (mostly) the sharpness of the filter. Usually researchers are interested in estimating the parameter <em>p</em> since it indeed is related to the frequency selectivity of the ear.</p>
+
+  <p>That's all fine and good, but what does that curve mean? The y-axis calls itself the “Weight”, while the x-axis represents frequencies.  The curve reprents how much the power (P) of input signals is weighted (or scaled) when they pass through the filter. Let us say that we have a 300Hz sinewave with P = 0.6. If we pass it through a ROEX filter whose weight for a 300Hz signal is 0.4. The power of the output signal would then be P<sub>output</sub> = 0.6 * 0.4 = 0.24. Notice that the weight for the center frequency of the filter is always 1.0, meaning signals at the center frequency of the filter are unaffected.</p>
+  
+  <p>Mathematically this weighting function is described by the equation</p>
+    
+  <div class="equation">
+  W(g, r, p) = (1 - r)(1 + pg)exp(-pg) + r
+  <div class="eqlab">Eq. 1</div>
+  </div>
+  
+  <p>in which <em>g</em> is <em>normalized frequency</em>, which will be defined shortly, and <em>r</em> and <em>p</em> are the parameters of the filter which we already encountered. </p>
+  
+  <p>Normalized frequency is the absolute difference of the frequency to the center frequency, divided by the center frequency:</p>
+  
+  <div class="equation">
+  g(f, f<sub>0</sub>) = |f - f<sub>0</sub>| / f<sub>0</sub>
+  <div class="eqlab">Eq. 2</div>
+  </div>  
+  
+  <p>Note that the function <em>g</em> will never return negative values. This is important since the function we defined for calculating the weights, W, is defined only for positive values. This means that the function only defines the <em>right-hand side of the auditory filter</em> and the other  side is just a mirror of it (the center frequency of the filter, when normalized, is always zero). So, whenever we are passing raw frequencies to the weighting function, W, they should be normalized with the function <em>g</em>, which also requires us to be explicit about the  center frequency of the filter.</p>
+  
+  <h3>How to do it in practice in R</h3>
+  
+  <p>To keep things grounded in practice, let us take a look at how one could define these functions in R and use them to plot different kinds of auditory filters.</p>
+  
+  <p>Here I define the functions g and W:</p>
+  
+  <pre>
+# Function for normalizing frequencies 
+# wrt some center frequency.
+#
+# INPUT
+# f  : frequency to be normalized
+# f0 : center frequency
+# OUTPUT
+# normalized frequency
+g = function(f, f0){
+  return(abs(f - f0) / f0)
+}
+
+# Weighting function of the ROEX(r, p) filter.
+#
+# INPUT
+# g     : normalized frequency
+# r_log : minimum magnitude response (log scale)
+# p     : sharpness of the filter
+# OUTPUT
+# Weight of the filter, as defined
+# by the parameters r and p, at the specified g.
+W = function(g, r_log, p){
+  r = 10^(r_log/10)
+  return((1 - r) * (1 + p * g) * exp(-p * g) + r)
+}</pre>
+
+  <p>Note that inside the function <em>W</em>, the parameter <em>r</em> is transformed back from the logarithmic scale.</p>
+
+  <p>Let us say we wanted to plot a filter with f<sub>0</sub> = 800, <em>r<sub>log</sub></em> = -30, <em>p</em> = 20, from 400Hz to 1200Hz:</p>
+  
+  <pre>
+# Decide which frequencies to plot:
+f = seq(400, 1200, 0.1)
+
+# Normalize frequencies:
+fNorm = g(f, 800)
+
+# Calculate weights:
+weights = W(fNorm, -30, 20)
+
+# Plot weights as a function of frequency...
+plot(f, weights, type = "l", 
+  xlab = "Frequency", ylab = "Weight", 
+  main = "Roex(r_log = - 30, p = 20)")
+
+</pre>
+  
+  <p>Or you could do all this on a single line using the built-in curve function:</p>
+  
+  <pre>curve(W(g(x, 800), -30, 20), 400, 1200) </pre>
+  
+  <p>If we wanted to plot a filter with center frequency of 2000Hz, parameters <em>r<sub>log</sub></em> = -20 and <em>p</em> = 15, in a plot whose x-axis extends from 750Hz to 3125Hz:</p>
+
+  <pre>curve(W(g(x, 2000), -20, 15), 750, 3125)</pre>
+
+  <p>What if the center frequency of the filter is 500Hz, parameters are  <em>r<sub>log</sub></em> = -15 and <em>p</em> = 25, and we want the filter's weight for a 650Hz tone? Easy:</p>
+  
+  <pre>W(g(650, 500), -15, 25)
+[1] 0.03617533</pre>
+
+  <h2>Calculating masked thresholds</h2>
+
+  <p>Usually the ROEX model is used to predict masked thresholds, that is thresholds for sine waves embedded in broadband noise. Data from e.g. notched noise experiments can then be used to estimate the parameters of the filter. I will not go into how this estimation is done in practice in this text, I'll save that for a later text, but I will show in this part how to calculate masked thresholds for noise maskers.</p>
+
+  <h3>Total power of a rectangular noise masker</h3>
+  
+  <p>A noise masker, generally, is a stimulus that contains power across a wide band  of frequencies. There are many different kind of noise maskers, for example, in pink noise the power of the noise depends on its frequency. Here, for simplicity, only noise maskers whose power is constant over their spectrum will be discussed – this simplification will play a big role later on, you just wait.</p>
+  
+  <p>In the visualization below you are presented with such a masker. Note that the slider labeled Center Frequency will become active only when the scale is set to Normalized Frequency: the slider controls the Center frequency of the function <em>g</em>. We will first look what happens when the scale is linear.</p>
+  
+  <div class="interactiveFigure">
+    <svg id="rectNoiseVis" height="400"></svg>
+    
+    <p id="totalAreaTextBox"></p>
+    
+    <div class="controlSlice">
+      <label for="rectVisuBoundSlider">Upper bound:</label>
+      <input type="range" id="rectVisuBoundSlider" min="1600" max="2000" value="1900" step="0.01">
+    </div>
+    <div class="controlSlice">
+      <label for="rectVislBoundSlider">Lower bound:</label>
+      <input type="range" id="rectVislBoundSlider" min="1000" max="1400" value="1200" step="0.01">
+    </div>
+    <div class="controlSlice">
+      <label for="rectVisN0Slider">N0:</label>
+      <input type="range" id="rectVisN0Slider" min="0.1" max="1.0" value="0.8" step="0.001">
+    </div>
+    
+    <!-- Switch between "linear" frequency and normalized frequency -->
+    
+    <div class="controlSlice">
+      <input type="radio" id="rectVisLinFreq" checked="checked" name="recVisScale">
+      <label for="rectVisLinFreq">Linear frequency</label><br>
+      <input type="radio" id="rectVisNormFreq" name="recVisScale">
+      <label for="rectVisNormFreq">Normalized frequency</label><br>
+    </div>
+    
+    <div class="controlSlice">
+      <label for="rectVisN0Slider">Center Frequency (f<sub>0</sub>):</label>
+      <input type="range" id="rectVisf0Slider" min="900" max="1200" value="1000" step="1">
+    </div>    
+  </div>
+  
+
+  <p>The masker's lower and upper bounds determine its bandwidth, which I think is fairly intuitive, and the quantity called N<sub>0</sub> determines how much power there is per frequency (per infititesimally narrow slice of the frequency axis); or in other words, how tall the noise rectangle is. You can change all of these quantities from the sliders below the figure; there's also  a switch for changing the scale of the x-axis, but let us not concern ourselves with that just yet. Try changing the values and see how they affect the rectangle.</p>
+  
+  <p>What we need to know is the <em>total power</em> of this masker. Well, it turns out that this is simply the <em>area of the masker</em>, and in this case, since the masker is rectangular, calculating it is very simple. I will assume that you, dear reader, are quite familiar with how to calculate that. For convenience, however, the area is printed below the figure.</p>
+  
+  <p>But now is the time to switch the scale in the figure to normalized frequency. As you can see, the noise masker itself is unaffected, it is the same old rectangular chunk of noise, and as such, its total power should be unaffected. However, if you now calculate its area using the normalized frequencies, what happens? What about if you change the center frequency? The area is now <em>dependent on the center frequency</em>, since center frquency affects how the "linear frequencies" are scaled.</p>
+
+  <p>For example, if the lower bound is 1500Hz, the upper bound is 2000Hz, N<sub>0</sub> = 0.5 and f<sub>0</sub> = 1000, the total power of the noise masker is </p>
+    <div class="equation">
+      P<sub>masker</sub> = (2000Hz - 1500Hz) * 0.5 = 250
+    </div>
+    
+    <p>However, using normalized frequencies we get</p> 
+    
+    <div class="equation">
+      P<sub>masker</sub> = [(2000Hz - 1000Hz)/1000Hz - (1500Hz - 1000Hz)/1000Hz] * 0.5 <br>= (1 - 0.5) * 0.5 = 0.25
+    </div>
+    
+    <p>and if we change the center frequency, this result will again be different, as we just saw. We will have to <em>undo</em> the transformation to normalized frequencies. This is done simply by multiplying the area calculated using normalized frequncies by the center frequency. In this case </p>
+
+    <div class="equation">
+      P<sub>masker</sub> = 0.25 * 1000 = 250
+    </div>
+
+    <p>Now that we've covered some of the basic concepts and transformations in a simple context, we can move forward to calculating the power of the noise masker <em>after it's been passed through a ROEX filter</em>!</p>
+  
+  <h3>Total power of the masker after filtering</h3>
+
+  <p>We are interested not just in rentangular blobs of noise, but the power of such a masker after it's been passed through a ROEX filter. Let's take a look at this visually first. In the demonstration below you see a rectangular noise masker, as before, but now, superimposed on it, is a ROEX filter (which is the solid curve) - or one side of it: remember, the equation for a ROEX filter (W) describes just one side of the filter. We will come back to "full" filters, that have both sides, when discussing the notched noise experiment. Below the noise masker and the curve you see a shaded area: <em>this</em> is the part of the noise masker that is passed through the filter, and this is what we need to find out. This is the amount of noise that would be audible e.g. for a human participant with the kinds of filtering charasteristics that the filter has.</p>
+
+  <div class="interactiveFigure">
+    <svg id="areaVis" height="400"></svg>
+    
+    <p class="controlTitle">Noise masker:</p>
+    <div class="controlSlice">
+      <label for="uBoundSlider">Upper bound:</label>
+      <input type="range" id="uBoundSlider" min="0.6" max="1.0" value="0.8" step="0.001">
+    </div>
+    <div class="controlSlice">
+      <label for="lBoundSlider">Lower bound:</label>
+      <input type="range" id="lBoundSlider" min="0.0" max="0.4" value="0.2" step="0.001">
+    </div>
+    <div class="controlSlice">
+      <label for="N0Slider">N0:</label>
+      <input type="range" id="N0Slider" min="0.1" max="1.0" value="0.8" step="0.001">
+    </div>
+    <!-- Parameters of the ROEX filter: -->
+    <p class="controlTitle">Filter:</p>
+    <div class="controlSlice">
+      <label for="areaVis_r">r<sub> log</sub>:</label>
+      <input type="range" id="areaVis_r" min="-60" max="-10" value="-20" step="0.1">
+    </div>
+    <div class="controlSlice">
+      <label for="areaVis_p">p:</label>
+      <input type="range" id="areaVis_p" min="10" max="30" value="15" step="0.001">
+    </div>
+  </div>
+
+  <p>Mathematically speaking finding the area under a curve is called <em>integrating</em>. Integral from the lower to the upper bound of the noise masker for the auditory filter (which is, remember, described by the function W(g, r, p)) would be</p>
+
+  <div class="equation"> &int; <span class="lims"><sub>l</sub><sup>u</sup></span> W(g, r, p) dg</div>
+
+  <p>which simply means "find the area under the function W(g, r, p) from <em>l</em> to <em>u</em> using <em>g</em> as the variable for integration (meaning g is on the x axis)". Note that this isn't yet the area we want to find: we want to find the area weighted by the noise masker, but the integral above corresponds the area under the <em>curve</em> from the lower to the upper bound. We want to find the area of the <em>shaded region under that curve</em>.</p>
+
+  <p>Now, remember when I said that the the maskers having a constant power over their bandwidth would be an important simplification? It turns out that since the function W(g, r, p) is weighted at every point by the same constant, N<sub>0</sub>, we can just multiply the integral above with that constant! So the area of the shaded region is</p>
+
+  <div class="equation"> N<sub>0</sub> &int; <span class="lims"><sub>l</sub><sup>u</sup></span> W(g, r, p) dg</div>
+
+  <p>which simply means that we find the area and the curve and then multiply it by N<sub>0</sub> and we get the area of the shaded region.</p>
+
+  <p>But also remember this! Since we are using <em>normalized frequencies</em>, we have to undo that transformation. Maybe you still remember that this was done simply by multiplying the area with f<sub>0</sub>. So we get this</p>
+
+  <div class="equation">f<sub>0</sub> N<sub>0</sub> &int; <span class="lims"><sub>l</sub><sup>u</sup></span> W(g) dg</div>
+
+  <p>Next we will look at how to actually evaluate that integral. I will show how to evaluate it numerically (approximately) in R using a bit of brute force and after that how to evaluate it using <em>mathematics</em>.</p>
+
+  <h3>Evaluating the integral numerically in R</h3>
+
+  <p>There are many ways for doing numerical integration. The simplest, although not necessarily the most efficient, is to just evaluate the function at large number of points and then calculate their weighted sum. Be sure to have the function <em>g</em> from the earlier R demo in your environment.</p>
+
+  <p>In this example we create a vector of points at which to evaluate the function <em>W</em> using R's function <em>seq</em>. These points are separated by the constant <em>delta</em>: note that when we are calculating the (weighted) sum, that is the integral, we must multiply each point by this constant. The intuition behind this is that if <em>delta</em> is small, the function will be evaluated at a larger number of points, and the sum will be larger just because of that. After the integral is approximated by this sum, it is multiplied by N<sub>0</sub> and f<sub>0</sub> as just discussed. </p>
+
+<pre>
+# Constants
+f0 = 1000
+N0 = 0.01
+
+# Limits of the integral in normalized frequency
+lower = 0.2
+upper = 0.8
+
+# Parameters of the filter
+r_log = -30
+p     = 15
+
+# Now we create a vector of points at which we 
+# evaluate the function W:
+delta = 0.001
+gVals = seq(from = lower, to = upper, by = delta)
+
+f0 * N0 * sum(W(gVals, r_log, p) * delta)
+</pre>
+
+  <p>The approximation will be more accurate the smaller <em>delta</em> is, but this will also make calculating the approximation more computationally expensive, since the function will be evaluated a a larger number of points. For this reason  it is usually better to use mathematical solutions if such exist. Luckily, for this problem such a solution does exist.</p>
+
+  <h3>Evaluating the integral mathematically</h3>
+
+  <p>Finding the area mathematically involves two parts.</p>
+
+  <p>Patterson et. al. (1982, p. 1801) give this equation, which is the area under the curve from 0 up to <em>g</em> (although see <a href="#appendix">Appendix: On the integral by Patterson et. al. </a> for some unnecessary mathematical nitpicking):</p>
+
+  <div class="equation">&int; <span class="lims"><sub>0</sub><sup>g</sup></span> = -(1 - r)(1/p)(2 + pg)exp(-pg) + rg</div>
+
+  <p>So with this equation we find the area under the curve from 0 to, say, the upper limit of the noise masker (up to a constant, but this is not really important right now). However, we want to find the area from the <em>lower bound </em> of the masker, not from zero. Well, the solution is actually really simple: 1) find the are from 0 to upper limit, then 2) find the are from 0 to the lower limit and 3) substract the area found in step two from the area found in step 1. Like so:</p>
+
+  <div class = "equation"> &int; <span class="lims"><sub>l</sub><sup>u</sup></span>W(g, r, p) = 
+    &int; <span class="lims"><sub>0</sub><sup>u</sup></span> W(g, r, p)dg - 
+    &int; <span class="lims"><sub>0</sub><sup>l</sup></span> W(g, r, p)dg
+  </div>
+
+  <p>But remember that we have to take into account the center frequency (f<sub>0</sub>) and the power of the noise masker (N<sub>0</sub>). This is done as before :</p>
+
+  <div class = "equation"> N<sub>0</sub> f<sub>0</sub> &int; <span class="lims"><sub>l</sub><sup>u</sup></span>W(g, r, p) = 
+    N<sub>0</sub> f<sub>0</sub>
+    (&int; <span class="lims"><sub>0</sub><sup>u</sup></span> W(g, r, p)dg - 
+    &int; <span class="lims"><sub>0</sub><sup>l</sup></span> W(g, r, p))dg
+  </div>
+
+  <p>Let us see how these equations could be implemented in R - to bring some concreteness into this discussion.</p>
+
+  <h3>R implementations</h3>
+
+  <p>Note that the parameter <em>r</em> is transformed back from the logarithmic scale when it's passed to the function W_area. This function calls the function W_int and passes the back-transformed version to it, so it does not have to be transformed again (one <em>could</em> do the transformation inside that function, it does not matter when it's done, as long as it is not done twice). </p>
+
+<pre>
+# This is the integral given by Patterson et. al. (1982)
+# which represents, up to a constant, integral
+# of W(g, r, p) from 0 to g
+#
+W_int = function(g, r, p){
+  return(-(1 - r)*(1/p)*(2 + p*g)*exp(-p*g) + r*g)
+}
+
+# This function will find the area under the curve
+# for lower and upper bounds
+# INPUT:
+# l, u     : lower and upper bounds of the integral (in normalized units)
+# r_log, p : parameters of the filter
+# f0       : center frequency
+# N0       : spectrum level of the masker
+W_area = function(l, u, r_log, p, f0, N0){
+  r = 10^(r_log/10)
+  f0 * N0 * (W_int(u, r, p) - W_int(l, r, p))
+}
+</pre>
+
+<p>Using the same values from the numerical approximation example above, we can find the solution</p>
+
+<pre>
+# Constants
+f0 = 1000
+N0 = 0.01
+
+# Limits of the integral in normalized frequency
+lower = 0.2
+upper = 0.8
+
+# Parameters of the filter
+r_log = -30
+p     = 15
+
+W_area(lower, upper, r_log, p, f0, N0)
+</pre>
+
+<p>This should be close to the value found earlier through numerical approximation.</p>
+
+<h2>The notched noise experiment</h2>
+
+<p>So far we've conserned ourselves with only one side of the ROEX filter. Let us expand our horizon by discussing the notched noise experiment, in which we model a "full" ROEX filter. The visualization below shows the basic components of a simple notched noise experiment: there's a noise masker which has a notch around the center frequency of the filter. The width of this notch is manipulated, which affects the amount of noise passed through this filter. At the filter's center frequency is a sine wave that the participant has to detect. By measuring the detection threshold for a few notch widths, we can estimate the parameters of the filter from the data.</p>
+
+<div class="interactiveFigure">
+  <svg id="thresholdVis" height="400"></svg>
+  
+  <div class="controlSlice">
+    <label for="thresholdVis_r">r<sub> log</sub>:</label>
+    <input type="range" id="thresholdVis_r" min="-60" max="-10" step="0.1" value="-40">
+    <div id="thresholdVis_r_text"></div>
+  </div>
+
+  <div class="controlSlice">
+    <label for="thresholdVis_p">p:</label>
+    <input type="range" id="thresholdVis_p" min="10" max="30" value="15" step="0.001">
+    <div id="thresholdVis_p_text"></div>
+  </div>
+  
+  <div class="controlSlice">
+    <label for="thresholdVis_NW">Notch width:</label>
+    <input type="range" id="thresholdVis_NW" min="0" max="500" step="1" value="150">
+    <div id="thresholdVis_NW_text"></div>
+  </div>
+</div>
+
+<p>How to calculate the threshold in this case? Since both sides of the noise masker are symmetric, it's enough to calculate the area of just one of them, and multiply that by two. Or it's <em>almost</em> that simple. Patterson et. alc. (1982) include a third parameter, not related to the charasteristics of the filter, called <em>K</em> which models the "efficiency of detection". This is included, since the estimated thresholds depend on e.g. motivation of the listener: if one is <em>really</em> motivated to listen for even the faintest hint of the signal, their measured thresholds will be estimated to be lower (they can detect fainter sounds) than for someone who gives up and resorts to guessing when the sine waves get less audible. In this way it is similar - but not the same thing - to how decisional criteria are modeled in Signal Detection Theory.</p>
+
+<div class = "equation"> Predicted threshold = 
+  2 K N<sub>0</sub> f<sub>0</sub>
+  (&int; <span class="lims"><sub>0</sub><sup>u</sup></span> W(g, r, p) dg - 
+  &int; <span class="lims"><sub>0</sub><sup>l</sup></span> W(g, r, p) dg)
+</div>
+
+<p>Another thing to take into account is that the magnitudes of N<sub>0</sub> are typically extremely low - in the visualizations above I've used large values in order to make the visualizations more easy to look at. As an example, the excepted N<sub>0</sub> for uniform noise between -1 and 1 is about 1.5e-5. This means that also the thresholds are low. To alleviate this, we will do the same thing as with the parameter <em>r</em>: we will transform the decibels to the logarithmic scale. (The type of logarithmic scale used here is called the <em>decibel</em> scale, by the way).</p>
+
+
+<p>When we have some set of notch widths, we have decided on the center frequency and the level of the noise masker, we can predict thresholds by varying the parameters of the model: K, r and p. The curve in the visualization below shows predicted thresholds as a function of the notch width for the current parameters of the filter. The dots represent measured thresholds (not based on real data, I just came up with them). See if you can match the "measured thresholds" by varying the parameters. Tips: the parameter <em>r <sub>log</sub></em> affects the curve mostly far away from zero, <em>p</em> affects its steepness and <em>K</em> translates the curve up and down.</p>
+  
+<div class="interactiveFigure">
+  <svg id="predThresholdVis" height="400"></svg>
+  <div class="controlSlice">
+    <label for="predThresholdVis_r">r <sub>log</sub>:</label>
+    <input type="range" id="predThresholdVis_r" min="-60" max="-10" step="0.1" value="-30">
+    <div id="predThresholdVis_r_text"></div>
+  </div>
+
+  <div class="controlSlice">
+    <label for="predThresholdVis_p">p:</label>
+    <input type="range" id="predThresholdVis_p" min="10" max="35" step="0.1" value="15">
+    <div id="predThresholdVis_p_text"></div>
+  </div>
+  
+  <div class="controlSlice">
+    <label for="predThresholdVis_k">K:</label>
+    <input type="range" id="predThresholdVis_k" min="0.5" max="2" step="0.01" value="1">
+    <div id="predThresholdVis_k_text"></div>
+  </div>
+  
+</div>
+
+<h3>Predicting thresholds in R</h3>
+
+<p>Let us see how we would do this in R. There's one new constant that is introduced. I call this <em>bw</em> for bandwidth. This corresponds to the static outer edges of the notched noise masker (see the visualization above). For example if the cemter frequency is 1000Hz and bw is 800Hz, then the outer edges would be at 200Hz and 1800Hz.</p>
+
+<p> The new variable <em>nw</em> is the total width of the notch in the masker around the center frequency. If the total with of the notch is 400Hz, and we are interested in finding the location of the lower edge of the masker on one side, it's 400Hz/2 = 200Hz. Note that this can vary in research articles: some researchers do the opposite and think the total notch width as 2*nw, that is, they have defined nw to be the distance of the lower edge from the center frequency. Again, it doesn't really matter how you define it, as long as it's consistent.</p>
+
+<pre>
+# Predicted threshold in decibels
+#
+# INPUT:
+# Variables: 
+# nw : width of the notch
+#
+# Non-filter related parameters:
+# K  : Efficiency of detection
+#
+# Parameters of the filter:
+# r_log : Minimum value (log scale)
+# p     : sharpness of the filter
+#
+# Experimental constants:
+# f0 : Center frequency
+# N0 : Power spectral density of the noise masker
+# bw : Distance of the outer edges of the noise masker
+#      from the center frequency
+#
+# OUPUT:
+# Predicted threshold in decibels
+predThr_dB = function(nw, K, r_log, p, f0, N0, bw){
+  #
+  #
+  # The "lower edge" of the noise masker
+  low_lim = (nw/2) / f0
+  # Upper edge
+  upp_lim = (f0 + bw) / f0
+ 
+  thr_magnitude = K * W_area(low_lim, upp_lim, r_log, p, f0, N0)
+  # Transform threshold to decibel scale:
+  thr_decibels = 10 * log10(thr_magnitude)
+
+  return(thr_decibels)
+}
+
+</pre>
+
+<p>It's easy to use this function to predict thresholds for given notch widths:</p>
+
+<pre>
+# Constants for the experiment
+f0 = 1000
+N0 = 1.5e-5
+bw = 800
+
+# Parameters:
+K     = 1.5
+p     = 20
+r_log = -50
+
+# Notch widths for which to predict thresohlds:
+nws = c(0, 100, 200, 400)
+
+predictedThresholds = predThr_dB(nws, K, r_log, p, f0, N0, bw)
+
+plot(nws, predictedThresholds, type = "b", 
+  xlab = "Notch width (Hz)", ylab = "Predicted threshold (db)")
+</pre>
+
+<p>Or we can use the curve function to plot the predicted threshold as a continuous function of notch widht:</p>
+
+<pre>
+curve(predThr_dB(x, K, r_log, p, f0, N0, bw), 0, 800, 
+  xlab = "Notch width (Hz)", ylab = "Predicted threshold (db)")
+</pre>
+
+  <h2 id="appendix"> Appendix: On the integral by Patterson et. al.</h2>
+
+  <p>Patterson et. al. call the integral <em>"tail integral . . . that is the area under the filter beyond given g . . ."</em>. This is slightly inaccurate. The integral is divergent, and the area under the filter beyond <em>g</em> is always &infin; (unless <em>r</em> = 0). This is easy to understand: since the function W eventually settles on the value of the parameter <em>r</em> as we get farther from the center frequency, the area gets larger and larger indefinitely.  What that integral more accurately is what I said in the text: it's the definite integral from 0 to <em>g</em> - up to a constant, as already noted in the main text.</p>
+
+
+  <p>The constant, that has to be substracted from the integral, is simply the value of the integral when <em>g</em> = 0:</p>
+
+  <div class="equation">-(1 - r)(1/p)2</div>
+
+  <p>So the full equation is</p>
+
+  <div class="equation">&int; <span class="lims"><sub>0</sub><sup>g</sup></span> W(g, r, p) dg = (-(1 - r)(1/p)(2 + pg)exp(-pg) + rg) - (-(1 - r)(1/p)2)</div>
+
+  <p>A word about the limits. It is customary to use 0.8 (in normalized frequency )as the upper limit of the integral. For example in the paper by Shen et. al. (2013) the upper edge of the noise masker is at 8000Hz and f<sub>0</sub> = 2000Hz, which does not correspond to normalized frequency of 0.8. Another problem is that in this case the noise masker will be asymmetric since it the lower edge can't be 6000Hz lower than 2000Hz. Both of these problems are - in a general setting - mentioned already by Rosen (1989).</p>
+
+    
+  <h2>Sources</h2>
+  
+  <p class="bibEntry">Patterson, R.D., Nimmo-Smith, I., Weber, D.L., and Milroy, R. (1982). The deterioration of hearing with age: Frequency selectivity, the critical ratio, the audiogram, and speech threshold. Journal of the Acoustical Society of America, 72(6), pp. 1788 - 1803. </p>
+  
+  <p class="bibEntry">Rosen, S. (1989). Deriving auditory filter charasteristics from notched-noise masking data: modified derivations. Speech, Hearing and Language: Wok in Progress, vol. 3, pp. 189-204.</p>
+  
+  <p class="bibEntry">Shen, Y., and Richards, V.M. (2013). Bayesian adaptive estimation of the auditory filter. Journal of the Acoustical Society of America, 134(2), pp. 1134 - 1145.</p>
+
+  
+  
+</main>
+
+  <footer>
+  &copy; Joni Pääkkö
+  </footer>
+<script src="../../js/graphicsLibrary/SVGVisualization.js"></script>
+<script src="roex_pr_funcs.js"></script>
+<script src="roex_pr_eng_js.js"></script>
+
+</body>
+
+</html>

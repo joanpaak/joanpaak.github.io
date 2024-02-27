@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../../../css/blather.css">
+    <title>Kontsevich/Tyler</title>
+  </head>
+  <body>
+    
+    <main>
+
+      <h1>Kontsevich/Tyler</h1>
+
+      <h2>Introduction</h2>
+      
+      <p>The paper <em>Bayesian adaptive estimation of psychometric slope and threshold</em> by Kontsevich and Tyler has become a classic of the adaptive testing literature in psychophysics. However, for newcomers, it might be a bit abstract, and difficult to get into. </p>
+      
+      <p>Here I present an R implementation of the kind of algorithm discussed in that paper in the hopes that this will help someone who just needs something a bit more concrete than what's available in the paper. I know I did find these kinds of code examples helpful when learning how to program.</p>
+      
+      <p>The code is not intended to perfectly optimized, I was thinking more about its understandability. Also, in real experimental use e.g. exception handling should be done with more care, or more accurately, it should be done - here I did not really bother with that, so there might be runs that produce weird buggy behaviour.</p>
+      
+      <p>There are two versions, one with fairly detailed commentary and one without. I of course recommended the commented version, but I've provided the non-commented for those who just want to see what's going on with one quick glance. Also, the version without comments shows that the algorithm is, at its core, fairly simple, and does not require that much programming - as long as you know what you're doing.</p>
+      
+      <ul>
+        <li><a href="#commented">Version with comments</a></li>
+        <li><a href="#notCommented">Version without comments</a></li>
+      </ul>
+      
+      <h2>Commented version</h2>
+
+<pre id="commented">
+# An adaptive procedure for a two-dimensional, two-parameter psychometric
+# function (P(R = 1) = Phi((S/alpha)^beta)) in the 2AFC task. 
+#
+# This is based on:
+#
+# Kontsevich, L. & Tyler, C. (1999). Bayesian adaptive estimation of 
+# psychometric slope and threshold. Vision Research, vol 39(16). 
+# Pp. 2729-2737.
+#
+# I've written this script from my memory of that article, so this probably
+# isn't complete mirror version of their implementation, however, I'd suspect
+# there to be quite a bit of overlap.
+#
+# I will show how to set up the algorithm, and how to run it in a 
+# simulated experiment. This script is not intented to be perfect, 
+# this is intended for teaching purposes, so there are some intentional
+# "inefficiencies" that I've pointed out, where I've remembered to. 
+# Also, in experimental use much more care should be put into separating 
+# functionality in functions, exception handling and so on.
+
+######
+###### PART 1: SET UP THE ALGORITHM
+######
+
+# In this part we sink our teeth into how grids work:
+# - We define the prior probability distribution on a grid
+# - We define possible stimulus values on a grid
+# - We set up a Look-up Table of psychometric functions on a grid
+
+# 1.1 Set up the prior
+
+# Here we set up a two-dimensionalgrid which has N_grid amount of points on 
+# each dimension, resulting in a grid that has N_grid * N_grid points in total. 
+# Too many points will result in an enormous array that will clog your computer. 
+# Note that there need not be the same amount of points on both dimensions. If 
+# you want to have different amount of points on each dimension, just define
+# them separately.
+
+N_grid = 50
+prior  = array(NaN, dim = c(N_grid, N_grid))
+
+# Then we decide at what parameter values we evaluate the grid:
+alphaVals = seq(0.5, 10, length.out = N_grid)
+betaVals  = seq(0.5, 3, length.out = N_grid)
+
+# Then we calculate the prior probability densities at all of the possible
+# combinations of those values, and store them into the array we just 
+# inititalized.
+#
+# Here I'm using the log normal density to calculate prior probabilities
+# for the combinations of the parameter values. As a matter of a fact,  they 
+# can be thought as truncated log-normal densities, since the grid will
+# sharpy "cut off" them, I will return to this point later.
+#
+# I've decided to use the log normal distibutions since both of the 
+# parameters are constrained to be positive.
+#
+# You can plot the marginals of the prior (the start and end points represent 
+# the edges of the grid);
+# curve(dlnorm(x, log(5), 1), 0.5, 10)
+# curve(dlnorm(x, log(1.5), 0.3), 0.5, 3)
+
+# Compute the actua values:
+
+for(i in 1:N_grid){
+  for(j in 1:N_grid){
+    prior[i,j] = dlnorm(alphaVals[i], log(5), 1) * 
+                 dlnorm(betaVals[j], log(1.3), 0.3)
+  }
+}
+
+# The prior is normalized, remember that the priors and posteriors are
+# probability distributions, which means that they should sum to 1:
+prior = prior / sum(prior)
+
+# We can look at the contour plot of the prior: 
+# contour(betaVals, alphaVals, prior)
+#
+
+# 1.2 Define stimulus values on a grid:
+
+# This is the "grid" of possible stimulus values we are choosing the stimuli 
+# from. Again, too many values and your computer will fry, since in the next
+# part these are used for computing a large look-up table:
+stimVals = seq(0.1, 10, length.out = 20)
+
+# 1.3 Compute Look-up Table of psychometric functions
+
+# Response probabilities are pre-computed, in other words,
+# this is an array of all the possible likelihood functions
+# (P(y | theta)) that can occur in this particular grid 
+# estimation scheme:
+
+PResp_1 = array(NaN, dim = c(N_grid, N_grid, length(stimVals)))
+
+for(i in 1:N_grid){
+  for(j in 1:N_grid){
+    # Note that we can vectorize the calculation of the response
+    # probabilities (we don't need to index stimVals-array):
+    PResp_1[i,j,] = pnorm((stimVals / alphaVals[i])^betaVals[j])
+  }
+}
+
+# Probabilities for "0" responses are simply the complement of the 
+# previous array:
+PResp_0 = 1 - PResp_1
+
+# This look-up table is used for quickly updating the prior to the posterior.
+
+#####
+##### PART 2: SET UP THE SIMULATION
+####
+
+# Here we set up our simulation. We choose values for the simulated observer,
+# the first is their alpha value and the second is their beta value.
+# Then we choose the number of trials and then initialize the arrays 
+# in which stimuli (S) and responses (R) are stored.
+
+genTheta = c(2.0, 1.0)
+NTrials  = 300
+
+S = rep(NaN, NTrials)
+R = rep(NaN, NTrials)
+
+#####
+##### PART 3: RUN THE SIMULATION
+#####
+
+# Here we see the algorithm in action! This main loop is the 
+# "experimental loop" that loops through the trials. It always has
+# the same structure:
+# 1) Choose the most optimal stimulus based on the current prior
+# 2) Present it to the observer and collect their response
+# 3) Update the current prior to the posterior distribution, which
+#    in turn will be the prior for the next iteration.
+#
+# Without further ado, jump in to the loop!
+
+for(t in 1:NTrials){
+  
+  # 3.1 We begin each trial by finding the "optimal" stimulus. 
+  
+  # We loop through the array of stimVals to find the optimal stimulus. 
+  # Before entering the loop, we initialize an array in which we store
+  # the expected entropies:
+  
+  E_H = rep(NaN, length(stimVals))
+  
+  for(i in 1:length(stimVals)){
+    
+    # Here we calculate what kind of posteriors we would see, if the 
+    # participant responded positively or negatively:
+    posterior_1 = PResp_1[,,i] * prior
+    posterior_1 = posterior_1 / sum(posterior_1)
+    
+    posterior_0 = PResp_0[,,i] * prior
+    posterior_0 = posterior_0 / sum(posterior_0)
+    
+    # Next, entropies for these posterior distributions are calculated.
+    # H_1 is entropy of the posterior distribution if the participant 
+    # responded correctly. Can you guess what H_0 is?
+    
+    # NOTE: sometimes the grid estimates may underflow to 0, that is, the array
+    # ight contain zeroes. Since log(0) = negative infinity, this may
+    # cause some numerical instability during this part, since this will 
+    # result in a "Not a number". 
+    # Here I use the "na.rm = T" inside the sum-function to remedy that:
+    
+    H_1 = -sum(posterior_1 * log(posterior_1), na.rm = T)
+    H_0 = -sum(posterior_0 * log(posterior_0), na.rm = T)
+    
+    # We need to calculate the expected entropy, that is, we need to weight
+    # H_1 and H_0 with the prior probabilities for positive and negative
+    # responses for this given stimulus. It doesn't matter if the stimulus
+    # would result in a large reduction in entropy if the participant responds
+    # negatively if the negative response is - as far as we know - very unlikely:
+    
+    P_R_1 = sum(PResp_1[,,i] * prior)
+    P_R_0 = sum(PResp_0[,,i] * prior)
+    
+    # NOTE: calculating the prior probability of a response given the stimulus
+    # level corresponds to how we calculated the normalization constants after
+    # calculating the posteriors in the earlier step. In order to make this script 
+    # faster, you could calculate these just once (during the earlier step) and 
+    # then re-use those values here. 
+    
+    # Finally we just calculate the expectation and store it:
+    E_H[i] = P_R_1 * H_1 + P_R_0 * H_0
+    # Then we just repeat this process for all of the stimuli
+  }
+  
+  # When that loop has finished, we pick the stimulus that results in the 
+  # LOWEST expected entropy:
+  
+  S[t] = stimVals[which.min(E_H)]
+  
+  # 3.1: Generating a simulated response and updating the prior
+  
+  # Generate a simulated response from the binomial distribution:
+  R[t] = rbinom(1, 1, pnorm((S[t] / genTheta[1])^genTheta[2]))
+  
+  # We look at the observed response, and update our prior to posterior:
+  
+  if(R[t] == 0){
+    # We take the correct slice from the look up table
+    posterior = PResp_0[,,which.min(E_H)] * prior
+  }
+  if(R[t] == 1){
+    # We take the correct slice from the look up table
+    posterior = PResp_1[,,which.min(E_H)] * prior
+  }
+  
+  # NOTE: these products were already calculated inside the earlier loop.
+  # If my memory serves me,  Kontsevitch and Tyler save the arrays inside that 
+  # loop that so they don't need to recompute these at this point.
+  
+  # The posterior is normalized, and it becomes the prior for the next trial
+  posterior = posterior / sum(posterior)
+  prior     = posterior
+  
+  # Then we begin the next trial and repeat everything!
+}
+
+
+# If everything went smoothly, we can now take a look at what kind of
+# stimuli the algorithm chose, as a function of trial:
+plot(S)
+
+# Or plot stimuli and  responses 
+# NOTE: The responses are jittered a bit so that they don't
+# stack up in the figure:
+plot(S, R + runif(length(R), -0.1, 0.1)); abline(h = 0.5)
+
+# We can look at the contour plot of the final posterior
+# probability distribution:
+contour(betaVals, alphaVals, posterior)
+# Add lines representing the generating values:
+abline(v = genTheta[2], lty = 2, col = "red") 
+abline(h = genTheta[1], lty = 2, col = "red") 
+
+# Note that the posterior distribution might not always be close to
+# the generating values; it's all random: the posterior probability
+# just tells what the responses "look like" and sometimes, due to chance,
+# they might look like as though they came from a different set of
+# genereting values!
+
+# Usually we want to also look at the marginal probability distributions:
+plot(alphaVals, rowSums(posterior), type = "l")
+abline(v = genTheta[1], lty = 2, col = "red") 
+
+plot(betaVals, colSums(posterior), type = "l")
+abline(v = genTheta[2], lty = 2, col = "red") 
+
+# Or indeed calculate the marginal expectations:
+sum(alphaVals * rowSums(posterior))
+sum(betaVals  * colSums(posterior))
+
+# And e.g. compare these with the generating values
+genTheta
+
+# Note that due to the nature of the grid estimation, the posterior
+# distribution (can be) truncated, that is, it might seem as though
+# it is "cut off", like it should continue beyond the limits of the grid
+#
+# This is just a feature of grid estimation and, generally speaking, there
+# are three possibilities: 
+# 1) Choose a tighter prior that is (almost) completely contained by the grid.
+# 2) Choose a larger grid  that contains the prior completely.
+# 3) Accept that the grid's truncation is part of the process, and represents
+#    a kind of prior information in itself.
+
+# Also note that as more and more parameter values become less likely, as 
+# new information is learned, the grid might start to degenerate, that is,
+# that only a few combinations of parameter values have probabilities that 
+# significantly differ from zero. This is a problem in longer experimental runs,
+# and one might need to re-initialize the a grid that's more tightly concentrated
+# around the current posterior.
+
+# For this reason, ut might be good idea to use e.g. Stan for the final 
+# statistical inferences.
+
+</pre>
+
+
+      <h2>Version without comments</h2>
+
+<pre id="notCommented">
+N_grid = 50
+prior  = array(NaN, dim = c(N_grid, N_grid))
+
+alphaVals = seq(0.5, 10, length.out = N_grid)
+betaVals  = seq(0.5, 3, length.out = N_grid)
+
+for(i in 1:N_grid){
+  for(j in 1:N_grid){
+    prior[i,j] = dlnorm(alphaVals[i], log(5), 1) * 
+                 dlnorm(betaVals[j], log(1.3), 0.3)
+  }
+}
+
+prior = prior / sum(prior)
+
+stimVals = seq(0.1, 10, length.out = 20)
+PResp_1 = array(NaN, dim = c(N_grid, N_grid, length(stimVals)))
+
+for(i in 1:N_grid){
+  for(j in 1:N_grid){
+    PResp_1[i,j,] = pnorm((stimVals / alphaVals[i])^betaVals[j])
+  }
+}
+
+PResp_0 = 1 - PResp_1
+
+genTheta = c(2.0, 1.0)
+NTrials  = 300
+
+S = rep(NaN, NTrials)
+R = rep(NaN, NTrials)
+
+for(t in 1:NTrials){ 
+  E_H = rep(NaN, length(stimVals))
+  
+  for(i in 1:length(stimVals)){
+    
+    posterior_1 = PResp_1[,,i] * prior
+    posterior_1 = posterior_1 / sum(posterior_1)
+    
+    posterior_0 = PResp_0[,,i] * prior
+    posterior_0 = posterior_0 / sum(posterior_0)
+        
+    H_1 = -sum(posterior_1 * log(posterior_1), na.rm = T)
+    H_0 = -sum(posterior_0 * log(posterior_0), na.rm = T)
+       
+    P_R_1 = sum(PResp_1[,,i] * prior)
+    P_R_0 = sum(PResp_0[,,i] * prior)
+
+    E_H[i] = P_R_1 * H_1 + P_R_0 * H_0
+  }
+  
+  S[t] = stimVals[which.min(E_H)]
+  R[t] = rbinom(1, 1, pnorm((S[t] / genTheta[1])^genTheta[2]))
+
+  if(R[t] == 0){
+    posterior = PResp_0[,,which.min(E_H)] * prior
+  }
+  if(R[t] == 1){
+    posterior = PResp_1[,,which.min(E_H)] * prior
+  }
+  
+  posterior = posterior / sum(posterior)
+  prior     = posterior
+}
+
+</pre>
+
+    <h2>Source</h2>
+    
+    <p class="bibEntry">Kontsevich, L. & Tyler, C. (1999). Bayesian adaptive estimation of psychometric slope and threshold. Vision Research, vol 39(16). Pp. 2729-2737.</p>
+
+    </main>
+    
+    <footer>
+    &copy; Joni Pääkkö
+    </footer>
+    
+     
+  </body>
+</html>

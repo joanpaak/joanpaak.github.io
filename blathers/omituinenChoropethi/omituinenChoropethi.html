@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <title>Omituinen choropethi</title>
+</head>
+
+<body>
+
+<main>
+
+  <h1>Omituinen choropethi</h1>
+
+  <p>
+    Korona-pandemian aikana on pinnalle pulpahtanut useita surkeita, pahimmillaan harhaanjohtavia visualisointeja tilastollisesta datasta. Erästä poikkeuksellisen hauskaa ruodittiin Andrew Gelmanin blogissa asti: https://statmodeling.stat.columbia.edu/2020/05/18/hey-i-think-somethings-wrong-with-this-graph/ 
+  </p>
+
+  <p>
+    Vähän aikaa sitten suosimallani ajantapposivustolla pulpahti esiin tässä liitteenä oleva kuva. 
+  </p>
+
+  <div class="floatingImgDiv">
+    <a href="omituinen_choropeth.png"><img src="chropeth_small.png"></a>
+    <div>Lähde: https://imgur.com/gallery/pJIp6MV</div>
+  </div>
+
+
+  
+  <p>
+    Kuvassa on jenkkilän Georgia-osavaltio, joka on jaettu piirikuntiinsa (county) ja näistä näytetään koronavirustapaukset per 100 000 asukasta, luokitetuna viisiasteikolliselle asteikolle.
+  </p>
+  
+  <p>
+    (Aika moni on nimennyt kuvan heat mapiksi, mutta tämä on väärin, kyseessä on choropeth – mutta eipä terminologialla sinänsä ole väliä. Kyseessä on kartta, joka on jaettu maantieteellisten rajojen mukaan ja kustakin palasesta näytetään joku luku värillä.)
+  </p>
+  
+  <p>
+    Ihmiset ovat kiinnittäneet huomiota kuvioiden välillä muuttuviin luokkarajoihin.  Silmiinpistävää on, että värit vastaavat eri lukuja kummassakin kuvaajassa ja että luokkien välisiä rajoja ei ole asetettu tasaisesti aineiston vaihteluvälille. 
+  </p>
+  
+  <p>
+    Oletettavasti tässä on käynyt niin, että luokkien rajat on etsitty perustuen kvantiileihin, ja tämä on tehty molemmissa kuvaajissa erikseen. Kvantiilit tarkoittavat kohtia, joissa havaintoaineistosta on kertynyt jokin tietty prosenttimäärä. 
+  </p>
+  
+  <p>
+    Esimerkksi jos aineistomme on lukusarja 1, 2, 3, 5 ja 18, on aineistosta kerääntynyt lukuarvoon 1 mennessä 20%, lukuarvoon 2 mennessä 40% jne. kunnes lukuarvoon 18 tultaessa aineistosta on kerääntynyt 100%. Jos tavoitteena on jakaa aineisto esimerkiksi kahteen mahdollisimman tasaiseen osaseen, voitaisiin luokat muodostaa jakamalla aineisto kahtia siltä kohdin, jossa aineistossa on kerääntynyt 50%. Ensimmäisessä luokassa olisivat täten havainnot 1 ja 2, ja toisessa luokassa havainnot 3, 5 ja 18. Havaintomäärällisesti luokat ovat niin tasaiset kuin on mahdollista, mutta luokkien vaihteluvälit lukuarvollisesti ovat erilaiset: ensimmäisessä luokassa on lukuarvoja väliltä 1 – 2 ja toisessa luokassa väliltä 3 - 18.
+  </p>
+  
+  <p>
+    Tällainen menetelmä voi olla hyvinkin näppärä silloin, kun on tärkeää, että kaikissa luokissa olisi havaintoja jotakuinkin tasaisesti. (Olen itse tehnyt näin kun olen probit-mallin kontekstissa luokitellut bernoulli-jakautuneita havaintoja isommiksi kimpuiksi.)  Menetemässä itsessään ei siis sinänsä ole välttämättä mitään väärää. Mikä on siis mennyt vikaan?
+  </p>
+  
+  <p>
+    Täytyy huomata että kuvaajaa piirtäessä aineistoa joudutaan jotenkin abstrahoimaan, yksityiskohtia joudutaan parturoimaan pois kokonaiskuvan tieltä: tekemään valintoja sen suhteen mitä kuvaajalla esitetään, minkä aineiston puolen kuvaaja esittää. Valinta ei ole “neutraalin” ja “puolueellisen” kuvaajan välillä – kuten asia joskus yksinkertaistetaan – vaan sisällöllisten seikkojen välillä. 
+  </p>
+  
+  <p>
+    Kuvan piirtäjällä tuleekin olla ammattitaitoa, jonka avulla hän voi tunnistaa paitsi mahdollisuudet siihen, <em>mitä</em> aineistosta voidaan viestiä, niin myös sen tunnistamiseen <em>mihin kontekstiin</em> kuva tulee: mikä yleisö tulkitsee kuvaa ja miten he tulevat sitä tulkitsemaan. Mikäli se, mitä ihmiset odottavat kuvaajan esittävän ja se, mitä kuvan tekijä on ajatellut, eivät kohtaa, voi tämä vaikuttaa tietoiselta harhaanjohtamiselta – ja sitä se voi tietenkin myös olla, esimerkkejä on runsaasti. 
+  </p>
+  
+  <p>
+    Tämän kartan kohdalla on selkeää, että se, mitä yleisö on ajatellut värien edustavan ja se mitä ne kuvassa edustavat, eivät kohtaa. 
+  </p>
+  
+  <p>
+    Luokkien rajojen perustaminen (oletettavasti) kvantiileihin jokaisessa kuvaajassa erikseen edustaa abstrahoinnin tasoa, jota ei ole totuttu tällaisissa grafiikoissa kohtaamaan ja jota yleisö ei ilmeisesti odottanut: arkipäivästä tutuista sääkartoissa esimerkiksi sateen todennäköisyys esitetään väritettynä skaalalla joka ei vaihtele kuvaajien välillä; ei siis niin, että esimerkiksi maanantaina kirkkain väri vastaisi 40 prosentin todennäköisyyttä – jos se on sen päivän korkein todennäköisyys – ja tiistaina taas 20 prosentin todennäköisyyttä. Ainakin Imgurin kommenteissa monet olisivat odottaneet värikoodauksen tässäkin kartassa toimivan näin. 
+  </p>
+  
+  <p>
+    Miksi kuvan tekijä (visualisointiskriptin  koodaaja) ei ole tätä ottanut huomioon on kirvoittanut monia mielipiteitä. Innokkaimmat ovat pitäneet tätä tietoisena yrityksenä harhaanjohtaa, mikä on nähty jatkumona muille harhaanjohtaville koronaviruskuvaajille (joista oli alussa esimerkki linkatussa Gelmanin blogissa) ja tämä puolestaan on yhdistetty poliittiseen tilanteeseen Yhdysvalloissa.
+  </p>
+
+  <p>
+    <em>"Minä olen miettinyt miksi / Tyhmyys, pahuus vai molemmat"</em>, runoili Tomi Tuomaala Pahin kaikista -kappaleeseen. Hanlonin partateränä tunnettu leikkimielinen heuristiikka opastaa, ettei mitään, minkä voi selittää johtuvaksi tyhmyydestä, pitäisi laittaa pahuuden piikkiin. Tämän heuristiikan toimivuudesta voi olla tietenkin montaa mieltä, tässä tapauksessa täytyy kuitenkin ottaa huomioon, että hyvän tilastografiikan tekeminen on vaikeaa. Ammattitutkijatkin tekevät jatkuvasti virheitä, tuottavat kehnoja kuvaajia, harhaanjohtavat tahattomasti. 
+
+  </p>
+  
+  <p>
+    Uutisten epäonnistuneille kuvaajille on naureskeltu jo vuosikausia. Minusta tuntuu, että nyt, kun käsillä on jotain niin sanotusti oikeasti tärkeää, ihmiset ovat havahtuneet tällaisten visualisaatioiden virheille ja mahdolliselle harhaanjohtavuudelle eri tavoin kuin ennen. 
+  </p>
+  
+  <p>
+    En siis usko, että tarkoituksena on ollut harhaanjohtaa, vaan tämä on luonnollinen seuraus jo pidempään jatkuneesta kulttuurista, jossa (tilasto)grafiikan tuottamiseen on suhtauduttu leväperäisesti: kaikkihan nyt osaavat jotain pylväitä, viivoja tai pilkkuja piirrellä! Elä tuu siihen minua neuvvomaan perkele.  Tuosta noin vain kun Excelissä painelet nuista napeista niin se on ihan hyvä, laitat siitä vaan sitä ruksia sinne, ihan sama, mitä nää niitä nyt näpräät, kuvat tiskiin! 
+  </p>
+  
+  <p>
+    Mutta miten voisikaan olla muutoin, kun ei tällaiseen kuvalliseen kommunikaatioon hirvittävästi kiinnitetä huomiota edes akateemisessa koulutuksessa. Hirsjärven <em>et al</em> klassisessa “Tutki ja kirjoita” -kirjassa numeerisen aineiston graafista esittämistä koskeva osio ei kehuja minulta kirvoita (en ole lukenut uusinta painosta, joten mielipiteeni voi olla vanhentunut), eikä laajalti käytetty Lauri Nummenmaan “Käyttäytymistieteiden tilastolliset menetelmät” juuri sen parempi ole (sen muista puutteista puhumattakaan). Monen idea aineiston esittämisestä visuaaliseti jääkin korkeintaan viivojen piirtämiseen keskiarvojen välille. 
+  </p>
+  
+  <p>
+    (Vaikka onhan niitä hyviäkin, tosin hieman mainstreamin ulkopuolelta: pääsykokeissa ja suosituilla kursseilla ei tätä kirjallisuutta lueta. Box/Huntering legendaarinen “Statistics for Experimenters” sisältää minun muistakseni paljon hyvää visualisointia. John Kruschken “Doing Bayesian Data Analysis” on loistava tässä suhteessa [on se loistava muutenkin!] ja mainitaan myös Gelmanin  et al  “Baysian Data Analysis” -opus. Erityisesti täytyy vielä nostaa hattua Jyväskylän Yliopistossa tilastotieteen perusteita  opettavalle Harri Högmanderille.)
+  </p>
+  
+  <p>
+    Palatakseni aiemmin mainittuu Hanlonin partaterään, voi asioiden kuittaaminen typeryydellä päästää roistot pälkähästä, mutta toisaalta salaliittojen tai henkilökohtaisen pahuuden näkeminen voi olla yhtälailla sokaiseva oletusasema. Jos esimerkiksi tässä tapauksessa uskomme ehdotustani, että suurempana tekijänä on se, että tällaisen grafiikan tekemiseen (tai sen miettimiseen, mitä sillä kommunikoidaan) ei juurikaan uhrata aikaa, ongelmaa ei saada ratkaistua kuvittelemalla lennokaita salajuonia, jotka vyöryttävät kaiken vastuun oletetuille pahantahtoisille yksilöille. Ongelma on inhottavan epäkonkreettisesti kulttuurissa, joka toisaalta painottaa datan visualisointia, mutta samaan aikaan ei palkitse hyvätasoisten visualisointien tuottamista tai ylipäänsä näe ammattitaitoa niiden tuottamiseen tärkeänä.
+  </p>
+  
+
+
+</main>
+<footer>&copy; Joni Pääkkö</footer>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../../../css/blather.css">
+    <link rel="stylesheet" href="SIS_style.css">
+    <title>SIS Gaussian</title>
+  </head>
+  <body>
+    <main>
+
+      <h1>Sequential Importance Sampling</h1>
+
+      <h2>Introduction</h2>
+      
+      <p>Sequential Importance Sampling is a method for approximating posterior distribution using sequentially weighted "particles".</p>
+      
+      <p>This document considers a model in which data points, <em>y</em>, are generated (sequentially) from normal distribution with unknown mean and standard deviation:</p>
+      
+      <div class="equation"> y ~ Normal(&mu;, &sigma;)</div>
+      
+      <p>The goal is to approximate the posterior probability distribution for the unknown parameters (that can be represented by the symbol &theta; = [&mu;, &sigma;]) given the observed data, <em>y</em>. This can be done sequentially, as the name implies: after each data point, the posterior is approximated, and this becomes the prior for the next data point. Schematically: </p>
+      
+      <ol>
+         <li>Set prior p(&theta;)</li>
+         <li>Observe a data point, <em>y</em>, and update the prior with the likelihood function: w<sub>i</sub> = w<sub>i</sub> p(y | &theta;<sub>i</sub>)</li>
+         <li>The posterior distribution from the previous step becomes the prior for the next iteration.</li>
+      </ol>
+      
+      <p>The parameters are assigned the following priors:</p>
+      
+      <div class="equation"> &mu; ~ Normal(0, 1)</div>
+      <div class="equation"> &sigma; ~ logNormal(0, 0.5)</div>
+           
+      <p>In the table below the first two columns show draws from those priors, that is, possible parameter values. These can be thought to represent specific hypotheses about possible values for the parameters, weights corresponding to their probabilities. They have been generated directly from the prior distribution, and for this reason they have uniform weights before any data has been observed.</p>
+      
+      <p>Below the table you have a button that says "Add observation". When you click that button</p>
+      
+      <ol>
+        <li>We observe a point (random deviate from Normal(0.5, 0.7)).</li>
+        <li>The weights are reweighted with the observation: the particle set with the updated weights is the posterior distribution after the observation. Some parameter values become less likely while others become more likely.</li>
+        <li>This posterior distribution then acts as the prior for the next observation, and so on.</li>
+      </ol>
+      
+      <table id="particleTable">
+      </table>
+      <p id="yContainer">y:</p>
+      <div class="buttonContainer">
+        <button id="addObservationBtn">Add observation</button>
+      </div>
+
+      <p>If you click he button many times, you will notice, that most of the weights will approach zero. This is known as <em>particle degeneracy</em> and is a known downside of SIS. After the weights degenerate too much, we should sample new points that are more tightly clustered around the current posterior. However, even in this simple demonstration, points that are closer to the parameters of the generating distribution (N(0.5, 0.7)) should end up with larger weights.</p>
+              
+      <h2>R Code</h2>
+      
+      <pre>
+# Sequential Importance Sampling for a simple Gaussian model
+
+# Prior probability of theta.
+# theta[1] = mu
+# theta[2] = sd
+prior = function(theta){
+  dnorm(theta[1], 0, 1) * dlnorm(theta[2], 0, 0.5)
+}
+
+likelihood = function(y, theta){
+  dnorm(y, theta[1], theta[2])
+}
+
+# Posterior probability of theta
+posterior = function(theta, y){
+   likelihood(y, theta) * prior(theta)
+}
+
+# Parameters for generating the data set:
+N = 10                   # Number of observations
+y = rep(NaN, N)          # Vector for storing obs.
+trueTheta = c(0.5, 0.7)  # Generating values 
+
+# Initialize SIS
+
+NParticles = 10000
+particles  = matrix(NaN, ncol = 2, nrow = NParticles)
+weights    = rep(1/NParticles, NParticles)
+
+# Initial particle set is generated from the prior:
+particles[,1] = rnorm(NParticles, 0, 1)
+particles[,2] = rlnorm(NParticles, 0, 0.5)
+
+# Initialize arrays for storing stuff (see inside)
+# the main loop for explanation):
+E_mu  = rep(NaN, N) 
+E_sd  = rep(NaN, N)
+SD_mu = rep(NaN, N)
+SD_sd = rep(NaN, N)
+N_eff = rep(NaN, N)
+
+for(t in 1:N){
+  # 1) Observe a data point
+  y[t] = rnorm(1, trueTheta[1], trueTheta[2])
+  
+  # 2) Reweight the particle set based on the observation
+  for(i in 1:NParticles){
+    weights[i] = weights[i] * likelihood(y[t], particles[i,])
+  }
+  
+  # 3) Normalize weights
+  weights = weights / sum(weights)
+  
+  # We could store the full particle sets on each iteration, 
+  # and that might be necessary for some applications, 
+  # but here I am saving only the marginal expecations
+  # and standard deviations - and effective sample sizes
+  # so we can monitor particle degeneracy
+  
+  # Expected values (marginal posterior means):
+  E_mu[t] = sum(weights * particles[,1])
+  E_sd[t] = sum(weights * particles[,2])
+  
+  # Standard deviations (marginal posterior SD's)
+  SD_mu[t] = sqrt(sum((E_mu[t] - particles[,1])^2 * weights))
+  SD_sd[t] = sqrt(sum((E_sd[t] - particles[,2])^2 * weights))
+  
+  # Effective sample size:
+  N_eff[t] = 1 / sum(weights^2)
+}
+
+# We can plot the trial-by-trial errors in posterior means: 
+plot(E_mu - trueTheta[1], type = "b"); abline(h = 0, lty = 2)
+plot(E_sd - trueTheta[2], type = "b"); abline(h = 0, lty = 2)
+#...or the raw posterior means::
+plot(E_mu, type = "b"); abline(h = trueTheta[1], lty = 2)
+plot(E_sd, type = "b"); abline(h = trueTheta[2], lty = 2)
+
+# Or the final marginals (note that the weights are supplied for the density function):
+plot(density(particles[,1], weights = weights)); abline(v = trueTheta[1], lty = 2) 
+plot(density(particles[,2], weights = weights)); abline(v = trueTheta[2], lty = 2)
+
+# By plotting the effective sample size, we can see that the proportion 
+# of particles that have non-neglible weights get small very fast:
+plot(N_eff / NParticles, type = "b")
+
+# For this reason, it is usually a good idea to rejuvenate the particle set
+# every now and then, for example when the effective sample size drops below
+# half of the original.
+#
+# Of course the speed at which the particle set degenerates depends on 
+# the specifics of the situation: if the prior would be tighter, then 
+# the more particles would be generated near the high-probability areas
+# of the posterior, and their weights would degenerate slower.
+</pre>
+
+<h2>Version with logarithms</h2>      
+      
+      <p>Usually prior and posterior probabilities are calculated on the log scale, since this prevents numerical problems. In this version also the weights are logarithmic.</p>
+      
+<pre>
+# Sequential Importance Sampling for a simple Gaussian model
+
+# Prior probability of theta.
+# theta[1] = mu
+# theta[2] = sd
+logprior = function(theta){
+  dnorm(theta[1], 0, 1, log = T) + dlnorm(theta[2], 0, 0.5, log = T)
+}
+
+loglikelihood = function(y, theta){
+  dnorm(y, theta[1], theta[2], log = T)
+}
+
+# Posterior probability of theta
+logposterior = function(theta, y){
+   loglikelihood(y, theta) + logprior(theta)
+}
+
+# Parameters for generating the data set:
+N = 10                   # Number of observations
+y = rep(NaN, N)          # Vector for storing obs.
+trueTheta = c(0.5, 0.7)  # Generating values 
+
+# Initialize SIS
+
+NParticles  = 10000
+particles   = matrix(NaN, ncol = 2, nrow = NParticles)
+logweights  = rep(log(1/NParticles), NParticles)
+
+# Initial particle set is generated from the prior:
+particles[,1] = rnorm(NParticles, 0, 1)
+particles[,2] = rlnorm(NParticles, 0, 0.5)
+
+# Initialize arrays for storing stuff (see inside)
+# the main loop for explanation):
+E_mu  = rep(NaN, N) 
+E_sd  = rep(NaN, N)
+SD_mu = rep(NaN, N)
+SD_sd = rep(NaN, N)
+N_eff = rep(NaN, N)
+
+for(t in 1:N){
+  # 1) Observe a data point
+  y[t] = rnorm(1, trueTheta[1], trueTheta[2])
+  
+  # 2) Reweight the particle set based on the observation
+  for(i in 1:NParticles){
+    logweights[i] = logweights[i] + loglikelihood(y[t], particles[i,])
+  }
+  
+  # 3) Normalize weights
+  logweights = logweights - log(sum(exp(logweights)))
+  
+  # We could store the full particle sets on each iteration, 
+  # and that might be necessary for some applications, 
+  # but here I am saving only the marginal expecations
+  # and standard deviations - and effective sample sizes
+  # so we can monitor particle degeneracy
+  
+  # Weights are exponentiated for calculating the summary statistics
+  weights = exp(logweights)
+  
+  # Expected values (marginal posterior means):
+  E_mu[t] = sum(weights * particles[,1])
+  E_sd[t] = sum(weights * particles[,2])
+  
+  # Standard deviations (marginal posterior SD's)
+  SD_mu[t] = sqrt(sum((E_mu[t] - particles[,1])^2 * weights))
+  SD_sd[t] = sqrt(sum((E_sd[t] - particles[,2])^2 * weights))
+  
+  # Effective sample size:
+  N_eff[t] = 1 / sum(weights^2)
+}
+
+# We can plot the trial-by-trial errors in posterior means: 
+plot(E_mu - trueTheta[1], type = "b"); abline(h = 0, lty = 2)
+plot(E_sd - trueTheta[2], type = "b"); abline(h = 0, lty = 2)
+#...or the raw posterior means::
+plot(E_mu, type = "b"); abline(h = trueTheta[1], lty = 2)
+plot(E_sd, type = "b"); abline(h = trueTheta[2], lty = 2)
+
+# Or the final marginals (note that the weights are supplied for the density function):
+plot(density(particles[,1], weights = weights)); abline(v = trueTheta[1], lty = 2) 
+plot(density(particles[,2], weights = weights)); abline(v = trueTheta[2], lty = 2)
+
+# By plotting the effective sample size, we can see that the proportion 
+# of particles that have non-neglible weights get small very fast:
+plot(N_eff / NParticles, type = "b")
+
+# For this reason, it is usually a good idea to rejuvenate the particle set
+# every now and then, for example when the effective sample size drops below
+# half of the original.
+#
+# Of course the speed at which the particle set degenerates depends on 
+# the specifics of the situation: if the prior would be tighter, then 
+# the more particles would be generated near the high-probability areas
+# of the posterior, and their weights would degenerate slower.
+</pre>
+    </main>
+    
+    <footer>
+    &copy; Joni Pääkkö
+    </footer>
+    
+    <script src="../../../js/statisticsLibrary/statisticalFunctions.js"></script>
+    <script src="SIS_gaussian_js.JS"></script>
+     
+  </body>
+</html>

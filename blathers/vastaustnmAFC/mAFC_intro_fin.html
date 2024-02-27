@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <title>mAFC johdanto</title>
+</head>
+
+<body>
+
+  <main>
+    <h1>Johdanto <em>m</em>-kategoriaiseen pakkovalintakokeeseen</h1>
+
+    <h2>Johdanto johdantoon</h2>
+    
+    <p>Signaalintunnistusteorian soveltaminen kaksoispakkovalintakokeeseen (2AFC) on varsin helppoa: moni tuntee "neliöjuuri kahdella" -korjauksen, jota voidaan soveltaa melko suoraan esimerkiksi Kyllä/Ei-tyyppisissä tehtävissä käytettyihin laskukaavoihin. Törmäämme kuitenkin ongelmiin, kun valintamahdollisuuksia on enemmän: vastaustodennäköisyyksillä ei enää olekaan suljettua ratkaisua, sillä ne vaatisivat seuraavan integraalin ratkaisemista (olettaen että käytämme Gaussilaista signaalintunnistusteoriaa):</p>
+
+    <div class="equation">&int;&Phi;(x)<sup>(m-1)</sup>N(x,d')dx <div class="eqlab">(Kaava 1)</div></div>
+
+    <p>Tämän tekstin tarkoituksena on paljastaa tuon kaavan mysteerit lukijalle: mitä tuo oikein tarkoittaa, miksi siinä on juuri tuollaisia termejä ja miksi niiden yli integroidaan - mitä ylipäänsä integrointi tarkoittaa. Kuten sanottua, tuota integraalia ei voi suljetussa muodossa ratkaista, mutta käsittelen myöhemmin sitä, miten sitä voidaan helposti approksimoida.</p>
+
+    <p>Oletan lukijan ymmärtävän, että kaksoispakkovalintakoetta voidaan Gaussilaisen signaalintunnistusteorian puitteissa ajatella niin, että kahdesta normaalijakaumasta (jotka vastaavat koetilanteessa esitettyjä valintoja) arvotaan molemmista yksi satunnaisluku, ja näistä suurempi determinoi vastauksen. Kolmoispakkovalintakokeessa taas arvottaisiin satunnaisluvut kolmesta normaalijakaumasta ja näistä suurin taas determinoisi vastauksen ja niin edelleen.</p>
+
+    <figure>
+      <a href="figures/2AFC_schemata.png"><img src="figures/2AFC_schemata_pieni.png"></a>
+      <p>Kuva 1: Gaussilaisen signaalintunnistusteorian näkemys kaksoispakkovalintakokeesta. Normaalijakauma 1 on "kohinajakauma", siis   intervalli,   jossa ärsykettä ei ole ja normaalijakauma 2 on "signaalijakauma". Osanottaja valitsee vastauksekseen sen intervallin sen   mukaan, kumpi näistä   jakaumista tuottaa suuremman arvon.</p>
+    </figure>
+
+    <p>Näytän miten laskut voi tehdä R-ohjelmointikielellä. Tämä sen takia, että joudumme käsittelemään suurta määrää lukuja. Kaikki tässä tehtävät laskut pystyy kyllä ratkaisemaan myös kynällä ja paperilla, mutta suosittelen lämpimästi jonkin automatisoidun menetelmän käyttöä.</p>
+
+    <h2>Kaksi noppaa</h2>
+
+    <p>Aiheen ymmärtäminen vaatii hieman todennäköisyyslaskennan käyttämistä. Tämän vuoksi aloitan yksinkertaisesta noppaesimerkistä. Tämä kahden nopan esimerkki vastaa tietenkin kaksoispakkovalintakoetta, jossa normaalijakaumien sijaan satunnaisluvut - ne, jotka determinoivat vastauksen - arvotaankin nopista.</p>
+
+    <p>Ajatellaanpa, että meillä on kaksi noppaa. Molempia noppia heitetään niin, ettemme niitä näe, ja tietämättämme toisen nopan silmälukuun lisätään kolme. Meidän täytyy arvata kumpi heitto oli se, jonka aikana silmälukuun salaisesti lisättiin tuo vakio. Järkevä strategia - ja se, mitä signaalintunnistusteoreettinen tarkastelu olettaa käytettävän - on aina valita heitto, jonka silmäluku oli suurempi. Mikä on todennäköisyys, että valitsemme oikein? Toisin sanottuna: mikä on todennäköisyys sille, että nopasta, jonka silmälukuihin tuo vakio lisätään, saadaan suurempi silmäluku? </p>
+    
+    <p>Näitä noppia voidaan kutsua kohinanopaksi (noppa johon ei lisätä mitään) ja signaalinopaksi (noppa, jonka silmälukuihin lisätään kolme). Noppien tulosmahdollisuudet on esitetty alla olevassa kuvaajassa:</p>
+
+    <figure>
+    <a href="figures/kaksi_noppaa.png"><img src="figures/kaksi_noppaa_pieni.png" alt="Kuvaaja näyttää skemaattisesti kaksi kuusisilmäistä noppaa, joista toisen silmäluvut ulottuvat yhdestä kuuteen ja toisen kolmesta kahdeksaan."></a>
+    <p>Kuva 2: kuvittelemamme tilanteen kaksi noppaa. Noppa K on "kohinanoppa" ja noppa S on "signaalinoppa" - jos tahdomme ajatella näitä kaksoispakkovalintakokeen kontekstissa.</p>
+    </figure>
+
+    <p>Olemme kiinnostuneita todennäköisyydestä, jolla noppa S (signaalinoppa) tuottaa suuremman silmäluvun kuin noppa K (kohinanoppa). Tämä vastaa siis todennäköisyyttä, jolla osanottaja vastaa kaksoispakkovalintakokeessa oikein.</p>
+
+    <p>Ennen kuin lähdemme laskemaan tuota todennäköisyyttä, teemme sen yksinkertaistavan oletuksen, että nopat ovat rehellisiä: jokaisen tahkon todennäköisyys on sama, tässä tapauksessa 1/6. Myöhemmin saamme nähdä, mitä tapahtuu, jos toinen noppa onkin painotettu.</p>
+
+    <p>Ongelmassa on kaksi satunnaismuuttujaa, jotka ovat siis noiden noppien silmäluvut: meidän täytyy ottaa huomioon molempien noppien silmälukuihin liittyvä satunnaisuus.</p>
+
+    <p>Monesti todennäköisyysongelmien ratkaiseminen vaatii sopivan näkökulman löytämistä, sellaista, josta ongelman saa muokattua helposti ratkaistavaan muotoon. Olemme siis kiinnostuneita  todennäköisyydestä, sille että nopan S silmäluku on suurempi tai yhtä suuri kuin nopan K silmäluku. Tätä kannattaa kuitenkin ajatella sen kautta mikä on todennäköisyys sille, että nopan S silmäluku on pienempi (tai yhtäsuuri) kuin nopan K silmäluku.</p>
+
+    <p>Kuvitellaanpa että signaalinoppamme on tuottanut silmäluvun neljä. Mikä on todennäköisyys, että kohinanopan silmäluku on pienempi tai yhtäsuuri? Kuvasta 1 tiiraamalla näemme, että tälle on neljä mahdollisuutta: jos nopan K silmäluku on 1 TAI jos se on 2 TAI jos se on 3 TAI jos se on 4. Jokaisen yksittäisen tapahtuman todennäköisyys on 1/6, ja koska näitä yhdistetään TAI-sanalla, saamme lopullisen todennäköisyyden laskemalla nämä kaikki yhteen: 1/6 + 1/6 + 1/6 + 1/6 = 4/6. Voimme merkitä tätä hieman kompaktimmin näin: P(Noppa K <= 4) = 4/6.</p>
+
+	<p>On ehkäpä selvää, että todennäköisyys sille, että nopan K silmäluku on pienempi tai yhtäsuuri kuin <em>x</em>, (P(Noppa 1 <= x)) saadaan laskemalla yhteen todennäköisyydet tuohon arvoon <em>x</em> asti. Jos katsomme tätä kaikken mahdollisten tulosten funktiona (jos x = 1, jos x = 2 ... jos x = 6) saamme <em>kertymäfunktion</em> (Cumulative Distribution Function, CDF) tälle nopalle.</p> 
+
+	<p>Tämä funktio on esitetty alla olevassa kuvassa (Kuva 3). Tuota kuvaa luetaan siten, että jos olemme kiinnostuneita siitä mikä on todennäköisyys, että nopan K silmäluku on pienempi tai yhtäsuuri kun neljä, etsimme x-akselilta (vaaka-akseli) kohdan 4 ja katsomme sitten missä kohtaa kuvaaja siinä on. Tässä tapauksessa se on kohdassa 4/6 - tämä on linjassa aikaisemmin laskemamme todennäköisyyden kanssa. Huomaa, että voimme myös kysyä todennäköisyyksiä arvoille, jotka ovat nopan silmälukujen ulkopuolella: esimerkiksi P(Noppa K <= 8) = 1 ja P(Noppa K <= 0) = 0.</p>
+
+<figure>
+  <a hfref="figures/noppa_1_cdf.png"><img src="figures/noppa_1_cdf_pieni.png"></a>
+  <p>Kuva 3: Nopan K kertymäfunktio.</p>
+</figure>
+
+<p>R-ohjelmointikielellä voisimme määritellä tämän funktion vaikkapa näin:</p>
+
+<pre>
+noppa_K_cdf = function(x){
+  if(x < 1){
+    return(0)
+  }
+  if(x > 6){
+    return(1)
+  }
+  return(x * 1/6)
+}
+</pre>
+
+<p>Ideana tässä funktiossa on siis se, että kysymme "mikä on todennäköisyys, että saamme nopasta K pienemmän tai yhtäsuuren arvon kuin <em>x</em>?". Funktion sisällä x:n  arvo tarkastetaan: jos se on pienempi kuin 1 (nopan silmälukujen ulkopuolella) palautamme nollan, jos taas x on suurempi kuin kuusi niin palautamme ykkösen, sillä tällöinhän saamme aina jotain pienempää. Muutoin laskemme yhteen silmälukujen todennäköisyyksiä x:n verran - joka tässä hoidetaan kompaktisti käyttämällä kertolaskua.</p>
+
+<p>Nyt meillä on menetelmä, jolla löydämme yksittäiset todennäköisyydet: jos noppa S tuottaa silmäluvun 4, mikä on todennäköisyys, että nopan K silmäluku on pienempi tai yhtäsuuri jne. Tahdomme kuitenkin tietää, mikä on todennäköisyys sille, että nopan K silmäluku <em>ylipäänsä</em> on pienempi kuin nopan S silmäluku. Meidän täytyy siis löytää todennäköisyys sille, että nopan K silmäluku on pienempi tai yhtäsuuri jos nopan S silmäluku on 4 TAI jos nopan S silmäluku on 5 TAI jos se on 6 ja niin edelleen. Muistanemme edellisestä, että TAI-sanalla liitetyt todennäköisyydet lasketaan yhteen. Mutta tässäpä ei vielä olekaan kaikki!</p>
+
+<p>Muistetaanpa vielä sekin, että myös nopan S silmälukuun liittyy satunnaisuutta! Emme tiedä sitä etukäteen! Tämä täytyy ottaa huomioon laskussa. Meidän täytyykin laskea esimerkiksi todennäköisyydet:</p>
+
+<ul>
+  <li>Todennäköisyys, että nopan S silmäluku on 4 JA että nopan K silmäluku on pienempi tai yhtä suuri kuin 4 TAI</li>
+  <li>Todennäköisyys, että nopan S silmäluku on 5 JA että nopan K silmäluku on pienempi tai yhtä suuri kuin 5 TAI</li>
+  <li>Todennäköisyys, että nopan S silmäluku on 6 JA että nopan K silmäluku on pienempi tai yhtä suuri kuin 6 TAI</li>
+  <li>Ja niin edelleen, kaikille mahdollisille arvoille</li>
+</ul>
+
+<p>Jos oikein pyyhimme tomuja todennäköisyyslaskentaan liittyvien muistojen päältä, saatamme hyvinkin muistaa, että JA-sanalla yhdistetyt todennäköisyydet tulee kertoa keskenään. Tämän lisäksi tahdon ottaa esiin vielä yhden konseptin: ymmärtänemme varmasti melko helposti, että todennäköisyys mille tahansa silmäluvulle välillä 4 ja 8 nopasta kaksi on 1/6 kun taas muiden silmälukujen todennäköisyys on nolla. Tämä voidaan esittää matemaattisesti <em>todennäköisyysmassafunktiona</em> (Probability Mass Function, PMF). Tältä funktiolta kysymme esimerkiksi "Hei nopan S PMF, mikä on todennäköisyys, että silmäluku on 5?" ja sehän vastaisi meille, että "1/6". R-kielellä voisimme toteuttaa tämän esimerkiksi näin: </p>
+
+<pre>
+noppa_S_pmf = function(x){
+  if(x < 4){
+    return(0)
+  }
+  if(x > 8){
+    return(0)
+  }
+  return(1/6)
+}
+</pre>
+
+<p>Tästä on piirretty kuva alapuolelle valikoiduilla <em>x</em>-muuttujan arvoilla:</p>
+
+<figure>
+  <a href="figures/noppa_2_pdf.png"><img src="figures/noppa_2_pdf_pieni.png"></a>
+  <p>Kuva 4: Nopan S  todennäköisyysmassafunktio. Koska se voi tuottaa arvoja väliltä 3-8, näiden todennäköisyys on 1/6 kun taas arvoille tämän haarukan ulkopuolella todennäköisyys on nolla. Emme voi mitenkään saada esimerkiksi lukua 2 tuosta nopasta.</p>
+</figure>
+
+<p>Palatkaamme nyt sen todennäköisyyden laskemiseen, että millä todennäköisyydellä noppa S ylipäänsä tuottaa suuremman tuloksen kuin noppa K. Tämähän vaatii, kuten jo aikaisemmin todettua, sen laskemista, mikä on todennäköisyys saada nopasta S vaikkapa 2 JA että nopan K tulos on pienempi tai yhtäsuuri se TAI että nopasta S saadaan 3 JA että nopan K tulos on sitä pienempi tai yhtä suuri ja niin edelleen. Tätä ei ole mahdotonta laskea käsin, se on varmaankin melko helppoa, mutta työlästä se on - ja tämän takia aiemmin mainitsinkin, että kannattaa olla käytössä jokin keino näiden laskutoimitusten automatisoimiseksi.</p>
+
+<p>Voimme matemaattisesti esittää tätä näin:</p>
+
+<div class="equation">&sum; Noppa_K_cdf(x)Noppa_S_pmf(x) </div>
+
+<p>jossa &sum; tarkoittaa <em>summaamista</em> eli että laskemme tuon tulon suurella määrällä <em>x:n</em> arvoja ja sitten laskemme kaikki nämä yhteen. Mitäkö sitten <em>suuri määrä</em> x:n arvoja tarkoittaa? No, teoriassa kaikkia kokonaislukuja, mutta voimme - ainakin tässä tapauksessa - päästä vähemmällä järkeilemällä, millä x:n arvoilla tuo tulo poikkeaa nollasta. Jos siis lasket tätä käsin, niin riittänee, että käyt läpi x:n arvot kolmesta kahdeksaan, sillä muutoinhan nopan S pmf on nolla, ja silloin tulokin on nolla. Alla olevassa R-skriptissä käy läpi x:n arvoja tämänkin ulkopuolelta, koska tietokonetyövoima on halpaa:</p>
+
+<pre>
+p = c()
+x = -10:10
+
+for(i in 1:length(x)){
+  p[i] =  noppa_K_cdf(x[i]) * noppa_S_pmf(x[i])
+}
+
+sum(p)
+</pre>
+
+<p>Lopputulokseksi saamme 0.75. Voimme siis sanoa, todennäköisyys sille, että nopan S silmäluku on nopan K silmälukua suurempi tai yhtä suuri on noi 0.75 <em>tai</em> toisin sanoen, että tämä on todennäköisyys sille, että valitsemme oikean heiton.</p>
+
+
+<p>Katsotaan nopeasti, mitä tahpahtuu, jos noppa S on painotettu siten, että todennäköisyys kahdeksikolle onkin 3/8 ja muiden silmälukujen vain 1/8. On ehkäpä helppo huomata, että koska nyt noppa S tuottaa keskimäärin suurempia lukuja, on varmaankin myös suurempi todennäköisyys sille, että oikea heitto tulee valituksi. Saamme laskettua todennäköisyyden helposti muokkaamalla aikaisempaa todennäköisyysmassafunktiota:</p>
+
+<pre>
+noppa_S_pmf_alt = function(x){
+  if(x < 3){
+    return(0)
+  }
+  if(x > 8){
+    return(0)
+  }
+  if(x == 8){
+    return(3/8)
+  }
+  return(1/8)
+}
+</pre>
+
+<p>Tämän jälkeen laskemme summan uudestaan:</p>
+
+<pre>
+p = c()
+x = -10:10
+
+for(i in 1:length(x)){
+  p[i] =  noppa_K_cdf(x[i]) * noppa_S_pmf_alt(x[i])
+}
+
+sum(p)
+</pre>
+
+<p>Tällä kertaa saammekin tulokseksi, että todennäköisyys sille, että nopan S silmäluku on suurempi on 0.875 - siis hieman suurempi kuin äsken. Tämä käy järkeen.</p>
+
+<h3>Kolme noppaa</h3>
+
+<p>Kävimme juuri pitkänlaisesti läpi tilannetta, jossa meillä on kaksi noppaa. Kuten sanottua, tämä vastaa 2AFC-tyyppistä tilannetta. Varsinaisesti kuitenkin olemme kiinnostuneita tilanteesta, jossa valintamahdollisuuksia on enemmän kuin kaksi.</p>
+
+<p>Esimerkiksi 3AFC-tyyppisessä tilanteessahan on yleensä niin, että koehenkilöllä esitetään kolme valintamahdollisuutta, joista kaksi sisältää pelkkää kohinaa ja yksi signaalin. Tilanne poikkeaa siis äskettäin kuvastusta siten, että meillä onkin kaksi "kohinanoppaa".</p>
+
+    <figure>
+      <a href="figures/kolme_noppaa.png"><img src="figures/kolme_noppaa_pieni.png" alt="Kuvaaja näyttää skemaattisesti kaksi kuusisilmäistä noppaa, joista toisen silmäluvut ulottuvat yhdestä kuuteen ja toisen kolmesta kahdeksaan."></a>
+      
+    <p>Kuva 5: 3AFC-tyyppisessä tilanteessa on kaksi "kohinanoppaa" (nopat K<sub>1</sub> ja K<sub>2</sub>) ja yksi "signaalinoppa".</p>
+    </figure>
+
+<p>Nyt meidän täytyy löytääkin todennäköisyys sille, että nopan S silmäluku on suurempi kun kummastakin kohinanopasta saatu arvo. Tämän lisääminen edelliseen on helppoa! Jokaisella <em>x</em>:n arvolla olemmekin kiinnostuneita todennäköisyydestä, jolla S-nopan arvo on suurempi kuin K<sub>1</sub>-nopan arvo JA K<sub>2</sub>-nopan arvo.</p>
+
+<p>Koska molempien kohinanoppien kertymäfunktio on sama, tästä tulee yksinkertaisesti</p>
+
+<div class="equation">&sum; Noppa_K_cdf(x) Noppa_K_cdf(x) Noppa_S_pmf(x)</div>
+
+<p>Koska kaksi ensimmäistä termiä ovat samat, voimme kirjoittaa tämän eksponenttimuodossa</p>
+
+<div class="equation">&sum; Noppa_K_cdf(x)<sup>2</sup> Noppa_S_pmf(x)</div>
+
+<p>Aivan kuten aikaisemminkin, tämä käydään läpi kaikilla mahdollisilla <em>x</em>:n arvoilla.</p>
+
+<p>Tärkeää on huomata, että kun meillä on <em>m</em> valintamahdollisuutta, niin meillä on <em>m-1</em> kohinanoppaa. Yleisesti siis tilanteelle jossa meillä on <em>m</em> noppaa:</p>
+
+<div class="equation">&sum; Noppa_K_cdf(x)<sup>(m-1)</sup> Noppa_S_pmf(x)</div>
+
+<p>Lasketaanpa vielä oikean heiton valitsemisen todennäköisyys R:llä:</p>
+
+<pre>
+p = c()
+x = -10:10
+
+for(i in 1:length(x)){
+  p[i] =  noppa_K_cdf(x[i])^2 * noppa_S_pmf(x[i])
+}
+
+sum(p)
+</pre>
+
+<h3>Nopista normaalujakaumiin</h3>
+
+<p>Palataanpa nyt alussa esitettyyn kaavaan</p>
+
+<div class="equation">&int;&Phi;(x)<sup>(m-1)</sup>N(x, d', 1.0)dx <div class="eqlab">(Kaava 1)</div></div>
+
+<p>Tässä kaavassa &Phi;(x) on normaalijakauman kertymäfunktio ja N(x, d') on normaalijakauman tiheysfunktio (keskiarvo = d' ja keskihajonta = 1.0), tai toisin ilmaistuna</p>. 
+
+<div class="equation">&int; normal_cdf(x) normal_pdf(x, d', 1.0)dx</div>
+
+<p>Huomannet yhteydet äsken käsiteltyihin funktioihin: nyt erona on se, että alemmekin puhua <em>tiheyksistä</em>. Miksi näin?</p> 
+
+<p>Diskreetit muuttujat ovat sellaisia, jotka voivat saada vain tiettyjä arvoja - kuten nyt vaikkapa noppa. Jatkuvat muuttujat voivat taasen saada mitä tahansa arvoja. Asian hienouksiin ei voine tässä mennä liian syvälle, mutta tässä kannattaa huomata se, että jatkuvien muuttujen tapauksessa ei oikeastaan enää käykään järkeen kysyä, että "mikä on todennäköisyys, että x = 3.00000010010003", koska eri tulosmahdollisuuksia on matemaattisesti äärettömän paljon. Tämän vuoksi käytämmekin tiheyksiä: esimerkiksi normaalijakaumassa eri tulosmahdollisuuksia on "tiheämmin" siinä kohdin, missä sen korkein kohta on. Onnemme on, ettei tämä sinänsä vaikuta laskutoimituksiimme - paitsi siinä määrin, että nyt kyllä joudumme jo käyttämään tietokonetta apuna, sillä vaikka näiden funktioiden arvoja voikin laskea taskulaskimen avustuksella, on se hyvin epäkäytännöllistä.</p>
+
+<p>Tästä syystä myös käytetään integrointia summaamisen sijaan; voisi ajatella, että integrointi on eräänlainen summaamisen yleistys tilanteisiin, jossa summaamme äärettömän paljon pieniä siivuja.</p>
+
+<p>R-ohjelmointikielessä &Phi;(x) on pnorm(x) ja N(x, d', 1.0) on dnorm(x, d, 1.0). (Huomaa, että R:ssä emme voi käyttää '-merkkiä muuttujan nimessä). Mutta kuinka etenemme, koska, kuten sanottua, meillä on nyt jatkuvia muuttujia? No, voimme <em>approksimoida</em> (likiarvoisesti arvioida) tulosta laskemalla tuon suurella määrällä x:n arvoja, eikä R-kooodimme muutu kauheasti edellisestä. Sanotaanpa, että d' = 0.8. Löydämme 2AFC tilanteessa vastaustodennäköisyyden näin:</p>
+
+<pre>
+p = c()
+x = seq(-5, 10, 0.1)
+
+for(i in 1:length(x)){
+  p[i] =  pnorm(x[i]) * dnorm(x[i], 0.8, 1.0)
+}
+
+sum(p) * 0.1
+</pre>
+
+<p>Huomaa, että nyt määrittelemme x:n arvot seq-funktion avulla, sillä haluamme laskea tuon tulon muillakin kuin kokonaisluvuilla. Viimeisellä rivillä kerromme summan 0.1:llä, sillä tämä on välimatka yksittäisten x:n arvojen välillä (katso seq-funktion kutsua). Tämä sen takia, että puhumme nimenomaan <em>tiheyksistä</em>: jos mittaamme sitä, kuinka paljon meillä on kääretorttua, voisimme ottaa siitä näytteitä tietyn välimatkan välein ja laskea nämä yhteen, mutta on varmaankin selvää, että mitä tiheämmin otamme noita näytteitä, sitä suuremmaksi summa tulee ihan vain sen vuoksi, että näytteitä on enemmän - siispä ottakaamme huomioon näytteidenottovälimatka!</p>
+
+<p>Voimme tarkastaa äskeisen tuloksen analyyttisesti, sillä 2AFC-tilanteessa tämä ratkaisu tunnetaan:</p>
+
+<pre>
+pnorm(0.8/sqrt(2))
+</pre>
+
+<p>Katsotaan vielä miten menettelisimme 3AFC-tilanteessa:</p>
+
+<pre>
+p = c()
+x = seq(-5, 10, 0.1)
+
+for(i in 1:length(x)){
+  p[i] =  pnorm(x[i])^2 * dnorm(x[i], 0.8, 1.0)
+}
+
+sum(p) * 0.1
+</pre>
+
+<p>Vaihtamalla 0.8:n tilalle muita arvoja voimme laskea todennäköisyyksiä myös muille d'-arvoille. Ongelma on se, että tätä emme nyt enää voikaan ratkaista suljetussa muodossa, meidän on pakko käyttää jonkinmoista approksimaatiota. Katso <a href="https://joanpaak.github.io/sciency_stuff/mAFC_polynomial_approximation/mafc_poly.html">tämän</a> linkin takaa, kuinka vastaustodennäköisyyksiä voidaan approksimoida tutuilla polynomiyhtälöillä (englanniksi).</p>
+
+<h2>Lähteet</h2>
+
+  <p class="bibEntry">DeCarlo, L.T. (2012). On a signal detection approach to m-alternative forced choice with bias, with maximum likelihood and Bayesian approaches to estimation. Journal of Mathematical Psychology, 56, pp. 196–207.</p>
+  
+  <p class="bibEntry">Kingdom, F.A.A. & Prins, N. (2009). Psychophysics: A Practical Introduction. Academic Press.</p>
+</main>
+
+<footer>&copy; Joni Pääkkö</footer>
+</body>
+</html>

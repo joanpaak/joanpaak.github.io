@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" />
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../css/blather.css">
+  <link rel="stylesheet" href="roex_pr_css.css" />
+  <title>The ROEX(r, p) filter</title>
+</head>
+<body>
+
+
+<main>
+
+  <h1>The ROEX filter</h1>
+
+  <h2>Introduction</h2>
+
+  
+  <p>This text is a practical guide to Bayesian inference for the ROEX(r,p) auditory filter model using R and Stan. I will assume that you are familiar with how to define likelihood functions, have some understanding of the Stan programming language - as well as R - and the psychophysical procedures that would be used to measure masked thresholds. There are also two main points you should remember from the introductory text on ROEX filters (<a href="roex_pr_eng.html">that can be found from here</a>): </p>
+  
+  <ol>
+    <li>In the notched noise experiment we are measuring the threshold of detection (of a sine wave signal at the center frequency) for a set of notch widths</li>
+    <li>The ROEX model can be used to create a curve of predicted thresholds as a function of the notch width</li>
+  </ol>
+  
+  <p>After a short description of the model, I will show how to simulate data in R and then fit that simulated data using Stan. After that I'll show how to apply the model to a real data set.</p>
+  
+  <h2>The model</h2>
+  
+  <p>As an example, if the experimenter decided to measure detection thresholds for notch widths of 0Hz, 100Hz, 200Hz and 400Hz, their data set might look like this:</p>
+  
+  <figure>
+  <table>
+    <tr>
+      <th>Notch width (Hz)</th>
+      <th>Threshold (dB)</th>
+    </tr>
+    <tr>
+      <td>0</td>
+      <td>-31.2</td>
+    </tr>
+    <tr>
+      <td>100</td>
+      <td>-43.5</td>
+    </tr>
+    <tr>
+      <td>200</td>
+      <td>-47.6</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>-52.1</td>
+    </tr>
+  </table>
+  </figure>
+    
+    
+  <p>The observed thresholds in the data set are assumed to come from normal distribution with conditional mean equal to the predicted thresholds:</p>
+  
+  <div class="equation">Threshold<sub>observed</sub> &sim; N(Threshold<sub>predicted</sub>, &sigma;)</div>
+  
+  <p>You might note the similarity to a standard linear regression, but note that here the dependent variable (thresholds) are a non-linear function of the independent variable (notch width).</p>
+  
+  <p>The likelihood function could also be written like this</p>
+  
+  <div class="equation"> Likelihood = &prod; N(Threshold<sub>observed</sub>  | Threshold<sub>predicted</sub>, &sigma;)</div>
+  
+  <p>which, for concretenss, could be written like this in R</p>
+  
+   <pre>
+prod(dnorm(observedThresholds, predictedThresholds, sigma))</pre>
+  
+  <p>Maximizing this function corresponds to minimizing the squared error between observed and predicted thresholds.</p>
+
+  <h2>Prior distributions for the parameters</h2>
+ 
+  <p>Before discussing what kind of prior distributions could be used, a word about the scale of the parameters. Usually the parameters <em>r</em> and <em>K</em> are transformed to the decibel scale, while the parameter <em>p</em> is kept on the original scale. The log transformed parameters are unbounded while <em>p</em> is bound to positive real numbers: for the unbounded parameters, I will use normal distribution as a prior probability distribution, and for the bounded parameters (which include the standard deviation of the normal distribution, &sigma;) the gamma distribution.</p>
+  
+  <p>To get some idea about what one would typically observe, I will take a look at two data sets which contain parameter estimates for the ROEX model. These data come from Shen et. al. (2013) and Wright (1996). Kernel density estimates for the data from Shen et. al. are shown; for the data from Wright, a normal approximation is shown (all means are at modal values, standard deviation is what was reported. This does not capture all aspects of the data, but is sufficient here).</p>
+  
+  <figure>
+    <img src="figures/roex_priors.png" alt="Three figures showing the distributions of parameter estimates from the two studies mentioned." />
+    <figcaption>Distribution of parameter estimates from Shen and Wright (see text for details).</figcaption>
+  </figure>
+  
+  <p>Based on this, I settled on the following priors for the parameters:</p>
+  
+  <div class="equation">10log<sub>10</sub>K &sim; N(0, 5)</div>
+  <div class="equation">10log<sub>10</sub>r &sim; N(-40, 20)</div>
+  <div class="equation">p &sim; Gamma(4, 0.13) (&mu; = 30, &sigma; = 15)</div> 
+  
+  <p>These could be regarded as providing only weak information about the scales of the parameters. In your own applications, feel free to choose distributions that more accurately capture your prior knowledge.</p>
+  
+  <p>In addition to these, the standard deviation of the normal distribution is assigned a Gamma(3, 1) prior.</p>
+  
+  <h2>Simulating data in R</h2>
+  
+  <p>Let us start by simulating a data set in R. First, we need have functions for predicting thresholds. We can use functions we already used in the previous tutorial (<a href="roex_pr_eng.html">this tutorial on the mathematics of ROEX filters</a>), but note that there are slight modifications:</p>
+  <ol>
+    <li>Instead of breaking the calculation of thresholds down to three functions, I've broken it down here to just two functions. I believe this to be sufficiently clear and easy to debug.</li>
+    <li>The constant N<sub>0</sub> is now on the decibel scale. This is more common in the research literature.</li>
+    <li>As already stated, also the parameter <em>K</em> is also now on decibel scale.</li>
+    <li>Since N<sub>0</sub> and K are both on logarithmic scale - as is the predicted threshold - these can be summed (rememerber: in the original formula they were multiplied).</li>
+  </ol>
+
+  <pre>
+# This is the integral given by Patterson et. al. (1982)
+# which represents, up to a constant, integral
+# of W(g, r, p) from 0 to g
+#
+W_int = function(g, r, p){
+  return(-(1 - r)*(1/p)*(2 + p*g)*exp(-p*g) + r*g)
+}
+
+#Predicted threshold in decibels
+#
+# INPUT:
+# Variables: 
+# nw : width of the notch
+#
+# Non-filter related parameters:
+# K_log  : Efficiency of detection
+#
+# Parameters of the filter:
+# r_log : Minimum value (log scale)
+# p     : sharpness of the filter
+#
+# Experimental constants:
+# f0 : Center frequency
+# N0 : Power spectral density of the noise masker
+# bw : Distance of the outer edges of the noise masker
+#      from the center frequency
+#
+# OUPUT:
+# Predicted threshold in decibels
+predThr_dB = function(nw_Hz, 
+                      K_log, 
+                      r_log, 
+                      p, 
+                      f0_Hz, 
+                      N0_dB, 
+                      bw_Hz){
+  # The parameter r is transformed to original scale:
+  r = 10^(r_log/10)
+  # The "lower edge" of the noise masker
+  low_lim = (nw_Hz/2) / f0_Hz
+  # Upper edge
+  upp_lim = (f0_Hz + bw_Hz) / f0_Hz
+  
+  thr_mag = f0_Hz * 2 * (W_int(upp_lim, r, p) - W_int(low_lim, r, p))
+  thr_decibels = N0_dB + K_log + 10 * log10(thr_mag)
+  
+  return(thr_decibels)
+}
+
+</pre>
+
+  <p>Next we choose parameters for the simulation. We will have to decide on some constants, such as the center frequency and spectrum level of the masker, as well as on the "generating parameters" of the simulated observer. I will again point out that in a real experiment, a participant would respond to multiple single trials, on which the signal level of the to-be-detected tone would be varied to establish their detection thresholds for different notch widths, but here I am simulating the observed/estimated thresholds directly.</p>
+  
+<pre>
+# Constants
+f0_Hz = 1000
+bw_Hz = 800
+N0_dB = 10 * log10(1.5e-5)
+
+# Since we aren't simulating the "full 2AFC task", we don't
+# need signal strengths (those would be used for determining
+# responses on individual trials)
+notchWidths_Hz = c(0, 100, 200, 400, 600)
+
+# Generating parameters
+gen_K_log = 0.8
+gen_r_log = -50
+gen_p     = 25
+gen_sigma = 2
+
+# Notice that since both the predThr_db and the rnorm functions are 
+# vectorized, we don't have to loop through the notch widths.
+
+trueThresholds =  predThr_dB(notchWidths_Hz, 
+                             gen_K_log, 
+                             gen_r_log, 
+                             gen_p, 
+                             f0_Hz, 
+                             N0_dB, 
+                             bw_Hz)
+observedThresholds_dB = rnorm(length(notchWidths_Hz), trueThresholds, gen_sigma)
+  </pre>
+  
+  <p>In my case,  I happened to stumble upon a data set that looks like this (since it's random, you'll probably get a data set that's slightly different):</p>
+  
+  <figure>
+    <img src="figures/roex_pr_simu_ex.png" alt="The simulated thresholds"/>
+    <figcaption>My simulated data set. Yours will be a bit different. It does not matter, but it should look <em>something</em> like that.</figcaption>
+  </figure>
+  
+  <p>As expected, the observed thresholds from the simulated participant are lower when notch widths are larger. Remember, with large notch widths, there's a larger gap in the noise, so the participant should be able to detect a fainter stimulus. </p>
+  
+  <h2>Fitting the model using R/Stan</h2>
+  
+  <p>The code snippet below shows an example how one could define this model in Stan. Notice that the function declarations (in the <em>functions</em> block) follow closely the R versions defined earlier in this text. You can refer to the documentation in the R examples if you need clarification as to what they do. The likelihood function is defined inside the <em>model</em> block. As already discussed, in this model, each observed threshold is assumed to come from a normal distribution whose mean is the predicted threshold (for the given notch width, parameter values and other constants) and with a constant amount of error (&sigma;).</p>
+  
+<pre>
+functions{
+  real W_int(real g, real r, real p){
+    return -(1 - r)*(1/p)*(2 + p*g)*exp(-p*g) + r*g;
+  }
+  
+  real predThr_dB(real l, 
+                  real u, 
+                  real K_log, 
+                  real r_log, 
+                  real p, 
+                  real f0_Hz, 
+                  real N0_dB){
+    
+    real r = pow(10, r_log/10);
+    real thr_magnitude = 2 * f0_Hz * (W_int(u, r, p) - W_int(l, r, p));
+    
+    return N0_dB + K_log + 10.0 * log10(thr_magnitude);
+  }  
+}
+
+data{
+  int  N;                   // Number of notch widths
+  real nw_Hz[N];            // Notch widths in Hz
+  real obsThreshold_dB[N];  // Observed thresholds
+  
+  real f0_Hz; // Center frequency
+  real N0_dB; // Spectrum level of masker
+  real bw_Hz; // Distance of the outer edges of the masker
+}
+
+parameters{
+  // Efficiency of detection:
+  real K_log;
+  // Parameters of the filter:
+  real r_log;
+  real&lt;lower = 0&gt; p;
+  
+  // Error between preditions and observations:
+  real&lt;lower = 0&gt; sigma;
+}
+
+model{
+  real mu;
+  
+  // Priors for the parameters, change these to suit 
+  // your situation:
+  K_log  ~ normal(0, 5);
+  r_log ~ normal(-40, 20);
+  p     ~ gamma(4, 0.13);
+  
+  sigma ~ gamma(3, 1);
+  
+  for(i in 1:N){
+    mu = predThr_dB(nw_Hz[i]/2/f0_Hz, 
+                   (f0_Hz + bw_Hz) / f0_Hz, 
+                   K_log, 
+                   r_log, 
+                   p, 
+                   f0_Hz, 
+                   N0_dB);
+    obsThreshold_dB[i] ~ normal(mu, sigma);
+  }
+}
+</pre>
+
+
+  <p>We'll compile the model (remember to set the path and filename correctly) and then draw samples from the posterior distribution using the command <em>sampling</em></p>
+  
+  <pre>
+roex_pr_trad_with_k = rstan::stan_model("Stan/roex_pr_trad_with_K.stan")
+
+fit  = rstan::sampling(roex_pr_trad_with_k, 
+                data = list(N = length(notchWidths_Hz),
+                            nw_Hz = notchWidths_Hz,
+                            f0_Hz = f0_Hz,
+                            N0_dB = N0_dB,
+                            bw_Hz = bw_Hz,
+                            obsThreshold_dB = observedThresholds_dB))
+  </pre>  
+  
+  <p>Samples drawn form the posterior distribution can be easily recovered by using the as.matrix method of the stanFit object:</p>
+  
+  <pre>
+postSamples = as.matrix(fit)</pre>
+  
+  <p>Approximations of the posterior distribution are then easily plotted using R's ready-made plotting functions. The plots below show bivariate plots and marginal distributions of the parameters <em>K</em>, <em>r</em> and <em>p</em>:</p>
+  
+  <figure>
+    <img src="figures/roex_pr_post_samples.png" alt="Posterior distributions for the estimated parameters"/>
+    <figcaption>Visualizing the posterior distributions for the parameters <em>K</em>, <em>r</em> and <em>p</em>.</figcaption>
+  </figure>
+  
+  <p>If we use the functions g(Hz, f0) amd W(g, p, r) from the previous tutorial, we can look at the shape of the estimated filter and uncertainty related to it by using the posterior samples from Stan. The idea is to draw one curve of the filter shape for each draw of posterior samples.</p>
+
+<pre>
+
+# Function for normalizing frequencies 
+# wrt some center frequency.
+#
+# INPUT
+# f  : frequency to be normalized
+# f0 : center frequency
+# OUTPUT
+# normalized frequency
+g = function(f, f0){
+  return(abs(f - f0) / f0)
+}
+
+# Weighting function of the ROEX(r, p) filter.
+#
+# INPUT
+# g     : normalized frequency
+# r_log : minimum magnitude response (log scale)
+# p     : sharpness of the filter
+# OUTPUT
+# Weight of the filter, as defined
+# by the parameters r and p, at the specified g.
+W = function(g, r_log, p){
+  r = 10^(r_log/10)
+  return((1 - r) * (1 + p * g) * exp(-p * g) + r)
+}
+
+curve(W(g(x, f0_Hz), postSamples[1,"r_log"], postSamples[1,"p"]), 700, 1300,
+      col = rgb(0, 0, 0, 0.1), xlab = "Frequency (Hz)", ylab = "Weight")
+
+for(i in 2:500){
+  curve(W(g(x, f0_Hz), postSamples[i,"r_log"], postSamples[i,"p"]), add = T,
+        col = rgb(0, 0, 0, 0.1))
+}
+</pre>
+  
+  <p>The resulting figure might look something like this:</p>
+  
+  <figure>
+    <img src="figures/roex_pr_filter_shape.png" alt="Figure showing uncertainty related to the shape of the estimated auditory filter"/>
+    <figcaption>Uncertainty related to the shape of the estimated auditory filter.</figcaption>
+  </figure>
+  
+  
+  <p>Model checking is an integral part of the Bayesian workflow. What this means is that we want to check if the fitted model is actually a reasonable description of the data. One way of doing this is through what's known as <em>posterior predictive check</em>. This simply means that we simulate data using the posterior samples returned by Stan and compare this simulated data agains our original data. The idea is that if our model captures the essential features of the data, the simulated data should look something like the original data set that was used to fit the model. Notice how this step mirrors the original step where we created our synthetic data set for this exercise.</p>
+
+  <pre>
+# How many simulated data sets to draw:
+NSim = 500
+
+simData = matrix(NaN, nrow = NSim, ncol = length(notchWidths_Hz))
+
+for(i in 1:NSim){
+    mu = predThr_dB(notchWidths_Hz, 
+                    postSamples[i,"K_log"], 
+                    postSamples[i,"r_log"], 
+                    postSamples[i,"p"], 
+                    f0_Hz, 
+                    N0_dB, 
+                    bw_Hz) 
+    simData[i,] = rnorm(length(notchWidths_Hz), mu, postSamples[i,"sigma"])
+}
+
+# This plots the simulated thresholds agains the observed thresholds
+plot(NULL, xlim = range(notchWidths_Hz), ylim = range(simData),
+     ylab = "Threshold (dB)", xlab = "Notch width (Hz)", axes = F)
+
+for(i in 1:length(notchWidths_Hz)){
+  points(rep(notchWidths_Hz[i], NSim), 
+         simData[,i], col = rgb(0, 0, 0, 0.1), pch = 19)
+}
+
+points(notchWidths_Hz, observedThresholds_dB, pch = 19, col = "red", type = "b")
+axis(side = 1); axis(side = 2) 
+
+</pre>
+  
+  <p>In my case I the posterior predictive distribution of thresholds looks like this (see figure caption for details):</p>
+  
+  <figure>
+    <img src="figures/roex_pr_post_pred.png" alt="Posterior predictive distribution compared against the observed data"/>
+    <figcaption>An example of a posterior predictive distribution. The black dots represent thresholds simulated from the posterior distribution, the red dots indicate observed data. There doesn't seem to be a significant mismatch between what's predicted and what's observed. </figcaption>
+  </figure>
+  
+  <p>Of course in this case, since we simulated the data from the same model, this step is kind of redundant, but in practice this methodology can be used for diagnosing mismatch between what the model "sees" and the observed data.</p>
+  
+  <h2>Fit data from Moore et. al.</h2>
+  
+  <p>Let us take a look at fitting a real data set. These data come from the upper left panel of Figure 1 in Moore et. al. (1995). However, before we get to the actual data set, here are some caveats:</p>
+  
+  <ol>
+    <li>The thresholds here are based on eyeballing the figure in the article</li>
+    <li>In the article, they also have asymmetric notch noise maskers: I've only picked data points for symmetric maskers</li>
+    <li>They fit a more complicated auditory filter model that allows for asymmetric filters</li>
+    <li>During the fitting procedure they correct for the frequency response of the headphones, middle-ear transfer function and also allow for off-frequency listening.</li>
+  </ol>
+  
+  <p>That out of the way, let's get to the actual data. The observed thresholds are shown visually in the figure below:</p>
+  
+  <figure>
+    <img src="figures/data_from_moore_et_al.png" alt="Figure showing the observed thresholds from Moore et al">
+      <figcaption>Eyeballed thresholds for symmetric nothces from Moore et. al. (1995, upper left panel of Fig. 1).</figcaption>
+  </figure> 
+  
+    <p>Here's the data set as a list object in R:</p>
+    
+    <pre>
+dataFromMoore1995 = list(
+  N = 6,
+  bw_Hz = 800,
+  f0_Hz = 2000,
+  N0_dB = 30,
+  nw_Hz = c(0, 0.1, 0.15, 0.2, 0.3, 0.4) * 2000 * 2,
+  obsThreshold_dB = c(49, 35, 29, 24, 17, 16)) </pre>
+    
+    <p>This can be given directly to Stan for sampling from the posterior distribution:</p>
+  
+ <pre>
+ fitMoore  = rstan::sampling(roex_pr_trad_with_k, 
+                             data = dataFromMoore1995) </pre>
+    
+    <p>As before, we can look at the approximate posterior distribution...</p>
+ 
+    <pre>
+postSamplesMoore = as.matrix(fitMoore)
+
+par(mfrow = c(2,3))
+plot(postSamplesMoore[, c(1,2)])
+plot(postSamplesMoore[, c(1,3)])
+plot(postSamplesMoore[, c(2,3)])
+
+hist(postSamplesMoore[,1], prob = T, main = "10log(K)")
+hist(postSamplesMoore[,2], prob = T, main  ="10log(r)")
+hist(postSamplesMoore[,3], prob = T, main = "p") </pre>
+    
+   <figure>
+    <img src="figures/moore_post_samples.png" alt="">
+      <figcaption>Posterior samples from the fitted model to data from Moore et. al. </figcaption>
+  </figure> 
+     
+     <p>...the estimated filter shape and uncertainty related to it (notice that you must have the functions W and g)...</p>
+     
+   <pre>
+ par(mfrow = c(1,1))
+curve(W(g(x, dataFromMoore1995$f0_Hz), postSamplesMoore[1,"r_log"], 
+        postSamplesMoore[1,"p"]), 1500, 2500,
+      col = rgb(0, 0, 0, 0.1), xlab = "Frequency (Hz)", ylab = "Weight")
+
+for(i in 2:500){
+  curve(W(g(x, dataFromMoore1995$f0_Hz), postSamplesMoore[i,"r_log"], 
+          postSamplesMoore[i,"p"]), add = T,
+        col = rgb(0, 0, 0, 0.1))
+}
+     </pre>
+     
+   <figure>
+    <img src="figures/moore_filter_shape.png" alt="">
+      <figcaption>Filter shape estimated from the data from Moore et. al. </figcaption>
+  </figure> 
+     
+    <p>...or compare the observed data to the posterior predictive distribution (again, be sure you have the needed functions in your R environment):</p>
+     
+ <pre>
+NSim = 500
+
+simDataMoore = matrix(NaN, nrow = NSim, ncol = dataFromMoore1995$N)
+
+for(i in 1:NSim){
+  mu = predThr_dB(dataFromMoore1995$nw_Hz, 
+                  postSamples[i,"K_log"], 
+                  postSamples[i,"r_log"], 
+                  postSamples[i,"p"], 
+                  dataFromMoore1995$f0_Hz, 
+                  dataFromMoore1995$N0_dB, 
+                  dataFromMoore1995$bw_Hz) 
+  simDataMoore[i,] = rnorm(dataFromMoore1995$N, mu, postSamples[i,"sigma"])
+}
+
+par(mfrow = c(1,1))
+plot(NULL, xlim = range(dataFromMoore1995$nw_Hz), ylim = range(simDataMoore),
+     ylab = "Threshold (dB)", xlab = "Notch width (Hz)", axes = F)
+
+for(i in 1:dataFromMoore1995$N){
+  points(rep(dataFromMoore1995$nw_Hz[i], NSim), 
+         simDataMoore[,i], col = rgb(0, 0, 0, 0.1), pch = 19)
+}
+
+points(dataFromMoore1995$nw_Hz, dataFromMoore1995$obsThreshold_dB, pch = 19, col = "red", type = "b")
+axis(side = 1); axis(side = 2) </pre>
+     
+   <figure>
+    <img src="figures/moore_post_pred.png" alt="">
+      <figcaption>Posterior predictive distribution against observed data. As before, the red dots joined by the lines indicate observed data.</figcaption>
+  </figure> 
+     
+     
+  <h2>Sources</h2>
+    
+    <p class="bibEntry">Moore, B. C. J., Glasberg, B. R., Heijden, van der, M. L., Houtsma, A. J. M., &amp; Kohlrausch, A. G. (1995). Comparison of auditory filter shapes obtained with notched-noise and noise-tone maskers. Journal of the Acoustical Society of America, 97(2), pp. 1175-1182.</p>
+  
+    <p class="bibEntry">Shen, Y., &amp; Richards, V.M. (2013). Bayesian adaptive estimation of the auditory filter. Journal of the Acoustical Society of America, 134(2), pp. 1134 - 1145.</p>
+  
+    <p class="bibEntry">Wright, B.A. (1996). Auditory filter asymmetry at 2000 Hz in 80 normal-hearing ears. Journal of the Acoustical Society of America, 100, 3, pp. 1717 - 1721.</p>
+  
+</main>
+
+  <footer>
+  &copy; Joni Pääkkö
+  </footer>
+
+</body>
+
+</html>

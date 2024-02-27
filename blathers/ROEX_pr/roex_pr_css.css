@@ -1,0 +1,36 @@
+svg polygon:hover{
+  fill: black;
+}
+
+svg path:hover{
+    stroke: black;
+}
+
+svg line:hover{
+    stroke: black;
+}
+
+/**/
+
+.controlTitle{
+    display: block;
+    text-align: center;
+    margin-bottom: 0;
+    margin-top: 0;
+    /*font-weight: bold;*/
+}
+
+/**/
+
+#totalAreaTextBox{
+    text-align: center;
+    margin: 0;
+    padding: 0;    
+}
+
+/**/
+
+table{
+  display: inline-block;
+}
+
