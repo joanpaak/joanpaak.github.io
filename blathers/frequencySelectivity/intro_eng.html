@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <link rel="stylesheet" href="css/af_intro.css">
+  <title>Introduction to Auditory Filtering</title>
+</head>
+<body>
+<main>
+
+  <h1>Frequency Selectivity</h1>
+
+  <h2>Introduction</h2>
+  
+  <p>This tutorial deals with frequency selectivity of the human auditory system,  and how it can be conceptualized using auditory filters. Frequency selectivity means that our auditory system can perform a sort of frequency analysis: different frequencies are processed (at least in part) independently of each other. However there are limits to this, and auditory filters are usually used to model these limits.</p>
+  
+  <p>Before we get to the actual topic, there are two demonstrations of the types of stimuli used when discussing frequency selectivity and auditory filters: sine waves and filtered noises. These kinds of stimuli are used in all of the demonstrations on this page, and for this reason it is important for you to understand what these stimuli are and how they sound like. Also, at the same time you have the chance to familiarize yourself with the kinds of visualizations I will be using to represent the stimuli.</p>
+  
+  <h2>Sine waves and noise maskers</h2>
+ 
+  <h3>Sine waves</h3>
+  
+  <p>Most sounds we hear contain many frequencies: for example a note played with a guitar contains a wide selection of frequencies which our brain knows how to bundle together. Due to this "bundling together" we hear the note as a single sound.</p>
+
+  <p>A <em>sine wave</em> in contrast is a sound which only has a single frequency component. In our everyday life these kinds of sounds are very rare: you might have heard these kinds of sounds if you have ever taken a hearing test; also some old synthesizers and game consoles produce sounds that are (or almost are) sine waves.</p>
+  
+  <p>There's not that much to say about sine waves, actually! Hearing is believing: use the demonstration below to listen to a sine waves, whose frequency you can change yourself.</p>
+  
+   <p>Click on the "start sound" button to, well, start the sound. You will hear a sine wave. Use the slider below to adjust its frequency. The dashed vertical line represents the sine wave's current frequency. After you are done, click the same button to stop the sound.</p> 
+      
+  <p>Note that on lower end audio equipment (e.g. laptop's speakers) you will probably not hear frequencies below 150Hz. So if you hear nothing when you move the slider to certain positions, it's likely due to limitations of your audio playback device.</p>
+  
+  <h3>!!!CHECK YOUR VOLUME BEFORE TURNING ON THE AUDIO!!!</h3>
+  
+  <div class="interactiveFigure"> 
+   <svg height="300" width="600" id="vis_1"></svg>
+   <div class="controlSlice">
+     <label for="demo1FreqSlider">Frequency:</label>
+     <input type="range" id="demo1FreqSlider" min="50" max="2000" step="1" value="1000">
+   </div>  
+   <button id="demo1Toggle">Start sound</button>
+  </div> 
+  
+  <h3>Noise maskers</h3>
+  
+  <p><em>Noise</em> in this context does not refer to any old noise, like a cat screeching in the night or cutlery falling onto the floor. Noise in this context refers to stimuli that contain wide range of randomly fluctuating frequencies. The most fundamental class of this kind of noise is what is simply referred to as <em>white noise</em>. It contains all frequencies, resulting in a uniform sounding hissing - something akin to a radio that's not tuned to any station.</p>
+  
+  <p>Often noise stimuli (at least in the context of auditory filters) are <em>filtered</em> in some way. This simply means that some frequencies are removed or emphasized, similar to when you use the <em>bass</em> and <em>treble</em> knobs on your stereo to, indeed, attenuate or accentuate low or high frequencies.</p>
+  
+  <p>In the demonstration below you have the chance to listen to white noise that's been passed through a <em>passband filter</em>. This means that it lets frequencies near its center frequency pass, and attenuates other frequencies. Use the sliders below the graph to change the center frequency and sharpness of the filter; the graph shows the shape of the current filter. </p>
+  
+  <p>(Take into account that the sound is again further filtered through your audio system: if you are listening to this on a particularly low-end set of speakers,  they will probably distort the frequencies quite a bit - as mentioned earlier e.g. laptop's speakers tend to filter out frequencies below about 150Hz. Still, you can get an idea about how differently filtered noises sound like.)</p>
+  
+  <p>The grayish block (it will be drawn once you turn the sound on) represents the noise: the higher the block is, there more energy (more noise) at that frequency, for example, if the gray block of noise has a peak around 1000Hz,this means, that the noise primarily contains frequencies around that point.</p>
+  
+  <p>Try for example changing the filter to a rather sharp one - one which is narrow - and then sweeping through the frequencies by changing the center frequency from low to high. Ooh, like wind murmuring angrily in the trees!</p>
+  
+  <div class="interactiveFigure">
+   
+   <svg height="300" width="600" id="vis_2"></svg>
+   <div class="controlSlice">
+     <label for="demo2FreqSlider">Center frequency:</label>
+     <input type="range" id="demo2FreqSlider" min="300" max="1500" step="1" value="1000">
+   </div>
+   <div class="controlSlice">
+     <label for="demo2QSlider">Sharpness:</label>
+     <input type="range" id="demo2QSlider" min="0.5" max="10" step="0.001" value="1">
+   </div>
+   <button id="demo2Toggle">Start sound</button>
+  </div> 
+  
+  <h2>A practical demonstration of frequency selectivity</h2>
+  
+  <p>Now that sine waves and noises are familiar, we can talk about the actual topic of this page.</p>
+  
+  <p>The concept of frequency selectivity is closely related to the concept of <em>masking</em>. Masking simply refers to the situation in which one sound negatively affects the detection of some other sound, quite literally that one sound <em>masks</em> another. Usually in psychoacoustics this refers to sine waves being masked by noise maskers.</p>
+
+  <p>In the demonstration below you are to listen to the 1000Hz sine wave (as shown by the vertical dashed line) that is  being masked by passband filtered noise (as shown by the gray block). You can change the center frequency of the noise masker. Try just that and take note how the center frequency of the noise affects the audibility of the sine wave.</p>
+  
+  <div class="interactiveFigure">
+    <svg width="600" height="300" id="vis_3"></svg>
+    <div class="controlSlice">
+      <label for="demo3CFSlider">Center frequency:</label>
+      <input type="range" id="demo3CFSlider" min="300" max="2000" step="1" value="1000">
+    </div>
+    <button id="demo3toggle">Start sound</button>
+  </div>
+  
+  <p>As you probably noticed, when the noise masker is shifted farther from the signal, the beep becomes more audible.</p>
+  
+  <p>This might seem awfully trivial: well of course the noise masks the signal only when it's on top of it! But remember: when our outer ear picks up sounds, they are just a "blob" of frequencies, and this is the case still when the sound is passed through the bones of the middle ear. There is no reason, at this point, that the frequencies of the noise masker should really affect the amount of masking: one masker should be as good as the other.</p>
+  
+  <p>However, in the inner ear something quite remarkable happens: the sound is decomposed into its constituent frequencies, which can be thought of a kind of frequency analysis of the signal. Due to this, different frequencies can be processed - to a degree - independently of each other. As a consequence, when the noise masker is shifted farther away from the beep, it does not mask it anymore, since the processing of the beep and the noise are done by different parts of our auditory system.</p>
+  
+  <p>As already noted, this frequency analysis has its limits: for example the 1000Hz sine wave in this demo is somewhat masked by the parts of the noise masker that are close, but not quite, 1000Hz. Usually this is modeled by assuming that we are listening to the sounds  through a filter, the same kind that was earlier (in the second demonstration) used to filter noise.</p>
+  
+  <h2>A simulated auditory filter</h2>
+  
+  <p>There are three components in the next demonstration:</p>
+  
+  <ol>
+    <li>A signal (a beep): centred at 1000Hz, represented by the dashed vertical line</li>
+    <li>A noise masker: a <em>notched noise</em> masker that has energy above and below signal: look at the symmetric gray block.</li>
+    <li>The auditory filter that we are listening this through: this is the roughly bell shaped filter, that is centered on the signal</li>
+  </ol>
+  
+  <p>The assumption is that the 1000Hz signal is heard through a passband filter that is also centered on 1000Hz.  Remember that a passband filter attenuates frequencies far from its center frequency. In the demonstration below, this is represented by the curve centered on the signal. If the bandwidth of the listening filter is wide, then it picks up frequencies far from its center frequency and, in this case, the actual signal (the beep) becomes more polluted by the noise that's lurking above and below the signal.</p>
+  
+  <p>(Of course in practice when we are listening to sounds, we are not just listening to a single auditory filter, but - so the assumption goes - we listen to sounds through an array of such filters, each with a different center frequency. This simulation is rather abstract in that sense, that it simulates what just one such filter would "hear".)</p>
+  
+  <p>You can try this in practice in the simulation below. Use the slider to adjust the listening filter's bandwidth. Listen to how this affects the ratio of signal and noise.</p>
+  
+  <p>I will again emphasize that when you change the bandwidth of the "auditory filter" the level of noise and signal stay the same, they are not affected by the slider. When the bandwidth is small, the overlap of the filter with the noise masker also becomes smaller, and so less of the noise is picked up by the filter, and the noise starts to sound quieter.</p>
+  
+  <div class="interactiveFigure">
+    <svg width="600" height="300" id="vis_4"></svg>
+    <div class="controlSlice">
+      <label for="demo4QSlider">Filter sharpness:</label>
+      <input type="range" id="demo4QSlider" min="0.25" max="10" step="0.01">
+    </div>
+    <button id="demo4toggle">Start sound</button>
+  </div>
+   
+  <p>Usually it is assumed that we are not able to alter the sharpness of our ear's filtering as dramatically as in the demonstration, though some suggest that e.g. attention might modulate the sharpness of the filters in a measurable way. Whatever the case might be, usually then it is assumed that the width of one's auditory filters is reasonably stationary, and what is investigated is how wide such filters are and what shape they are.</p> 
+  
+  <h2>Conclusion</h2>
+  
+  <p>The main takeaway from this tutorial is that our auditory system is able to split incoming sounds into different frequencies and process these different frequencies independently. There are however limits to this. A common way of modeling this is to assume that the detection of signals can be modeled with bandpass filter that's centered on the signal. The narrower the bandwidth of this filter, the more sharply tuned it is to listen to that specific frequency and the less it is contaminated by e.g. noise on other frequency bands. These filters are usually referred to as auditory filters.</p>
+  
+  <p>It is, however, important to understand, that there aren't <em>really</em> this kind of filters in our ear or brain. This is just a convenient mathematical way of conceptualizing the biological and mechanical processes that lead to this kind of frequency selectivity in our auditory system.</p>
+  
+  <p>The bandwidths of the auditory filters are commonly studied using the kind of stimuli that were present in the last demonstration: sine waves masked by different notched noise maskers. A widely used model of the auditory filter is based on the rounded exponential function (ROEX function). In an upcoming tutorial I will show how the notched noise experiment can be used to determine the bandwidths of auditory filters and also how to do Bayesian inference on the parameters of the ROEX model.</p>
+  
+
+</main>
+<footer>&copy; Joni Päääkkö</footer>
+<script src="../../js/graphicsLibrary/SVGVisualization.js"></script>
+<script src="js/af_intro_v2.js"></script>
+</body>
+
+</html>

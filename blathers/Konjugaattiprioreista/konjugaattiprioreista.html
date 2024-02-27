@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fi">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Konjugaattiprioreista</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/blather.css">
+        <link rel="stylesheet" href="../../css/slideShowStyle.css">
+    </head>
+    <body>
+        <main>
+            <h1>Konjugaatti- ja ei-konjugaattiprioreista</h1>
+
+            <h2>Johdanto</h2>
+
+            <p>Bayes-tilastotieteen kenties tunnetuin ominaisuus on se, että siinä tilastolliseen malliin otetaan mukaan priori-tietoa, eli tietoa, jota meillä on etukäteen. Usein Bayesiläinen päättely tiivistetäänkin sanomalla, että priori-tieto päivitetään dataa havaitsemalla posteriori-tiedoksi, eli tiedoksi, mikä kirjaimellisesti kuvaa sitä, mitä tiedämme aineiston havaitsemisen jälkeen.</p>
+
+            <p>Yleensä priori-tieto ilmaistaan todennäköisyysjakaumana jollekin parametrille: voimme tiivistää ennakkotietomme vaikkapa lineaarisen mallin kulmakertoimesta normaalijakaumaan, jonka keskiarvo on nolla ja keskihajonta viisi. Tällöin odottaisimme keskimäärin kulmakertoimen arvon olevan lähellä nollaa, mutta suuretkin (suhteessa toki asteikkoon) poikkeamat olisivat vielä mahdollisia.</p>
+
+            <p>Tässä kuvassa ei sinänsä ole mitään vikaa,  ja se kuvaakin erinomaisella tarkkuudella suurinta osaa tilanteista, joissa Bayes-päättelyä käytetään.</p>
+
+            <p>Haluan kuitenkin ottaa esiin yhden havainnollistavan esimerkin kautta tilanteen, jossa priori-tieto on hieman erilaisessa asemassa. Tässä esimerkissä priori-tieto on olennaisessa osassa kokonaiskuvan selvetämistä, ei ainostaan toimimassa painotusfunktiona parametrien mahdollisille arvoille.</p>
+
+            <p>Kehystän keskutelun tästä vieläpä yleisempään kehikkoon konjugaattisista ja ei-konjugaattisista prioreista. Konjugaattiset mallit ovat sellaisia, joiden priori- ja uskottavuusfunktiot tuottavat yhdessä jakauman, joka tunnetaan suljetussa muodossa. Saattaa olla, että tätä tilannetta pidetään tietyssä mielessä ihanteellisena paitsi sen matemaattisen miellyttävyyden vuoksi, niin myös siksi, että se vaikuttaa teoreettisesti yhtenäisemmältä. Tätä käsitystä – sikäli kun niin kukaan ajattelee - haluan ravistella tässä kirjoituksessani. </p>
+
+            <p>Aloitan käsittelyn ehkäpä tunnetuimmasta konjugaattimallista, binomijakaumamallista Beta-priorilla.</p>
+
+            <h2>Binomijakaumamalli</h2>
+
+            <p>Binomijakaumamalli kuvaa jonkin tapahtuman todennäköisyyden posteriori-todennäköisyyttä: mikä on todennäköisyys vaikkapa sille, että pelaaja saa koripallon koriin, ja miten tarkasti tiedämme tämän todennäköisyyden. Mikä tekee tästä mallista miellyttävän, on se, että posteriori-jakauma tunnetaan suljetussa muodossa. Tässä mallissa, kuten tunnettua, priori-jakaumana käytetään beta-jakaumaa ja aineiston mallina binomijakaumaa.</p>
+
+            <p>Uskottavuusfunktio yksittäiselle havainnolle on erittäin yksinkertainen. Tässä nämä funktiot matemaattisessa muodossa, ensin sille tapaukselle, että havaitsemme referenssikategoriaan kuuluvan havainnon (pallo meni koriin):</p>
+
+            <div class="equation">
+                P(y = 1| &theta;) = &theta;<br>
+                P(y = 0| &theta;) = 1 - &theta;
+            </div>
+
+            <p>Muistutan vielä, että koska parameteri &theta; kuvaa todennäköisyyttä, se on rajattu nollan ja ykkösen välille. Graafisesti nämä muodostavat lineaarisen funktion tuolle välille:</p>
+
+            <figure>
+                <img src="figs/uskottavuusfunktiot.svg">
+            </figure>
+
+            <p>Uskottavuusfunktio aineistolle, joka koostuu useammista havainnoista, saadaan kertomalla näitä lineaarisia funktioita keskenään. Kuten alla olevista kuvaajista näemme, tämä aiheuttaa sen, että lopputuloksena saatu funktio ei ole enää lineaarinen, vaan se saa tuollaisia kumpuilevia muotoja:</p>
+
+            <div class="slideShow">
+                <div class="slides">
+                    <div class="slide" slideTitle="Yksi havainto">
+                         <img src="figs/uskottavuuskonvoluutio_1.svg">
+                         <p>Yksi referenssikategoriaan kuuluva havainto (y = {1}).</p>
+                     </div>
+                     <div class="slide" slideTitle="Kaksi havaintoa">
+                         <img src="figs/uskottavuuskonvoluutio_2.svg">
+                         <p>Kaksi referenssikategoriaan kuuluvaa havaintoa (y = {1, 1}).</p>
+                     </div>
+                     <div class="slide" slideTitle="Kolme havaintoa">
+                         <img src="figs/uskottavuuskonvoluutio_3.svg">
+                         <p>Kaksi referenssikategoriaan kuuluvaa havaintoa ja yksi referenssikategoriaan kuulumaton havainto (y = {1, 1, 0}).</p>
+                     </div>
+                </div>
+            </div>
+
+            <p>Koska posteriori-jakaumat ovat nimenomaan <em>todennäköisyysjakaumia</em>, täytyy tämä lopputuloksena ollut funktio skaalata niin, että sen pinta-ala tuolla välillä on 1.0. Lopputuloksena on beta-jakauma parametreilla &alpha;=N<sub>y=1</sub>+1 ja &beta;=N<sub>y=0</sub>+1. Äskeisen esimerkin tapauksessa, jossa referenssikategoriaan kuuluvia havaintoja oli 2 ja siihen kuulumattomia havaintoja 1, nuo parametrit olisivat siis &alpha; = 3 ja &beta; = 2. Alla olevassa kuvaajassa on vasemmalla skaalattu uskottavuusfunktio ja oikealla beta-jakauma vastaavilla parametreilla. Vasemmalla oleva kuva on siis tuotettu kirjaimellisesti vain kertomalla lineaarisia funktioita keskenään ja skaalaamalla lopputulos; oikealla oleva kuvaaja on piirretty käyttämällä beta-jakauman tiheysfunktiota:</p>
+
+            <figure>
+                <img src="figs/betavsuskottavuus.svg">
+            </figure>
+
+            <p>Voimme siis olla vakuuttuneita siitä, että Beta-jakauma todellakin saadaan rakennettua kertomalla lineaarisia funktioita keskenään ja skaalamalla lopputulos sopivasti.</p>
+
+            <p>Koska tässä binomijakaumamallissa myös priori-jakauma määritellään beta-jakaumana, voimme ajatella, että se edustaa joko konkreettisesti aikaisemmin havaittuja tapauksia, tai sitä, miten uskoisimme tai tietäisimme havaintojen noihin kategorioihin jakautuvan. Tietyssä mielessä mallissa ei siis ole muuta kuin tuo uskottavuusfunktio: priori- ja posteriori-jakaumat seuraavat suoraan siitä.</p>
+
+            <p>Tämä mallin yhtenäisyys on tietyssä mielessä ilahduttavaa. Ei vain siksi, että tunnemme jakaumat suljetussa muodossa, vaan ehkäpä myös siksi, että tuntuu siltä ettei siinä ole mitään ylimääräistä; kaikki tuntuu seuraavan tuosta yksinkertaisesta lineaarisen funktion muotoa seuraavasta uskottavuusfunktiosta...</p>
+
+            <p>Seuraavaksi tarkoituksenani onkin ravistella tätä yhtenäisyyden iloisuutta ottamalla esimerkiksi mallin, jossa juuri se, että priori- ja posteriori-jakaumien välillä <em>ei</em> ole tällaista yhtenäisyyttä onkin vahvuus!</p>
+
+            <h2>Kaksoispakkovalintakoe</h2>
+
+            <p>Ihmisten (ja muidenkin eläinten) havaintokynnyksiä tutkitaan usein niin kutsutulla kaksoispakkovalintakokeella. Näön tutkimuksen kontekstissa tämä voisi konkreettisesti tarkoittaa sitä, että ihmiselle esitetään kaksi ääniärsykettä, joista toisessa näistä on esimerkiksi vaimea piipaus, joka hänen tulisi yrittää havaita. Tärkeää on huomata, että toinen ärsykkeistä on aina "tyhjä", eli se sisältää, äänen tapauksessa, vain hiljaisuutta.</p>
+
+            <p>Koehenkilön tehtävänä on siis osoittaa, kummassako näistä hän uskoo piipauksen lymyävän.</p>
+
+            <p>Tehtävän laadusta johtuen – siinä on kaksi vaihtoehtoa – koehenkilöllä on viidenkymmenen prosentin mahdollisuus osua oikeaan sattumalta. Kun ärsykkeen taso nousee, eli esimerkiksi piipauksen äänenvoimakkuutta lisätään, myös todennäköisyys oikealle vastauukselle kasvaa.</p>
+
+            <p>Voimme mallintaa havaintokynnystä esimerkiksi logit-regressiolla. Logit-regressiossahan todennäköisyyden logit-muunnosta mallinnetaan lineaarisella funktiolla. Ärsykkeen arvo nolla tarkoittaisi ärsykettä, jonka voimakkuss on nolla, eli pelkkää hiljaisuutta. Tässä tapauksessa, jossa tunnemme todennäköisyyden oikealle vastaukselle kun ärsykkeen taso on nolla, voimme jättää mallista vakiotermin pois: suorahan alkaa aina kohdasta, jossa todennäköisyys on 0.5.</p>
+
+            <p>Yksinkertaisimmillaan olemme siis kiinnostuneita mallista</p>
+            
+            <div class="equation">
+                logit(P(Oikea)) = x &beta;
+            </div>
+
+            <p>Jossa <em>x</em> vastaa esimerkiksi piipauksen äänenvoimakkuutta ja olemme kiinnostuneita estimoimaan &beta;-parametrin suuruutta; se siis kuvaa, tässä tapauksessa, kuulon tarkkuutta. Vakiotermiä ei ole, joten funktio alkaa aina kohdasta 0.0 (x on pienimmillään nolla, eikä negatiivisia &beta;:n arvoja sallita). Kuten jo todettua, tämä tarkoittaa siis 50&percnt;:n mahdollisuutta osua oikeaan kun <em>x</em> = 0.</p>
+
+            <p>Tämä voi olla hieman ongelmallista. Ajatellaanpa todennäköisyyttä ärsykkeen havaitsemiselle, kun äänenvoimakkuus on todella iso, niin iso, että osanottaja valitsee oikean vastauksen aina. Mallimme mielestä on <em>silti</em> aina mahdollista, että osanottajamme ei välttämättä ole oikeasti havainnut ärsykettä, että hän on vain sattumalta osunut oikeaan niin monta kertaa peräkkäin: todennäköisyys sille, että hänen havaintokynnyksensä olisi äänille olisi jossain ydinräjähdyksen tienoilla ei koskaan saavuta nollaa, emme voi koskaan sulkea tuota mahdollisuutta pois.</p>
+
+            <p>Mallin rakenteesta johtuen todennäköisyys korkeille kynnyksille on aina minimissään 0.5^N<sub>y=1</sub>.</p>
+
+            <p>Voi tietenkin olla tilanteita, joissa tämänkaltainen agnostisuus on hyve. Jos esimerkiksi valitsemme ihmispopulaatiosta satunnaisia osanottajia, voi olla, että osanottaja todellakin on esimerkiksi kuuro, ehkäpä äänentoistolaitteistomme ei toimi tai hän muuten vain vastailee miten sattuu. Tyypillisimmissä tilanteissa tämä tosin ei kuvaa realistisesti lähtötietoamme osanottajasta. Jos testaamme ihmisiä, joilla ei ole kuulovammaa, tiedämme kyllä että he tunnistavat ärsykkeen, johon piipaus on piilotettu &ndash; jo paljon ennen kuin äänenvoimakkuus lähentelee tulivuorenpurkauksen tasoja.</p>
+
+            <p>Nyt emme voikaan ilmaista tätä priori-tietoa itsellään kerrottuna uskottavuusfunktiona; kuviteltuna tai tiedettynä ennakkoaineistona.</p>
+
+            <h2>Loppu</h2>
+
+            <p>Kaksoispakkovalintakoe-esimerkistä näimme, että priori-tieto voi olla muutakin kuin vain parametreille annettu painotusfunktio. Priori-tietoa voidaan käyttää enkoodamaan myös muita oletuksiamme mallintamastamme tilanteesta, vaikkapa tunnettuja faktoja ihmisen kuuloaistista; asioita, jotka eivät sisälly malliin tai uskottavuusfunktioon.</p>
+
+            <p>Tämä johtuu siitä, että tässä tapauksessa mallimme tietää vain, että on kaksikategorisia havaintoja, joiden todennäköisyys riippuu <em>x</em>-muuttujasta ja että aina on 50&percnt;:n mahdollisuus osua oikeaan. Malli ei tiedä mitään tyypillisistä kuulokynnyksistä, tai siitä, miten osanottajat on kokeeseen valikoitu; tällainen yksinkertainen logit-malli onkin tietyntyyppinen perusmalli. Voimme kuitenkin <em>täydentää</em> mallin priori-tiedolla, niin, että se vastaa paremmin sitä tilannetta, jossa sitä käytemme. Tämä on helpompaa kuin yrittää keksiä sellainen malli, johon nuo oletukset ja ennakkotiedot sisältyisivät suoraan.</p>
+
+        </main>
+        <footer>&copy; Joni Pääkkö (2022)</footer>
+
+        <script src="../../js/slideshow.js"></script>
+    </body>
+</html>

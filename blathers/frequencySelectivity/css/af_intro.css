@@ -1,0 +1,61 @@
+svg{
+    width: 100%;
+    max-width: 600px;
+}
+
+svg polygon:hover{
+    stroke: hsl(100, 100%, 0%);
+    stroke-width: 2px;
+    stroke-dasharray: 8, 3;
+}
+
+.signalLine{
+    stroke: hsl(200, 100%, 0%);
+    stroke-dasharray: 4, 1;
+}
+
+.signalLine:hover{
+    stroke: hsl(200, 100%, 70%);
+}
+
+figure{
+    text-align: center;   
+}
+
+.controlSlice{
+    display: block;
+}
+
+.controlSlice * {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.interactiveFigure{
+    text-align: center;
+}
+
+.interactiveFigure button{
+    border: none;
+    font-family: "Garamond", serif;
+    font-size: 16pt;
+    padding: 10px;
+    background-color: rgb(240, 120, 75);
+    width: 20%;
+}
+
+.interactiveFigure button:hover{
+    background-color: rgb(240, 150, 100);
+    cursor: pointer;
+}
+
+label{
+    font-size: 20px;
+    font-family: "Garamond", serif;
+    text-align: justify;
+}
+
+ol{
+    font-family: "Garamond", serif;
+    font-size: 14pt;    
+}

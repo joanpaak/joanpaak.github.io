@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Luottamusväli &ne; luottamusväli</title>
+        <link rel="stylesheet" href="../../css/blather.css">
+        
+    </head>
+    <body>
+        <main>
+            <h1>Luottamusväli &ne; luottamusväli</h1>
+
+            <p>Ah, luottamusvälit!</p>
+
+            <div class="floatingImgDiv2">
+                <a href="klassinenPylpyrä.png"><img src="klassinenPylpyrä_pieni.png"></a>
+                <div>85%:n luottamusvälejä yhden otoksen t-testille, kun populaatio &sim; N(0, 1). Punaiset luottamusvälit eivät sisällä populaation keskiarvoa. Oliskohan pituuden ja sen, että sisältääkö luottamusväli populaation keskiarvon, välillä yhteyttä? Sitä pohdimme tässä tekstissä!</div>
+            </div>
+
+            <p>
+                Millä tilastotieteen alkeiskurssilla ei käsiteltäisi 95-prosentin luottamusvälejä. Ja on hankala löytää empiiristä tutkimusta käsittelevää artikkelia, jossa ei piste-estimaateille olisi kyseisiä välejä viiksiksi piirrelty.  
+            </p>
+
+            <p>
+                Mutta mitenpä sen yleisen tulkinnan kanssa, että kiinnostuksen kohteena oleva populaation parametri on 95 prosentin todennäköisyydellä otoksesta lasketun luottamusvälin sisässä? (Jatkossa oletan, että kiinnostuksen kohteena oleva parametri on keskiarvo niin on lyhyempiä ja selkeämpiä lauseita).
+            </p>
+
+            <p>
+                Niin, kyllähän siitä on varoiteltu, että noin ei niitä pitäisi tulkita, mutta koska monella on hankaluuksia hankkia intuitio niistä muutenkaan, niin tuohon tulkintaan sorrutaan. Ehkäpä pientä syyllisyyttä tuntien, mutta ajatellen, että ei se nyt niin vakavaa ole: miksemme muka voisi sanoa, että jokin yksittäinen luottamusväli sisältää populaation keskiarvon jos kerran 95 prosenttia niistä sen sisältää? 
+            </p>
+
+            <p>
+                Vähän siis niin kuin raaputusarvoissa: jos 2% niistä sisältää voiton niin silloin yksittäisen arvan voittotodennäköisyys on sen verran, mitä siitä vaikka vähän siinä sotkisi frekventismin jauhelihakeittoa bayesiläisyyden minttujäätelöön.
+            </p>
+
+            <p>
+                Mutta entäpä jos katsoisimme asiaa näin:
+            </p>
+
+
+
+            <p>
+                Sanotaanpa, että olemme laskeneet otoksestamme luottamusvälin, jonka pituus on 2.0. Jos tahdomme pysytellä väärintulkinnassamme, eikö silloin pitäisi olla niin, että KAIKISTA 2.0:n pituisista luottamusväleistä 95 % sisältää populaation keskiarvon? Konkreettisesti: jos meillä on sata 2.0:n pituista luottamusväliä niin noin 95 niistä sisältää poplaation keskiarvon?
+            </p>
+
+            <p>
+                Näin ei kuitenkaan ole! Todennäköisyys sille, että luottamusväli sisältää populaation keskiarvon, muuttuu sen pituuden funktiona. Hämmentävää. 
+            </p>
+
+            <p>
+                Liitteenä oleva kuva sisältää tulokset kahdesta simulaatiosta. Näihin simulaatioihin on arvottu kymmenen ja sadan kokoisia otoksia standardinormaalijakaumasta (8 miljoonaa simulaatiota per kuvaaja). Jokaisesta otoksesta on sitten laskettu luottamusväli ja katsottu että sisältääkö se populaation keskiarvon eli nollan.
+            </p>
+
+            <div class="floatingImgDiv">
+                <a href="simulaatiot.png"><img src="simulaatiot_pieni.png"></a>
+                <div>Simuloituja tuloksia.</div>
+            </div>
+
+            <p>
+                Kuvaajissa olevat mustat vertikaaliset pökäleet näyttävät virhemarginaalit. Ne ovat suurempia lyhyille ja pitkille luottamusväleille, koska niitä esiintyy simulaatioissa harvemmin.
+            </p>
+
+            <p>
+                Punainen horisontaalinen viiva näyttää nimellisen 95%:n todennäköisyyden. Mikä on ironista, on se, että todennäköisyys sille, että luottamusväli sisältää populaation keskiarvon, on pienempi LYHYILLE luottamusväleille. Joskushan luottamusväli tulkitaan tiedon tarkkuutena: lyhyt luottamusväli = tarkempaa tietoa. 
+            </p>
+
+            <p>
+                Jos laskisimme keskiarvon sille, että populaation keskiarvo sisältyy noihin luottamusväleihin, olisi se kyllä 95 %, eli luottamusvälien laskemiseen käytetyt oletukset ja matematiikka on ihan kunnossa ja toimii kuten pitääkin. 
+            </p>
+
+            <p>
+                Tämä on tärkeä muistutus, että on eri asia sanoa, että 95 % kaikista luottamusväleistä sisältää populaation keskiarvon kuin että yksittäinen luottamusväli sisältää sen tuolla todennäköisyydellä. 
+            </p>
+        </main>
+        
+        <footer>&copy; Joni Pääkkö</footer>
+    </body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <title>mAFC approximation</title>
+</head>
+
+<body>
+
+<main>
+
+  <h1>mAFC approximation</h1>
+
+  <h2>Contents</h2>
+
+  <ol>
+    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#2afc">Linearity of &Phi;<sup>-1</sup>(P(R = 1)) and d' in 2AFC</a></li>
+    <li><a href="#nutshell">Current approach in a nutshell</a></li>
+    <li><a href="#approxinr">Approximating Equation 1 in R</a></li>
+    <li><a href="#estpoly">Estimating the polynomial in R</a></li>
+    <li><a href="#testsimu">Simulate data / Fit models</a></li>
+    <li><a href="#stan3afc">Stan program for 3AFC</a></li>
+    <li><a href="#nonincreasing">What do to if the polynomial is not monotonically increasing?</a></li>
+    <li><a href="#errors">Errors between the polynomial approximation and R's integrator</a></li>
+  </ol>
+
+  <h2 id="intro">Introduction</h2>
+  
+  <p>When applying the Gaussian Signal Detection Theory to mAFC models in which m &gt; 2, the response probabilities  don't have a closed-form solution, since finding the probability of a correct response (which can be notated as P(R = 1)) for an <em>m</em> alternative task would require solving the following integral (DeCarlo 2012)</p>
+
+  <div class="equation">
+    &int; &Phi;(x)<sup>(m-1)</sup>N(x, d', 1.0)dx
+    <div class="eqlab">
+    (Eq.1)
+    </div>
+  </div>
+  
+  <p>in which &Phi; is the cumulative distribution function (CDF) of the standard normal distribution, N(d', 1.0) is the probability density function (PDF) of a normal distribution with mean d' and variance 1.0 and m is the number of alternatives.</p>
+  
+  <p>The main goal of this text is to show that the function between d' and the &Phi;<sup>-1</sup>(P(R = 1)) can be relatively well approximated with simple polynomials. Here, &Phi;<sup>-1</sup> is the inverse cumulative distribution function of the normal distribution.</p>
+  
+  <p>There are two advantages to this approach. 1) Speed: e.g. Stan does come with a 1D integrator-which would allow one to numerically approximate Equation 1-but this results in a fairly slow algorithm (at least on my computer) which limits the applications of these kinds of models. 2) Simplicity: this approach is easy to use and simple to set up; it is (relatively) intuitive and as such easy to understand.</p>
+  
+  <p>I will show how to do use polynomial approximation for a 3AFC task in practice in R, and then use that approximation to simulate data, get maximum a posteriori estimates and lastly how do full Bayesian inference in Stan. I will also discuss what to do if the polynomial approximation is not monotonically increasing, and provide some tips for coding these models in R and Stan.</p>
+
+  <h2 id="2afc">Linearity of &Phi;<sup>-1</sup>(P(R = 1)) and d' in 2AFC</h2>
+
+  <p>Consider the probability of a correct response in a 2AFC task:</p>
+  
+  <div class="equation">
+  P(R = 1) = &Phi;(d' / &radic;2)
+  <div class="eqlab">
+  (Eq. 2)
+  </div>
+  </div>
+  
+  <p>Remember that the CDF (&Phi;) and the inverse CDF (&Phi;<sup>-1</sup>) "cancel out" each other, analogously to how multiplication and division can "cancel out" each other. So if we put both sides of Equation 2 inside &Phi;<sup>-1</sup> like this</p>
+  
+  <div class="equation">
+  &Phi;<sup>-1</sup>(P(R = 1)) = &Phi;<sup>-1</sup>(&Phi;(d' / &radic;2)) 
+  </div>
+  
+  <p>we are left with this</p>
+  
+  <div class="equation">
+  &Phi;<sup>-1</sup>(P(R = 1)) = d' / &radic;2 
+  </div>
+    
+  <p>We can say that the inverse CDF transformation of the probability of P(R = 1) is a linear function of d' with parameters a = 0 and b = 1/&radic;2.</p>
+
+  <p>Unfortunately for m &gt; 3 &Phi;<sup>-1</sup>(P(R = 1)) is no longer a linear function of d'. If it was, it would be easy to estimate it's parameters. However, we can get fairly close by using polynomial regression - which indeed is the topic of this text.</p>  
+  
+  <h2 id="nutshell">Current approach in a nutshell</h2>
+  
+  <p>There's really just three steps:</p>
+  
+  <ol>
+    <li>Approximate the integral of Equation 1 for  various d'-values. After this step you should have a vector of d'-values and a vector of probabilities of correct responses.</li>
+    <li>Fit a polynomial of <em>n</em>th degree: &Phi;<sup>-1</sup>[P(Corr)] = a + &sum;b<sub>i</sub>d'<sup>i</sup></li>
+    <li>Now the probability of  a correct response can be found easily by using the estimated coefficients: P(Corr) = &Phi;(a + &sum;b<sub>i</sub>d'<sup>i</sup>)</li>
+  </ol>
+  
+  <p>If you are uncertain as to what all that means,  I will walk you through how to implement these steps in practice in R and Stan.</p>
+  
+  <h2 id="approxinr">Approximating Equation 1 in R</h2>
+  
+  <p>In R the integral of Equation 1 can be numerically approximated by defining the integrand as a function and then using R's built-in integrator. The variables, over which we are not integrating (d' and m), are supplied as arguments to it:</p>
+  
+  <pre>
+  integrand = function(x, dprime, m){
+    pnorm(x)^(m-1) * dnorm(x, dprime)
+  }
+  </pre>
+  
+  <p>It is then simple to use R's integrator to find response probabilities for various d' values for fixed <em>m</em>, here for <em>m</em> = 3: </p>
+  
+  <pre>
+  dprimes = seq(0, 10, 0.01)
+  pcorr   = rep(NaN, length(dprimes))
+
+  for(i in 1:length(dprimes)){
+    pcorr[i] = integrate(integrand, 
+                         dprime = dprimes[i],
+                         m = 3,
+                         rel.tol = 1e-13,
+                         abs.tol = 0,
+                         lower = -Inf,
+                         upper = Inf)$value
+  }
+  </pre>
+  
+  <p class="note">NOTE: if one sets only the abs.tol parameter, the integration might terminate before reaching that since the relative tolerance is reached. By setting absolute tolerance to zero (basically unattainable), and the rel.tol to a small value will result in better accuracy. This is a slight variation on what John D. Cook noted in his blog post on Scipy's integrator (Cook, 2012).</p>
+  
+  <h2 id="estpoly">Estimating the polynomial in R</h2>
+  
+  <p>We want to fit a polynomial to the function between &Phi;<sup>-1</sup>(R = 1) and d'. From the last step we have the vectors <em>pcorr</em> and <em>dprimes</em>;  we get  &Phi;<sup>-1</sup>(R = 1) by using R's function <em>qnorm</em>. Fitting polynomials in R is simple, since we can use R's <em>poly</em> function to create the predictors and <em>lm</em> to find the coefficients. As an example, here I use a fourth degree polynomial:</p>
+  
+  <pre>
+    fit = lm(qnorm(pcorr) ~ poly(dprimes, degree = 4, raw = TRUE))
+  </pre>
+  
+  <p class="note">NOTE: You will want to make sure that you supply the named argument <em>raw=TRUE</em>, since otherwise the d' values will be centered and normalized. This is not a problem per se, but in all of the scripts below I will assume that the d'-values are not centered and normalized. Also, I find this to be more intuitive, since usually we use the d' values directly.</p>
+  
+  <p>You can get the estimated coefficients from the fit object with the function <em>coef</em>. The number of decimals can be set with the <em>format</em> function like this:</p>
+
+  <pre>
+    coefs = format(coef(fit), 1, 9)
+  </pre>
+
+  <p>This for example gives the coefficients up to nine decimal places. Using R's <em>as.vector</em> can help get rid of some of the unimportant stuff that gets printed on screen:</p>
+  
+  <pre>
+    > as.vector(coefs)
+    [1] "-4.31232205e-01" "7.77160861e-01"  "-3.97425403e-03" "-8.00229228e-05" "1.11980344e-05"
+  </pre>
+
+  <p>These coefficients can be hardcoded for example to a function that gives the response probabilities:</p>
+
+  <pre>
+    getPCorr4 = function(dprime){
+      return(pnorm(-4.31232205e-01 +
+                    7.77160861e-01 * dprime +
+                   -3.97425403e-03 * dprime^2 +
+                   -8.00229228e-05 * dprime^3 +
+                    1.11980344e-05 * dprime^4))
+    }
+  </pre>
+
+  <p>In this case the polynomial happens to be monotonically increasing and so this is all we need. If this is not the case - the polynomial is not monotonically increasing - you will want to define a cut-off point after which the function returns 1.0. The exact location of this cut-off point depends on the parameter <em>m</em>, number of alternatives, but for example in the 3AFC case the function is practically 1.0 already when d' is about 5.0. I will later come back to this issue and give some tips for what to do in a case like that.</p>
+
+  <p>For testing if the polynomial is monotonically increasing, one can e.g. try finding its roots and see if there are any real valued roots after the initial root:</p>
+
+  <pre>
+    > polyroot(coef(fit))
+    [1]   0.5564815+ 0.00000i -41.7340122+ 0.00000i  24.1618443-32.77763i  24.1618443+32.77763i
+  </pre>
+
+  <p>In this case there aren't (note that the roots whose real part is larger than zero also have non-zero imaginary parts).</p>
+
+  <p>In addition to this, it is also a good idea to plot the function up to some large values and see for yourself:</p>
+
+  <pre>
+    xvals = seq(0, 20000, length.out = 1000)
+    plot(xvals, predict(fit, newdata = data.frame(dprimes = xvals)), type = "l")
+  </pre>
+
+  <h3 id="testsimu">Simulate data / Fit models</h3>
+
+  <p>Next we will simulate data, and then find the Maximum a Posteriori (MAP) estimates for the simulated data sets. MAP estimates are similar to Maximum Likelihood estimates, really, but the likelihood is weighted with a prior, which means that unlikely values for the parameters get lower weights.</p>
+
+  <p>We will begin by choosing a function that relates the signal strength to the internal signal to noise ratio. We can for example use the ubiquitous "power law" model as the d' function:</p>
+
+  <div class="equation">
+    d' = (S/&alpha;)<sup>&beta;</sup>
+  </div>
+
+  <p>This is the actual <em>model</em> we're interested in estimating. This could of course be anything. If one was studying, say, auditory filtering, one would use equations for e.g. ROEX filters to calculate the d' values.</p>
+
+  <p>In the next R snippet the parameters of the model, &alpha; and &beta; are defined on the logarithmic scale, since they are often constrained to positive values (&alpha; because it relates, in SDT terms, to the standard deviation of the latent distributions of noise and signal distributions, and  &beta; because the d' function is constrained to be monotonically increasing).</p>
+
+  <p>We will first define the desired number of simulations, and the number of trials (stimuli) per simulation. Then a matrix is filled with generating parameter values that are drawn from the uniform distribution and made logarithmic; at this point I also create a matrix to house the maximum a posteriori estimates that we will be finding in the next step.</p>
+  
+  <p>In side the main simulations loop stimuli are drawn simply from the uniform distribution. R's rbinom function is then used to simulate the responses, the probabilities come from the function defined in the previous step. Stimuli and responses are stored in matrices, rows indexing the individual simulations.</p>
+
+  <pre>
+    N_simulations = 100
+    N_stimuli     = 200
+    
+    log_params    = matrix(NaN, ncol = 2, nrow = N_simulations)
+    log_estimates = matrix(NaN, ncol = 2, nrow = N_simulations)
+    
+    log_params[,1] = log(runif(N_simulations, 1.5, 5))
+    log_params[,2] = log(runif(N_simulations, 0.5, 1.5))
+    
+    S = matrix(NaN, ncol = N_stimuli, nrow = N_simulations)
+    R = matrix(NaN, ncol = N_stimuli, nrow = N_simulations)
+    
+    for(i in 1:N_simulations){
+      S[i,] = runif(N_stimuli, 0.1, 10)
+      R[i,] = rbinom(N_stimuli, 1, 
+                     getPCorr4((S[i,] / 
+                     exp(log_params[i,1]))^exp(log_params[i,2])))
+    }
+  </pre>
+
+  <p>For finding the MAP estimates, we define three functions: log prior, log likelihood and log posterior. It is possible to cram all of this in a single function, but I find it more fun to keep 'em separated, it's a bit clearer that way.</p>
+  
+  <p>All of these functions expect log transformed parameters as their input. Note that in the log likelihood function the likelihood is padded a bit, this is the 0.02 * (1/3) etc part: this prevents the likelihood of a single response being exactly 1.0. In the psychophysical literature this is sometimes referred to as correcting for lapses (see e.g. Zeigenfuse & Lee 2010), for example unintended incorrect responses to easily detectable stimuli, so this can be also be interpreted as having some psychological meaning but it also provides numerical stability.</p>
+
+  <p>I've arbitrarily chosen the prior for log(&alpha;) to be N(0, 1) and for log(&beta;) to be N(0, 2). In real situations more care should probably be given for choosing priors.</p>
+
+  <pre>
+    # Functions for Maximum a posteriori analysis. 
+    #
+    # For every function, log_theta is a vector of parameter values 
+    # c(log_alpha, log_beta)
+    #
+    # S and R are vectors of stimuli and responses. Stimuli are assumed
+    # to be strictly positive, and responses coded 0 = incorrect and 1 = correct.
+    # The vectors S and R should be the same length.
+    #
+    # The logLikelihood and logPosterior also require the function that calculates
+    # the response probabilities as a parameter. 
+
+    logPrior = function(log_theta){
+      return(sum(dnorm(log_theta, c(0, 0), c(2, 1), log = T)))
+    }
+    
+    logLikelihood = function(log_theta, S, R, getPCorr){
+      pcorr = getPCorr((S / exp(log_theta[1]))^exp(log_theta[2]))
+      presp = pcorr * R + (1 - pcorr) * (1 - R)
+      return(sum(log(0.02 * (1/3) + 0.98 * presp)))
+    }
+    
+    logPosterior = function(log_theta, S, R, getPCorr){
+      return(logPrior(log_theta) + logLikelihood(log_theta, S, R, getPCorr))
+    }   
+  </pre>
+
+  <p>After this is done, we can simply loop over the simulated data, and optimize the log posterior. Note that since the optimization algorithm <em>minimizes</em> by default, I give the optimization algorithm an anonymous function which returns the negative log posterior (minimizing the negative log posterior is the same as maximizing the log posterior). Estimates are stored in the matrix defined earlier.</p>
+
+  <p class="note">NOTE: it is not warranted that the optimization algorithm will always converge, that is, find the correct maximum. Again, in real situation the converge flag of the optimization should be monitored and the optimization started again from a different point if it is non-zero. It is usually also a good idea to start the optimization from a few different places and choose the best to avoid local minima, and otherwise anomalous fits.</p>
+
+  <pre>
+    for(i in 1:N_simulations){
+      fitMAP = optim(runif(2, -2, 2), function(theta, S, R, getPCorr){
+        return(-logPosterior(theta, S, R, getPCorr))
+      }, S = S[i,], R = R[i,], getPCorr = getPCorr4, method = "BFGS")
+      log_estimates[i,] = fitMAP$par
+    }
+  </pre>
+
+  <p>We can then look at how well the generating parameters were recovered:</p>
+
+  <pre>
+    # Plot correspondence between generating and estimated log alpha:
+    plot(log_params[,1], log_estimates[,1]); abline(0, 1, col = "red")
+    # The same but for log beta:
+    plot(log_params[,2], log_estimates[,2]); abline(0, 1, col = "red")
+  </pre>
+
+  <p>Note that there might be some divergent fits due to the aforementioned convergence problem. I got lucky, and the optimization algorithm seemed to always converge to a reasonable solution (note that I used <em>par(mfrow = c(1,2)) to draw both plots in the same figure</em>):</p>
+
+  <figure>
+    <img src="figures/params_against_estimates.png" alt="A figure that shows the estimated parameters as a function of generating parameters. The figure shows a positive correlation between these, although there is some variability.">
+  </figure>
+
+  <p>It is highly recommended to do full posterior analysis, since this allows one to quantify uncertainty. In the next part I will show how this model can be coded in the popular Stan programing language.</p>
+  
+  <h2 id="stan3afc">Stan program for 3AFC</h2>
+
+  <p>If you are new to Stan, I'd recommend checking out the tutorials at <a href="https://mc-stan.org">https://mc-stan.org</a>, there's also lots of good material on Youtube. My point is that this is not intended as a tutorial for Stan language, I will assume that you have some familiarity with the language. </p>
+
+  <p>This is the Stan code for a 3AFC model, with 4th degree polynomial approximation of the d' function, and using a two-parameter power law psychometric function:</p>
+
+  <pre>
+    functions{
+      real getPCorr(real dprime){
+      return(Phi_approx(-4.31232205e-01 +
+                         7.77160861e-01 * dprime +
+                        -3.97425403e-03 * pow(dprime, 2) +
+                        -8.00229228e-05 * pow(dprime, 3) +
+                         1.11980344e-05 * pow(dprime, 4)));
+      }
+    }
+    
+    data {
+      int<lower=0> N;
+      real<lower = 0> S[N];
+      int<lower = 0, upper = 1> R[N];
+      
+      real priorMus[2];
+      real<lower = 0> priorSds[2];
+    }
+    
+    parameters {
+      real logAlpha;
+      real logBeta;
+    }
+    
+    model {
+      logAlpha ~ normal(priorMus[1], priorSds[1]);
+      logBeta  ~ normal(priorMus[2], priorSds[2]);
+      
+      for(i in 1:N){
+        R[i] ~ bernoulli(0.02 * (1.0/3.0) + 0.98 * 
+          getPCorr(pow(S[i] / exp(logAlpha), exp(logBeta))));
+      }
+    }    
+  </pre>
+
+  <p>The polynomial approximation is defined in the <em>functions</em> block as its own function. Parameters are, again, defined on the log scale and given normal priors; parameters for this priors are supplied as data for the Stan program. Each response is modeled as being Bernoulli distributed with probability given by the parameters of the model and the polynomial approximation.</p>
+
+  <p>You can try running this program, if you still have the simulated data from the previous step - or some other data. Note that in order to run this from R, you will need to have the Rstan package installed, and the model saved to a .stan file.</p>
+
+
+  <pre>
+    library(rstan)
+    mdl3AFC = stan_model("../stan/stan3AFC.stan")
+
+    fit = sampling(mdl3AFC, data = list(N = N_stimuli, 
+                                    R = R[1,],
+                                    S = S[1,],
+                                    priorMus = c(0, 0),
+                                    priorSds = c(1, 2)))
+  </pre>
+
+  <p>After sampling is done, the fit object contains the samples, and prints summary statistics if it's called:</p>
+
+  <pre>
+    > fit
+     Inference for Stan model: stan3AFC.
+     4 chains, each with iter=2000; warmup=1000; thin=1; 
+     post-warmup draws per chain=1000, total post-warmup draws=4000.
+     
+                mean se_mean   sd   2.5%    25%    50%    75%  97.5% n_eff Rhat
+     logAlpha   0.62    0.01 0.32  -0.13   0.44   0.66   0.84   1.12   910    1
+     logBeta   -0.37    0.01 0.28  -0.95  -0.56  -0.37  -0.19   0.18   978    1
+     lp__     -89.69    0.03 1.09 -92.61 -90.10 -89.35 -88.91 -88.62  1069    1
+     
+     Samples were drawn using NUTS(diag_e) at Thu Jun 03 11:38:25 2021.
+     For each parameter, n_eff is a crude measure of effective sample size,
+     and Rhat is the potential scale reduction factor on split chains (at 
+     convergence, Rhat=1).
+  </pre>
+
+  <p>However, it is good idea to plot the samples to get an idea of the geometry of the full posterior distribution. This is simple, since we have just two dimensions to begin with:</p>
+
+  <pre>
+    plot(as.matrix(fit))
+  </pre>
+
+  <figure>
+    <img src="figures/exemplar_posterior.png" alt="This figure shows random draws from the posterior distribution of the model applied to a simulated data set. The random draws show a slight correlation between the parameters of the model.">
+  </figure>
+
+  <p>This tells us that the posterior distribution is somewhat correlated: plausibility of log alpha depends, to a  degree, on log beta. This is  not problematic per se.</p>
+
+  <h2 id="nonincreasing">What do to if the polynomial is not monotonically increasing?</h2>
+
+  <p>As already stated, the polynomial used to earlier happens to be monotonically increasing (on the domain of interest - it's not monotonically increasing everywhere). This is not always the case, for example, if one uses a 2nd degree polynomial. I'll show what to do in that case.</p>
+
+  <h3 id="fit2nd">Fitting a 2nd degree polynomial</h3>
+
+  <pre>
+    integrand = function(x, dprime, m){
+      pnorm(x)^(m-1) * dnorm(x, dprime)
+    }
+    
+    
+    dprimes = seq(0, 10, 0.01)
+    pcorr   = rep(NaN, length(dprimes))
+    
+    for(i in 1:length(dprimes)){
+      pcorr[i] = integrate(integrand, 
+                           dprime = dprimes[i],
+                           m = 3,
+                           rel.tol = 1e-13,
+                           abs.tol = 0,
+                           lower = -Inf,
+                           upper = Inf)$value
+    }
+    
+    
+    fit = lm(qnorm(pcorr) ~ poly(dprimes, degree = 2, raw = TRUE))
+  </pre>
+
+  <p>The polyroot function tells us that this polynomial has two roots, both of which are positive and have a zero imaginary part:</p>
+
+  <pre>
+    > polyroot(coef(fit))
+    [1]   0.5528427+0i 236.5754598-0i    
+  </pre>
+
+  <p>We can verify this by plotting the function</p>
+
+  <pre>
+    xvals = seq(0, 260, length.out = 1000)
+    plot(xvals, predict(fit, newdata = data.frame(dprimes = xvals)), type = "l")
+  </pre>
+
+  <p>Of course d' values beyond 236 might seem excessive, but there's still a chance that for example Stan might - with wide priors - sample parameters that might, in conjunction with large stimulus values, lead to d' values well above that.</p>
+
+  <h3>Writing the likelihood function</h3>
+
+  <p>To make sure that the function between d' and the probability of a correct response is monotonically increasing, I'll introduce a discontinuity in the function that calculates response probabilities:</p>
+
+  <pre>
+    getPCorr2 = function(dprime){
+      p = pnorm(-0.42564703147 + 
+                 0.77172355802 * dprime + 
+                -0.00325445571 * dprime^2)
+      
+      p[which(dprime > 50)] = 1.0
+      
+      return(p)
+    }
+  </pre>
+
+  <p>Based on the plot of the polynomial I decided to put the discontinuity at d' = 50. This is well above the point at which the response probabilities are numerically indistinguishable from 1.0:</p>
+
+  <pre>
+    > getPCorr(40) == 1.0
+    [1] TRUE   
+  </pre>
+
+  <p>Given the functions for MAP estimation we can use them with this approximation too, and save the estimates in a new matrix:</p>
+
+  <pre>   
+     log_estimates_2 = matrix(NaN, ncol = 2, nrow = N_simulations)
+     
+     for(i in 1:N_simulations){
+       fitMAP = optim(runif(2, -2, 2), function(theta, S, R, getPCorr){
+         return(-logPosterior(theta, S, R, getPCorr))
+       }, S = S[i,], R = R[i,], getPCorr = getPCorr2, method = "BFGS")
+       log_estimates_2[i,] = fitMAP$par
+     }
+  </pre>
+
+  <p>Plotting the estimates from this against the earlier estimates should reveal a close to one-to-one correspondence (again, given that the optimization algorithm always converges, which it necessarily doesn't):</p>
+
+  <pre>
+    # log alpha:
+    plot(log_estimates[,1], log_estimates[,1]); abline(0, 1, col = "red")
+    # log beta:
+    plot(log_estimates[,2], log_estimates[,2]); abline(0, 1, col = "red")
+  </pre>
+
+  <p>Here's what I got (with the exception that I used <em>par(mfrow = c(1,2))</em> to cram both plots in the same figure):</p>
+
+  <figure>
+    <img src="figures/estimates_from_the_two_approximations.png" alt="This figure plots estimates from the earlier approximation with a 4th degree polynomial as a function of the estimates from this approximation. They are almost perfectly correlated.">
+  </figure>
+
+  <h3>Writing the Stan file</h3>
+  
+  <p>Since Stan's algorithm is based on calculating the gradients of the posterior distribution, discontinuities can result in problems. If you introduce the if/else statement in the wrong place, the program won't work. </p>
+
+  <p>Do not write something like this inside the model block</p>
+  
+  <pre>
+    if(dprime > 50){
+      R[i] ~ bernoulli(0.02 * (1.0/3.0) + 0.98 * 1.0);
+    } else {
+      R[i] ~ bernoulli(0.02 * (1.0/3.0) + 0.98 * APPROXIMATED_PROBABILITY);
+    }
+  </pre>
+
+  <p>The problem here is that the conditional statement breaks the sampling statement (R ~ bernoulli) into two separate halves. This can mess up Stan's algorithm.</p>
+
+  <p>In this code the conditional statement is "hidden" inside the function that returns the probability of a correct response. Otherwise this code is exactly the same as for the 4th degree polynomial.</p>
+
+  <pre>
+    functions{
+      real getPCorr(real dprime){
+        
+        if(dprime > 50){
+          return(1.0);
+        }
+        
+        return(Phi_approx(-0.42564703147 +
+                           0.77172355802 * dprime +
+                          -0.00325445571 * (dprime * dprime)));
+      }
+    }
+    
+    data {
+      int<lower=0> N;
+      real<lower = 0> S[N];
+      int<lower = 0, upper = 1> R[N];
+      
+      real priorMus[2];
+      real<lower = 0> priorSds[2];
+    }
+    
+    parameters {
+      real logAlpha;
+      real logBeta;
+    }
+       
+    model {
+      logAlpha ~ normal(priorMus[1], priorSds[1]);
+      logBeta  ~ normal(priorMus[2], priorSds[2]);
+      
+      for(i in 1:N){
+        R[i] ~ bernoulli(0.02 * (1.0/3.0) + 0.98 * 
+          getPCorr(pow(S[i] / exp(logAlpha), exp(logBeta))));
+      }
+    }    
+  </pre>
+
+  <p>Here's a comparison between random samples drawn with the earlier Stan model which used a 4th degree polynomial (on the left) and the current model (on the right):</p>
+
+  <figure>
+    <img src="figures/comparison_of_posteriors.png" alt="This figure shows random draws from two models applied to the same simulated data set. The other model used a 4th degree polynomial while the other useda 2nd degree polynomial. The approximations look almost identical.">
+  </figure>
+
+  <h2 id="errors">Errors between the polynomial approximation and R's integrator</h2>
+
+  <p>Here I will provide some guidance with regards to what is the degree of the polynomial one might pick for the approximation. This is done by comparing the probabilities predicted by the polynomial approximation against the R's numerical integrator, which is taken here as a baseline truth. This is because it is impossible to compare the errors to the true values, since the true values aren't known. However, this comparison still gives some idea about how increasing the degree of the polynomial affects the relative accuracy of the polynomial approximation.</p>
+
+  <h3>Procedure</h3>
+
+  <p>The general procedure is as follows: choose a the degree of the polynomial, approximate the Equation 1 on 500 points. 100 points are then used to fit the approximation while all of the points to calculate discrepancy between predicted response probabilities.</p>
+
+  <p>Possible <em>m</em> values ranged from 3 to 50 while possible degrees of the polynomial ranged from 2 to 7.</p>
+  
+  <p>Script for this experiment can be found from behind this link: <a href="R/error_for_varying_degrees_and_m.r">link to the script</a>. I encourage you to replicate the results, or modify the script to get e.g. get better accuracy or to extend the results beyond these <em>m</em> values or degrees of polynomials or to find mistakes I've made - do what thou wilt.</p>
+
+  <h3>Results</h3>
+
+  <p>Results are summarized in the array of figures below. In each figure the top-most line shows maximum absolute error, middle line median absolute error and the bottom line minimum absolute error. For example the top-left figure shows the minimum, median and maximum absolute errors in the predicted probabilities as a function of <em>m</em> when the degree of the polynomial is 2. Note that y-axis is on a logarithmic scale: in all plots the difference between two ticks on the y axis represents a change of three orders of magnitude.</p>
+
+  <figure>
+    <img src="figures/abs_error_degree_small.png" alt="Results of the experiment">
+  </figure>
+  <h2>Sources</h2>
+  
+  <p class="bibEntry">Cook, J.D. (2012). https://www.johndcook.com/blog/2012/03/20/scipy-integration/. Blog post (accessed 1.6.2021).</p>
+  
+  <p class="bibEntry">DeCarlo, L.T. (2012). On a signal detection approach to m-alternative forced choice with bias, with maximum likelihood and Bayesian approaches to estimation. Journal of Mathematical Psychology, 56, pp. 196–207.</p>
+
+  <p class="bibEntry">Zeigenfuse, M.D. & Lee, M.D. (2010). A general latent assignment approach for modeling psychological contaminants. Journal of Mathematical Psychology, 54, pp. 352–362.</p>
+
+</main>
+<footer>&copy; Joni Pääkkö</footer>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Jacobian in Action</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/blather.css">
+    </head>
+    <body>
+      <main>  
+        <h1>Jacobian adjustment for a simple model</h1>
+
+        <h2>Introduction</h2>
+
+        <p>In the previous texts (<a href="../LogTransformation/VeryShortIntroToParameterTransformations.html">Part 1</a> and <a href="../LogTransformationStan/transformationsInStan.html">Part 2</a>) we sampled from a known distribution. That is of course not a realistic scenario. I will show in this tutorial how we can apply skills learned in those previous tutorials to a real modeling situation.</p>
+
+        <p>I'll first walk you through examples using a simple and non-efficient (but hopefully easy-to-read) Metropolis algorithm and then discuss how this generalizes to Stan. Even if you are only interested in seeing the Stan versions, at least skim trough the Metropolis examples, since it is in those examples where I explain when Jacobians are needed and when not in greater detail.</p>
+
+        <p>We will be looking at a simple model in which the data <em>y</em> are assumed to come from a normal distribution with unknown mean (&mu;) and standard deviation (&sigma;):</p>
+
+        <div class="equation">
+          y &sim; N(&mu;, &sigma;)
+        </div>
+        <pre class="R_eq">dnorm(y, mu, sigma)</pre>
+
+        <p>The aim is to approximate the joint posterior density for the unknown parameters, but before we go into that, let us briefly talk about what kind of priors the parameters are assigned. </p>
+
+        <p>We can give &mu; a normal prior</p>
+
+        <div class="equation">
+          &mu; &sim; N(0, 5)
+        </div>
+        <pre class="R_eq">dnorm(mu, 0, 5)</pre>
+
+        <p>but in the case of &sigma; we have to take into account that it's constrained to positive real numbers. We can give it a <em>lognormal</em> prior:</p>
+
+        <div class="equation">
+          &sigma; &sim; lognormal(1.5, 0.5)
+        </div>
+        <pre class="R_eq">dlnorm(sigma, 1.5, 0.5)</pre>
+
+        <p>As before, the Metropolis algorithm samples values on the unconstrained scale, so we might want to apply the log transformation.</p>
+
+        <p>But what is the lognormal distribution? As the name implies, it is related to the normal distribution. Similar to the Gamma distribution it has support only on positive real numbers.</p>
+
+        <p>If x is distributed normally with the parameters &mu; and &sigma;:</p>
+
+        <div class="equation">
+          x ~ N(&mu;, &sigma;)
+        </div>
+
+        <p>then</p>
+
+        <div class="equation">
+          exp(x) ~ lognormal(&mu;, &sigma;)
+        </div>
+
+        <p>In other words, if we draw a random sample from a normal distribution and then exponentiate those samples, the resulting samples will be lognormally distributed. Try this in R:</p>
+
+<pre>
+<pre class="annotation"># First we draw samples from a normal distribution</pre>
+x = rnorm(1e5, -2, 0.3)
+<pre class="annotation"># Then we exponentiate them</pre>
+exp_x = exp(x)
+<pre class="annotation"># And plot the distribution agains the lognormal distribution</pre>
+hist(exp_x, prob = T)
+curve(dlnorm(x, -2, 0.3), add = T) 
+</pre>
+
+       <p>This figure shows the histogram exponentiated samples against a lognormal distribution:</p>
+
+       <figure>
+         <img src="figs/lognormal.svg">
+       </figure>
+
+        <p>You can try this for different values of the parameters.</p>
+
+
+        <h2>Examples using a basic Metropolis algorithm</h2>
+
+        <p>We will begin by coding a simple Metropolis algorithm: it's not coded in the most efficient way, and hardcoding initial values, number of steps and so on is not a good practice, but this will suffice for this example; really the code just needs to be readable. R code is shown below:</p>
+
+
+<pre>
+# INPUT
+# posterior : a function for evaluating the unnormalized posterior
+# y         : a vector of data
+runChain = function(posterior, y){
+<pre class="annotation">
+# The number of steps is hard-coded, and the initial values 
+# are always drawn randomly from the std normal distribution:</pre>
+  NSteps      = 25000
+  samples     = matrix(NaN, ncol = 2,  nrow = NSteps)
+  samples[1,] = rnorm(2)
+      
+  for(i in 2:NSteps){
+    proposal = rnorm(2, samples[i-1,], 1)
+        
+    P_accept = posterior(proposal, y) / posterior(samples[i-1,], y)
+        
+    if(is.nan(P_accept)) P_accept = 0
+        
+    if(runif(1) &lt; P_accept){
+      samples[i,] = proposal
+    } else {
+      samples[i,] = samples[i-1,]
+    }
+  }
+  return(samples)
+}</pre>
+
+      <p>Next, we'll define two posterior distributions. First we define a posterior distribution <em>without</em> the Jacobian:</p>
+
+
+<pre>
+# INPUT
+# theta : c(mu, sigma)
+# y     : vector of data
+# Note y can be of length zero: in that case we 
+# simply are sampling from the prior distribution.
+posteriorWoJacobian = function(theta, y){
+  <pre class="annotation">
+  # Next we get the prior probabilities for the parameters.
+  # Note that since theta[2] has been transformed, we 
+  # use the inverse transform to get it back to the
+  # original scale:</pre>
+  prior = dnorm(theta[1], 0, 5) * dlnorm(exp(theta[2]), 1.5, 0.5)
+  <pre class="annotation">
+  # This is just so we can run the Metropolis algorithm
+  # with no data:</pre>
+  if(length(y) == 0){
+    likelihood = 1
+  } else {
+     likelihood = prod(dnorm(y, theta[1], exp(theta[2])))
+  }
+  <pre class="annotation">
+  # We return the product of the prior and likelihood,
+  # there's no Jacobian adjustment!</pre>
+  return(prior * likelihood)
+}</pre>
+
+       <p>We define another posterior, this time with the Jacobian adjustment:</p>
+
+<pre>
+# INPUT
+# theta : c(mu, sigma)
+# y     : vector of data
+# Note y can be of length zero: in that case we 
+# simply are sampling from the prior distribution.
+posteriorJacobian = function(theta, y){
+  <pre class="annotation">
+  # We do pretty much all of the same things here as before</pre>
+
+  prior = dnorm(theta[1], 0, 5) * dlnorm(exp(theta[2]), 1.5, 0.5)
+
+  if(length(y) == 0){
+    likelihood = 1
+  } else {
+     likelihood = prod(dnorm(y, theta[1], exp(theta[2])))
+  }
+  <pre class="annotation">
+  # But now we do the Jacobian adjustment, that is, 
+  # multply the density with the absolute value of the 
+  # derivative of the inverse transformation. Remember that
+  # theta[2] is still on the unconstrained scale! </pre>
+  return((prior * likelihood) * exp(theta[2]))
+}</pre>
+
+       <p>Let us begin by simply sampling from the prior distribution.</p>
+
+<pre>
+<pre class="annotation">
+Since we want to sample from the prior, we initialize a vector
+of length zero as data. I do it this way, since this is compatible
+with Stan: </pre>
+y = array(dim=0)
+samplesWoJacobian = runChain(posteriorWoJacobian, y)
+samplesJacobian   = runChain(posteriorJacobian, y)
+</pre>
+
+<p>You can compare the different versions by plotting histograms of the samples against the prior distributions. Remeber to add <code>prob=T</code> to the call to the histogram and to exponentiate the samples on the second dimension:</p>
+
+<pre>
+hist(samplesWoJacobian[,1], prob = T)
+curve(dnorm(x, 0, 5), add = T)
+  
+hist(exp(samplesWoJacobian[,2]), prob = T)
+curve(dlnorm(x, 1.5, .5), add = T)  
+
+# And the same for the the samples from runs
+# with the Jacobian
+</pre>
+
+      <p>But in case you don't feel like trying that yourself, I've included some figures below: the red shaded area is the target distribution. Solid lines show approximations using the posterior without Jacobian and the dashed line with it.</p>
+
+      <figure>
+        <img src="figs/jacobPlot1.svg">
+      </figure>
+
+      <p>For the &mu; parameter things look fine, there's some random error, but things are different for the &sigma; parameter. It is probably not suprising that the version without Jacobian doesn't converge to the prior distribution while the one with the Jacobian does. We saw as much when we were sampling from Gamma distribution: this example is almost one-to-one copy of that. But let us take a look at a third example!</p>
+
+      <p>Bring back to your mind what we talked about the relationship between normal and lognormal distributions. We have, so far, defined the prior for <code>exp(theta[2])</code> to be lognormal distribution: <code>dlonorm(exp(theta[2]), 1.5, 0.5)</code>. Mathematically this is the same as saying that the <em>non-exponentiated</em> theta is distributed normally with parameters &mu; = 1.5 and &sigma; = 0.5: <code>dnorm(theta[2], 1.5, 0.5</code>.</p>
+
+      <p>Let us use this information to modify our model in this way:</p>
+
+<pre>
+# INPUT
+# theta : c(mu, sigma)
+# y     : vector of data
+# Note y can be of length zero: in that case we 
+# simply are sampling from the prior distribution.
+posteriorLogPrior = function(theta, y){
+  <pre class="annotation">  # We now have prior for non-exponentiated theta[2]:</pre>
+  prior = dnorm(theta[1], 0, 5) * dnorm(theta[2], 1.5, 0.5)
+
+  if(length(y) == 0){
+    likelihood = 1
+  } else {
+<pre class="annotation">  # We still have to remember to exponentiate theta[2]
+  # when we are calculating the likelihood:
+</pre>    
+     likelihood = prod(dnorm(y, theta[1], exp(theta[2])))
+  }
+<pre class="annotation"># Now we don't include the Jacobian:</pre>
+  return(prior * likelihood)
+}</pre>
+
+       <p>Since we've already seen that the difference (in including the Jacobian or not) can be seen in the &sigma; parameter, let us look just at that. As before, the shaded area represents the target distribution (lognormal(1.5, 0.5)), and the solid line represents the Metropolis approximation:</p>
+
+       <figure>
+         <img src="figs/logPriorSigma.svg">
+       </figure>
+
+       <p>Seems like a match &ndash; even though there was no Jacobian adjustment! Why is that?</p>
+
+       <p>Jacobian adjustments are needed when the scale on which the sampler works (here: Metropolis algorithm) is transformed to some other scale. Or in other words, when the inverse transformed parameter is present in a call to a density function: <code>somePDF(exp(theta))</code>. Note that it doesn't matter <em>when </em> the parameter is transformed: we could modify the earlier examples in such a way that <code>theta[2]</code> would be exponentiated just once, when the function is entered, and we would still need to include the Jacobian.</p>
+
+       <p>But given that in this last example exponentiated theta is not used in any calls to density functions, only in the likelihood, no Jacobian adjustment is needed. Schön und flink!</p>
+
+       <p>Let us now take a look at how this generalizes to Stan models.</p>
+
+        <h2>Examples using Stan</h2>
+
+        <p>I'll show you three models.</p>
+
+        <ol>
+          <li>Model 1: the exponentiated standard deviation is given a lognormal prior (analogous to the first two examples earlier). Inclusion of Jacobian is controlled through the parameter <code>includeJacobian</code>)</li>
+          <li>Model 2: standard deviation is again given a lognormal prior, but we use Stan's constraints</li>
+          <li>Model 3: which prior is given for log transformed standard deviation (analogous to the last example in the previous section)</li>
+        </ol>
+
+
+        <p>It's important to note that the expression <code>exp(logSD) ~ lognormal(1.5, 0.5)</code> is analogous to <code>dlnorm(exp(logSD), 1.5, 0.5)</code>.</p>
+
+        <p>Model 1:</p>
+<pre>
+  data{
+    int N;
+    vector[N] y;
+    int includeJacobian;
+  }
+  
+  parameters{
+    real mu;
+    real logSD;
+  }
+  
+  model{
+    mu ~ normal(0, 5);
+    exp(logSD) ~ lognormal(1.5, 0.5);
+    
+    // For sampling from the prior. In R use "y = array(dim=0))"
+    if(N > 0){
+      y ~ normal(mu, exp(logSD));
+    } 
+<pre class="annotation">  // I don't explicitly use the absolute value here 
+  // because the values are always positive anyways. Note that we add
+  // the Jacobian to the target since Stan works with the log posterior. 
+  // This is why we also take take Log of the Jacobian.
+  // (Or we add the Jacobian to the target: 
+  // that's the same as multiplication)</pre>    
+    if(includeJacobian == 1){
+      target += log(exp(logSD));
+    }
+  }  
+</pre>
+
+      <p>Model 2, using Stan's constrains:</p>
+
+<pre>
+  data{
+    int N;
+    vector[N] y;
+  }
+  
+  parameters{
+    real mu;
+    real&lt;lower = 0&gt; logSD;
+  }
+  
+  model{
+    mu ~ normal(0, 5);
+    logSD ~ lognormal(1.5, 0.5);
+    
+    // For sampling from the prior. In R use "y = array(dim=0))"
+    if(N > 0){
+      y ~ normal(mu, logSD);
+    }
+  }
+</pre>
+       <p>Model 4, prior on log scale</p>
+
+<pre>
+  data{
+    int N;
+    vector[N] y;
+  }
+  
+  parameters{
+    real mu;
+    real logSD;
+  }
+  
+  model{
+    mu    ~ normal(0, 5);
+    logSD ~ normal(1.5, 0.5);
+    
+    // For sampling from the prior. In R use "y = array(dim=0))"
+    if(N > 0){
+      y ~ normal(mu, exp(logSD));
+    } 
+  }
+  
+</pre>
+
+       <p>Let us sample from the prior and see how the different models (with/without Jacobian) do.</p>
+
+       <ol>
+         <li>Model 1 <em>without</em> Jacobian</li>
+         <li>Model 1 <em>with</em> Jacobian</li>
+         <li>Model 2: here Stan does Jacobian adjustment under the hood</li>
+         <li>Model 3: prior is on log scale, Jacobian is not needed</li>
+       </ol>
+
+       <figure>
+         <img src="figs/stanJacobian.svg">
+       </figure>
+
+       <p>Results are similar to those that were obtained using Metropolis algorithm. When prior is explicitly defined for the (inverse) transformed parameter (Model 1) we need to include the Jacobian. If we use Stan's constraints (Model 2), Stan does these adjustments for use. If prior is on the transformed scale (in this case log scale) no adjustment is needed, even though the inverse transformed parameter (<code>exp(logSD)</code>) is used in the likelihood.</p>
+
+        <h2>Effect of Jacobian as <em>N</em> gets larger</h2>
+
+        <p>The last example we'll look at is how the number of observations affects the difference between estimates that use and estimates that don't use Jacobian adjustment. We'll look at the the estimated marginal posterior mean of the standard deviation parameter. In the figure below is the absolute difference between the marginal mean when Jacobian is included versus when it is not.</p>
+
+        <p>Observations are generated from normal distribution with &mu; = 2.0 and &sigma; = 8.0.</p>
+
+        <p> For each <em>N</em> a couple of simulations were run:</p>
+
+        <figure>
+          <img src="figs/effectOfJacob.svg">
+        </figure>
+
+        <p>As you can see, the difference approaches zero. This is because Jacobian affects the <em>prior</em>, and as usual, when <em>N</em> gets larger, the influence of the prior diminishes.</p>
+
+        <p>It is of course good to remember that this depends on the information content of the observations and the model used. See <a href="../SampleSizeAndInformation/sampleSizeInformation.html">this</a> text for further details.</p>
+
+        <h2>Conclusion</h2>
+
+        <p>Jacobians are needed when we transform the samples to fit the prior distribution. If transformed values are used in the likelihood, this does not imply the need for Jacobian adjustment. If the prior is on such a scale that the samples need not be transformed, there's no need for a Jacobian either. Also, in Stan, if we specify explicit constraints, Stan will handle Jacobian adjustments for us.</p>
+
+
+
+      </main>
+
+      <footer>&copy; Joni Pääkkö (2022)</footer>
+        
+      <script src="../../js/codeAnnotationToggle.js"></script>
+
+    </body>
+</html>

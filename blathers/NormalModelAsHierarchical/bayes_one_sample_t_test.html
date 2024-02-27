@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Bayesian one-sample t-test</title>
+        <link rel="stylesheet" href="../../css/blather.css">
+    </head>
+    <body>
+
+        <main>
+            <h1>Bayesian one-sample t-test</h1>
+
+            <h2>Introduction</h2>
+
+            <p>Ah, the one-sample t-test with known variance! It's what many statistics text books begin with - or if they don't outright begin with it, it's among the first models discussed. Well, I'm being a bit misleading, since I will not discuss <em>the</em> one-sample t-test that's used in frequentist statistics but a Bayesian version of it. The point is to show how it can be conceptualized as a hierarchical model, which in turn can be understood as a measurement-error model, and the original model can be thought of as a special case in which measurement error is zero.</p>
+    
+            <p>I'll beging by discussing the Bayesian version of the one-sample t-test (with known variance).</p>
+    
+            <h2>Bayesian one-sample t-test</h2>
+    
+            <p>A quick note: I'll use diagrams inspired by Krushcke's diagrams[1] to graphically represent the models used in this text. In my diagrams dashed lines represent stochastic relationships (i.e. that something "is distributed as" something) while solid lines represent deterministic relationships (i.e. constants).</p>
+    
+            <p>In addition, all of the models are written in Stan programming language - for those who are familiar with it or at least its c-like syntax, will easily see the structure of the models from the code snippets. (The basic one-sample model here has a closed-form solution, but for consistency this solution is omitted, and everything is approximated using Stan).</p>
+
+            <p>Without further ado, here's the strcuture of the Bayesian one-sample t-test with known variance:</p>
+
+            <figure>
+              <a href="figs/one_sample_model.png"><img src="figs/one_sample_model_small.png"></a>
+                
+                <figcaption>
+                    Structure of the Bayesian one-sample t-test (with known variance).
+                </figcaption>
+            </figure>
+            
+            <p>
+                What the diagram tells us is that the observations (<em>y<sub>1</sub></em>,<em>y<sub>2</sub></em>&hellip;<em>y<sub>n</sub></em>) are normally distributed (the dashed line from the normal curve to the observations). The normal distibution has known variance (&sigma; = 1) but unknown mean. The unknown mean is given a probability distribution, that is a <em>prior</em>, which in this case is also a normal distribution. The parameters of the prior distibution are constants, and are set, well, prior. 
+            </p>
+
+            <p>
+                Stan code for the model is available below. In Stan the stochastic relationships are represented with &tilde;. The parameters of the prior distibution are given as data to the model. 
+            </p>
+
+            <pre>
+// Normal model with known variance
+// Note, this is not optimal wrt performance:
+// this is intended to be easy to read.
+
+data{ 
+  // Observations are given as an array, 
+  // for which the length also needs to be given:
+  int&lt;lower = 1&gt; N;
+  real y[N];
+  
+  // Prior information is given as data:
+  real priorMu_mu;
+  real&lt;lower = 0&gt; priorSD_mu; 
+}
+
+parameters{
+  real mu;
+}
+
+model{
+  mu ~ normal(priorMu_mu, priorSD_mu);
+
+  for(i in 1:N){
+    y[i] ~ normal(mu, 1.0);
+  }
+}
+            </pre>
+            
+            <p>This model, it itself, is of course not that remarkable, it is - as I promised - just a Bayesian version of the one-sample t-test with known variance.</p>
+
+            <p>Now, let us see how one could extend this simple model by making it hierarchical.</p>
+
+            <h2>Hierarchical version</h2>
+
+            <p>Here's the quasi-Kruschke diagram for the hierarchical version, I will walk you through it afterwards, before showing the Stan code:</p>
+    
+            <figure>
+              <a href="figs/hierarchical_version.png"><img src="figs/hierarchical_version_small.png"></a>
+                
+                <figcaption>
+                    A hierarchical version of the one-sample t-test with known variance. See text for details.
+                </figcaption>
+            </figure>
+
+            <p>This model is sligthly more involved. The idea is that each observation is now given <em>it's own distribution</em> from which is comes from.  We can't, obviously, infer the variances of these distributions, since there's just one observation per each distribution, which is why they are all given a constant variance, &tau;.</p>
+
+            <p>The case is different for the &mu;'s. Each distribution has it's own &mu;, which is inferred from the data, but on the higher level, all of these &mu;s are assumed to come from the same source, which in this case is a normal distribution. This higher level distribution has constant variance (this corresponds to the known variance in the simpler model), but unkown &mu;: this &mu; is inferred from the data as well, and inferences about this higher level &mu; depend on the inferences about the lower level &mu;'s - which in turn depend on the higher level &mu;. The higher level normal distribution's &mu; parameter is given a prior, which is again a normal distribution, with known parameters, and which are set a prior.</p>
+
+            <p>We can think of this as adding an extra layer to the simple model. In the simpler model the data points are modelled directly, but here each data point is given a distribution (from it is assumed to be a random sample from) and we model the means of these distributions.</p>
+
+            <p>Below is the Stan code for this model, which hopefully will further clarify the structure of the model. Now also the value for &tau; is given to the model as data.</p>
+
+            <pre>
+// Normal model with known variance
+// Note, this is not optimal wrt performance:
+// this is intended to be easy to read.
+
+data{ 
+  // Observations are given as an array, 
+  // for which the length also needs to be given:
+  int&lt;lower = 1&gt; N;
+  real y[N];
+  
+  // Prior information is given as data:
+  real priorMu_mu;
+  real&lt;lower = 0&gt; priorSD_mu;
+
+  // "Measurement error"
+  real&lt;lower = 0&gt; tau;
+}
+
+parameters{
+  real priorMu;
+
+  real mus[N];
+}
+
+model{
+
+  priorMu ~ normal(priorMu_mu, priorSD_mu);
+
+  mus ~ normal(priorMu, 1.0);
+
+  for(i in 1:N){
+    y[i] ~ normal(mus[i], tau);
+  }
+}
+                
+
+            </pre>
+
+            <p>What &tau; represents? I've called it "measurement error" in the Stan model code, but it could be for example standard deviation of an estimate in a meta analysis model, similarly to the eight schools example on Stan's web page[2]. If &tau; = 0, then the individual distributions have no other possiblity than to sit right on the data points, which means that each individual &mu;<sub>i</sub> = y<sub>i</sub> and the model is equivalent to the simpler model.</p>
+
+            <h2>Doing "it" in practice in R</h2>
+
+            <p>Let's see how this works in practice.</p>
+
+            <p>The code below will generate a synthetic data set and then fit both of the models to it. Actually, the hierarchical model is fit twice: first with small &tau; and then with large &tau;. See what happens.</p>
+<pre>
+# SET CORRECT WORKING DIRECTORY FIRST
+# Compile stan models:
+normalModel             = rstan::stan_model("normalModel.stan")
+normalModelHierarchical = rstan::stan_model("normalModelHierarchical.stan")
+
+# Generate some synthetic data:
+set.seed(1312)
+
+N = 100
+y = rnorm(N, 0, 1)
+
+dataForStanSmallTau = list(N = N,
+                           y = y,
+                           priorMu_mu = 1.0,
+                           priorSD_mu = 1.0, 
+                           tau = 0.01)
+
+dataForStanLargeTau = list(N = N,
+                           y = y,
+                           priorMu_mu = 1.0,
+                           priorSD_mu = 1.0, 
+                           tau = 1.5)
+
+# Fit models!
+fitNormal = rstan::sampling(normalModel, dataForStanSmallTau)
+fitHieraSmallTau = rstan::sampling(normalModelHierarchical, dataForStanSmallTau)
+fitHieraLargeTau = rstan::sampling(normalModelHierarchical, dataForStanLargeTau)
+
+## Plot results
+
+
+# Uncomment this and the dev.off lines when writing
+# the plot to a file
+#png(file = "../figs/posteriors.png")
+plot(density(as.matrix(fitNormal)[,"mu"]), type = "l", lwd = 2, 
+     xlab = expression(mu), ylab = "Density", axes = F, main = "")
+points(density(as.matrix(fitHieraSmallTau)[,"priorMu"]), type = "l", lwd = 2,
+       lty = 2)
+points(density(as.matrix(fitHieraLargeTau)[,"priorMu"]), type = "l", lwd = 2,
+       lty = 2)
+axis(side = 1); axis(side = 2)
+#dev.off()
+
+
+##### Plot 2:
+
+# Indices for the columns that have posterior draws
+# for the individual mus
+inds = which(grepl("mus", colnames(as.matrix(fitHieraSmallTau))))
+
+# Uncomment this and the dev.off lines when writing
+# the plot to a file
+# png(file = "../figs/mu_posteriors.png",
+    width = 480*2, height = 480)
+par(mfrow = c(1,2))
+plot(y, colMeans(as.matrix(fitHieraSmallTau)[,inds]),
+     xlab = "y", ylab = "Posterior means", axes = F,
+     ylim = range(y), xlim = range(y),
+     main = expression(paste("Small ", tau)))
+abline(0, 1)
+axis(side = 1); axis(side = 2)
+
+plot(y, colMeans(as.matrix(fitHieraLargeTau)[,inds]),
+     xlab = "y", ylab = "Posterior means", axes = F,
+     ylim = range(y), xlim = range(y),
+     main = expression(paste("Large ", tau)))
+abline(0, 1)
+axis(side = 1); axis(side = 2)
+# dev.off()
+    
+
+</pre>
+
+            <p>As already noted, the hierarchical model is equivalent to the first model, when &tau; = 0.0. But note that in practice, when running the Stan model, we can't set &tau; to zero, since this would mean that the log probability is -&infin; always when the sampled parameter is not equal to &mu;<sub>i</sub>, and Stan can't really sample from that kind of a posterior. Rather, to simulate the equicalence of the models, I've first set &tau; to a "really small" value which is still larger than zero.</p>
+
+            <p>The figure below shows the posterior probability density for the parameter &mu; from the simpler model (solide line) and for the higher level &mu; parameters from the hierarchical model (dashed lines). When &tau; is set to a value close to zero, we can see that the posterior density overlaps with that from the simpler model (there's some random approximation error); on the other hand, when &tau; is large, uncertainty about the individual &mu;'s (due to measurement error or something), adds to the uncertainty about the higher level &mu; which results in a wider posterior probability density - as one would expect!</p>
+
+
+            <figure>
+                <a href="figs/posteriors.png"><img src="figs/posteriors.png"></a>
+                <figcaption>Posterior distributions for the main parameter of interest. Solid line: traditional model, dashed line: hierarchical model. Guess which one of the hierarchical fits is the one that assumes largers measurement error?</figcaption>
+            </figure>
+
+            <p>Let us take a look at the posterior means for the individual &mu;'s against the data set. In both panels of the figure below, the original data set is on the x-axis and the posterior means are on the y-axis. When &tau; is small (left panel), the posterior means match closely the data points: as already said, as &tau; approaches zero, each individual &mu;<sub>i</sub> gets closer to each individual data point y<sub>i</sub>. But when &tau; is large (right panel) the &mu;'s kind of influence each other - since they are linked on a higher level - and they clutter around their common mean.</p>
+
+            <figure>
+                <a href="figs/mu_posteriors.png"><img src="figs/mu_posteriors.png"></a>
+                
+                <figcaption>
+
+                </figcaption>
+            </figure>
+
+            <h2>Conclusion</h2>
+
+            <p>The one-sample t-test is a simple model, but with a simple hierarchical extension, one can find new ways to implement it. But maybe even more importantly this exposes some hidden assumptions in models like that: if we conceptualize &tau; as measurement error, in the regular one-sample t-test we are implicitly assuming zero measurement error. When measuring, for example, reaction times on a computer using standard keyboard or mouse, there might be significant amounts of error due to limitations of the hardware. It's fairly easy to code a Bayesian model that accounts for this. </p>
+
+            <h2>Sources</h2>
+    
+            <p class="bibEntry">[1]http://doingbayesiandataanalysis.blogspot.com/2018/02/make-model-diagrams-for-human.html</p>
+            <p class="bibEntry">[2]https://mc-stan.org/users/documentation/case-studies/divergences_and_bias.html</p>
+
+        </main>
+
+        <footer>
+            &copy; Joni Pääkkö (2021)
+        </footer>
+
+
+        <script src="" async defer></script>
+    </body>
+</html>

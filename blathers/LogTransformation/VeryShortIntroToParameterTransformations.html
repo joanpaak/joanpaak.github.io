@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en" />
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../../css/blather.css" />
+  <title>Log transformed parameters</title>
+</head>
+<body>
+
+    <main>
+    <h1>Log transformed parameters</h1>
+
+    <h2>Intro</h2>
+
+    <p>A researcher is using numerical optimization to find the maximum of a likelihood function, that is, they are fitting a model to data. One of the parameters of this model is the standard deviation of the normal distribution, and as a consequence, it is constrained to positive real numbers. The optimization algorithm the researcher is using does not allow for constraints, which means that the algorithm might sometimes try to evaluate the objective function with a negative value for the standard deviation, resulting in a failure. To circumvent this, the researcher <em>transforms the standard deviation to the logarithmic scale</em>: now negative numbers are also accepted and don't result in the optimization routine failing.</p>
+
+    <p>What does this mean in practice? What <em>is</em> the logarithm transfrom, and how to use it with optimization problems such as just described? How about Markov Chain Monte Carlo methods, how can parameter transformations be used in that context?</p>
+
+    <p>Parameter transformations are common in statistics, but they can also be a bit arcane and there's a lot of terminology to navigate through. It might be hard to find practical introductions into how to implement these transformations. This text is intended as a gentle introduction to parameter transformations. I'll discuss the simple and ubiquitous logarithm transformation in the context of maximum likelihood estimation and MCMC sampling, and show how to impement these in R.</p>
+
+    <p>I'll assume that you, dear reader, have some familiarity with statistics, such as what are distribution functions, or what likelihood functions are. (Why else would you be reading stuff about parameter transformations in the context of maximum likelihood estimation or MCMC sampling...).</p>
+
+    <h2>What <em>is</em> the logarithm function?</h2>
+
+    <p>Let us start by exploring the log function in R, and just throw a few numbers at it and see what it outputs: </p>
+
+<pre>
+> log(-1)
+[1] NaN
+Warning message:
+In log(-1) : NaNs produced 
+> log(0)
+[1] -Inf
+> log(0.1)
+[1] -2.302585
+> log(1)
+[1] 0
+> log(2)
+[1] 0.6931472
+> log(3)
+[1] 1.098612
+</pre>
+
+   <p>The logarithm function is defined <em>only for positive real numbers</em>, which is why inputting the number -1.0 to it results in <code>NaN</code>. Logarithm of zero is negative infinity (-&infin;) and logarithm of one is zero. This means that the whole range of numbers between 0 and 1 is stretched to the range -&infin; to 0.0. After this the function decelerates: log(2) &approx; 0.7 and log(3) is only &approx; 1.1.</p>
+
+   <p>This is shown graphically in the figure below, for some inputs. On the upper axis is the original variable, <em>x</em>, on the lower axis the transformed variable. The (dashed) lines show how the input and outputs to the log function are related.</p>
+
+    <figure>
+        <img src="figs/logStretch2.svg">
+    </figure>
+
+    <p>What is important to note is that before 1.0 (on the original scale) the logarithm transform <em>stretches</em> the scale and after that it starts <em>squeezing</em> the scale.</p>
+    
+    <p>Another way of viewing this is to look at the input variable on the x-axis and the output (logarith transformed) on the y-axis. Like so:</p>
+
+    <figure>
+        <img src="figs/logAsFunction.svg">
+    </figure>
+
+    <p>The red dashed lines show the (already familiar) points: log(1) = 0, log(2) &approx; 0.7 and log(3) &approx; 1.1.</p>
+
+    <h2>Function and its inverse function</h2>
+
+    <p>We also need to understand what a function and its inverse are. Luckily, this is not that hard. Think, for example, multiplication. In some sense division is its inverse: we can "undo" multiplication by using division.</p>
+
+    <p>The function that undos logarithms is the exponential function, <code>exp()</code> in R:</p>
+
+    <figure>
+        <a href="figs/logAsFunctionTransformations.svg"><img src="figs/logAsFunctionTransformations.svg"></a>
+    </figure>
+
+    <p>Let us try this in R:</p>
+    <pre>
+> log(5)
+[1] 1.609438
+> exp(1.609438)
+[1] 5 </pre>
+
+    <p>As you can see, using the exponential function on the logarithm transformed value we ended up back where we started from. You can try this with a couple of different numbers to assure yourself that this always works.</p>
+
+    <p>In summary: <code>log()</code> tranforms the original scale to the logarithmic scale and <code>exp()</code> transforms the logarithmic scale to the original scale.</p>
+
+    <h2>Maximum likelihood estimation</h2>
+
+    <p>Let us first consider this in the context of how to find the maximum likelihood estimates for the parameters of the normal distribution using numerical optimization.</p>
+
+    <p>The likelihood function for this problem is (R pseudocode below)</p>
+
+    <div class="equation">
+        likelihood = &prod;NormalPDF(y | &mu;, &sigma;)
+    </div>
+
+    <pre class="R_eq">
+prod(dnorm(y, mu, sd))</pre>
+
+    <p>which states that the likelihood of the parameters &mu; and &sigma; is the product of the values of the normal probability distribution function at points <em>y</em>; and <em>y</em> is the observed data set. Finding the values of &mu; and &sigma; that maximize the likelihood is analogous to finding the normal distribution that "best matches" the distribution of the data, <em>y</em>.</p>
+
+    <p>Usually the <em>log</em> likelihood is preferred, since this allows one to change the product into a sum. This is done simply by taking the logarithm of normalPDF:</p>
+
+    <div class="equation">
+        log-likelihood = &sum;log(NormalPDF(y | &mu;, &sigma;))
+    </div>
+    <pre class="R_eq">
+sum(dnorm(y, mu, sd, log = T))</pre>
+
+    <p>And the final modification: since most optimization routines minimize functions as a default, we define the <em>negative</em> log-likelihood function</p>
+
+    <div class="equation">
+        negative log-likelihood = -&sum;log(NormalPDF(y | &mu;, &sigma;))
+    </div>
+    <pre class="R_eq">
+-sum(dnorm(y, mu, sd, log = T))</pre>
+
+    <p>since minimizing this function is the same as maximizing the original.</p>
+
+    <p>Let us use the heights of black cherry trees from R's built-in data set <em>trees</em></p>
+
+    <pre>y = datasets::trees[,2]</pre>
+
+    <p>which contains the following measurements (in feet):</p>
+    <pre>
+> y
+[1] 70 65 63 72 81 83 66 75 80 75 79 76 76 69 75 74 85 86 71 64 78 80 74 72 77 81 82 80 80 80 87</pre>
+
+    <p>Next we define the objective function as, well, a function in R. Due to R's vectorization powers, this is very simple. But let us first define it <em>without</em> the transformation. One could write the objective function like this:</p>
+    
+<pre>
+negLogLikelihood = function(theta, y){
+    negLL = -sum(dnorm(y, theta[1], theta[2], log = T))
+    return(negLL)
+}</pre>
+
+   <p>The first input (theta) to the function, called <code>theta</code>, contains the parameters of the model. <code>theta[1]</code> = &mu; and <code>theta[2]</code> = &sigma;. The second input (y) is the dataset.</p>
+
+   <p>The problem with this version is that if we use an optimization routine that does not support constraints, it mighst sometimes try a negative value for <code>theta[2]</code>, which (in R) results in <code>NaN</code> and, depending on how error handling is implemented, might result in the optimization routine failing beyond the possiblity of recovery.</p>
+
+   <p>The solution is to log transform <code>theta[2]</code>. Perhaps the most mind boggling aspect of how this is done in practice is that <em>there will be no calls to the <code>log()</code> function at all</em>! Actually, the opposite happens: we will be making calls to the inverse transform, <code>exp()</code>.</p>
+
+   <p>This is because the <em>optimization algorithm already functions on the transformed scale</em>. This might seem strange: how does the algorithm know to use the log transformed standard deviation? Well, of course it doesn't: it is really the <em>inverse tranform</em> that we apply to the parameter that kind of <em>post hoc</em> determines the scale that the optimization algorithm is working on: if we exponentiate the sampled parameter, this means that the algorithm was implicitly working with a log transformed parameter.</p>
+
+   <p>When we implement the log transform, the objective function becomes this:</p>
+
+<pre>
+negLogLikelihood = function(theta, y){
+    negLL = -sum(dnorm(y, theta[1], exp(theta[2]), log = T))
+    return(negLL)
+}    
+</pre>
+
+    <p>Next, we will use base-R's BFGS optimization routine to find the minimum of the negative log likelihood function. The starting values (first input to <code>optim</code>) were chosen by selecting a random observation from the dataset as the initial guess for &mu; and the initial value for log(&sigma;) was just, well, guessed (note that the initial value for <code>theta[2]</code> has to be on the log scale!): </p>
+
+<pre>
+fit = optim(c(83, 0), method = "BFGS", negLogLikelihood, y = y)
+</pre>
+
+    <p>Given that the optimization routine was able to find the global minimum (you should always inspect the convergence flag and the message in the object returned by the <code>optim</code> function, however, even these don't always reveal errors), we can now inspect the maximum likelihood estimates:</p>
+
+<pre>
+> fit$par
+[1] 76.000000  1.835489    
+</pre> 
+
+    <p>But wait! The second estimate is still on the <em>logarithmic scale</em>, so we have to transform it back to the original scale using the inverse transfrom. Like so:</p>
+
+<pre>
+> exp(fit$par[2])
+[1] 6.2682    
+</pre>
+
+    <p>These estimates should be close to what we get simply by just calculating the mean and standard deviation of the <em>y</em> (they are closed from solutions). Note that we have to calculate these by hand, since by default R calculates the <em>sample</em> standard deviation, which is <em>not</em> the maximum likelihood estimate:</p>
+
+<pre>
+p = rep(1/length(y), length(y))
+E = sum(y * p)
+SD = sqrt(sum((E - y)^2 * p))
+
+> E
+[1] 76
+> SD
+[1] 6.268199
+</pre>
+
+    <p>The estimates found using optimization and the closed form solutions seem to be close enough. There's some numerical error, but that's inevitable, and could be lessened by tweaking the parameters of the optimization routine.</p>
+
+    <p>R code for the optimization example can be found from <a href="R/MLExample.R">here</a></p>
+
+    <h2>MCMC sampling and Jacobians</h2>
+
+    <p>Parameter transformations are ubiquitous in the world of MCMC sampling. As a simple example, for which the ground truth is known, let us look at using the Metropolis algorithm to sample from Gamma distribution. In the figure below is a Gamma distribution with parameters shape = 3 and rate = 1:</p>
+
+    <figure>
+        <a href="figs/gammaDistribution.svg"><img src="figs/gammaDistribution.svg"></a>
+    </figure>
+    
+    <p>The Gamma distribution is defined only for positive real numbers, however, the Metropolis algorithm works on the unconstrained scale. For this reason it might be useful to think of the samples as being log transformed.</p>
+
+    <p>We have to take into account the aforementioned stretching/squeezing of the scale.</p>
+
+    <h3>Jacobian</h3>
+
+    <p>What we have to imagine is that the MCMC chain samples uniformly on the transformed scale, in this case log transformed scale. When we do the inverse transform, due to its non-linearity, it changes the density.</p>
+    
+    <p>We already discussed how the log transform affects the original scale. Let us now be a bit more mathematical about that. The amount of stretching/squeezing is related to the <em>rate of change of the function</em>. The rate of change of a function is called its derivative, which in turn is the slope of tangent line drawn at some point on the function. The interactive figure below shows the exponential function and the tangent line for the chosen <em>x</em>. Try changing <em>x</em> and see how the derivative (slope of the tangent line) behaves:</p>
+
+
+   <div class="interactiveFigure">
+     <svg id="derivVis" height="400"></svg>
+    
+     <div class="controlSlice">
+       <label for="deriVis_x">x:</label>
+       <input type="range" id="deriVis_x" min="-1" max="3" step="0.001" value="1"><br>
+       <div id="deriVis_text"></div>
+     </div>
+   </div>
+
+   <p>As you undoubtedly noticed, the derivative is smaller when <em>x</em> is small and vice versa. See what happens to the derivative on different sides on 0.0. When the absolute value of the derivative is &gt; 1.0, the scale gets stretched and when its &lt; 1.0 the scale is squished.</p>
+
+   <h3>Metropolis algorithm</h3>
+
+   <p>So, we are interested in sampling from the Gamma(3,1) distribution using the Metropolis algorithm. We might program the target distribution for example like this</p>
+
+<pre>
+target = function(theta){
+    dgamma(theta, 3, 1)
+} </pre>
+
+   <p>However, since the Metropolis algorithm uses a symmetric proposal distribution, some of the proposals might fall outside if the support of the distribution (i.e. they  might be negative) so they are discarded by default or even (if error handling is not implemented) cause other problems with the algorithm. To make sampling more efficient/stable, we might again imagine that the samples are on the log scale, and implement the inverse transformation inside the target density:</p>
+
+  <pre>
+target = function(theta){
+    dgamma(exp(theta), 3, 1)
+} </pre>   
+
+   <p>This ensures that all of the samples will always be inside the support of the target distribution. However, we now have to take into account the stretching induced by the transformation. </p>
+
+   <p>Mathematically, the derivative of exp(x) is exp(x) [1], but we need the <em>absolute value</em> of this, since we are interested in the <em>amount</em> of change, not its direction. The result is called the <em>Jacobian</em>. The Jacobian, then, is the <em>absolute of the derivative of the inverse transformation</em>. Huh! Here the <em>transformation</em> is, of course, the logarithm transformation and as we discussed, its inverse is the exponential function. We will use J to indicate the Jacobian, and please note that the <em>x</em> variable is on the original unconstrained scale:</p>
+
+   <div class="equation">
+       J = |exp(x)|
+   </div>
+   <pre class="R_eq">J = abs(exp(x))</pre>
+
+   <p>The target density has to be multiplied by this term. In this case we get</p>
+
+   <div class="equation">
+    Gamma(x, 3, 1) * J</div>
+<pre class="R_eq">dgamma(x, 3, 1) * J</pre>
+
+   <p>In this particular case this term will be small when <em>x</em> is small. This results in the values nero zero having a lower weight:</p>
+
+   <figure>
+       <a href="figs/gammaWCorrection.svg"><img src="figs/gammaWCorrection.svg"></a>
+   </figure>
+
+   <p>Intuitively this is easy to comprehend by taking a look at how the exponential function behaves (take a look at the figure above with the arrows).</p>
+   
+   <p>When we exponentiate numbers between ]-&infin; 0] they end up between [0, 1]. In plain English: half of the number line is squeezed between zero and one! The MCMC sampler doesn't know that this is happening. It is taking the same size and same amount of steps as it would if the scale was untransformed. So when it its exploring negative numbers, it thinks that it's exploring one half of the real number line when in reality it's exploring numbers between zero and one..</p>
+   
+   <p>To demonstrate the effect the Jacobian adjustment has, in the next example there are two different target densities: one with the Jacobian and one without and the metropolis algorithm is run on both of them.</p>
+
+   <pre>
+target_wo_jacobian = function(theta){
+    dgamma(exp(theta), 3, 1)
+}
+
+target_w_jacobian = function(theta){
+    dgamma(exp(theta), 3, 1) * abs(exp(theta))
+}</pre>
+
+    <p>Note that when calculating the correction, we use the unconstrained value of theta. Remember that the Metropolis algorithm is implicitly working on the logarithmic scale, and in order to calculate the derivative of the logarithm transformation, we need the value of theta on the that scale.</p>
+    
+    <p>Let us see what happens when the Metropolis algorithm is run on both of these target densities:</p>
+
+<pre>
+runChain = function(target){
+    NIter = 50000
+    x     = rep(NaN, NIter)
+    x[1]  = log(runif(1, 1, 10))
+       
+    for(i in 2:NIter){
+        proposal = rnorm(1, x[i-1], 1)
+          
+        P_accept = target(proposal) / target(x[i-1])
+          
+        if(runif(1) &lt; P_accept){
+            x[i] = proposal
+        } else {
+            x[i] = x[i - 1]
+        }
+    }
+    return(x)
+}
+      
+samples_wo_jacobian = runChain(target_wo_jacobian)
+samples_w_jacobian  = runChain(target_w_jacobian)</pre>
+
+    <p>The figure below shows the estimated density (histogram) against the true target density (red line) for both cases: when including the Jacobian and when the Jacobian is not included (R code below):</p>
+
+    <figure>
+        <img src="figs/jacobian.svg">
+    </figure>
+
+<pre>
+par(mfrow = c(1,2))
+hist(exp(samples_wo_jacobian), prob = T, main = "No Jacobian",
+    breaks = 30, xlab = "x")
+curve(dgamma(x, 3, 1), add = T, col  = "red", lwd = 2)
+    
+hist(exp(samples_w_jacobian), prob = T, main = "Jacobian", 
+    breaks = 30, xlab = "x")
+curve(dgamma(x, 3, 1), add = T, col  = "red", lwd = 2)    
+</pre>
+
+    <p>R code for the MCMC example is <a href="R/MCMCExample.R">here</a></p>
+
+    <h2>Outro</h2>
+
+    <p>I hope this text has given you some practical tools for working with, at least, the logarithm transformation.</p>
+
+    <p>In upcoming texts I'll discuss other transformations besides the log transformation, and what to do when multiple parameters are transformed at the same time.</p>
+
+    <h2>Sources &amp; Literature</h2>
+
+    <p class="bibEntry">[1]. Derivatives for common functions can be found from e.g. the website Math is Fun: https://www.mathsisfun.com/calculus/derivatives-rules.html</p>
+
+    <p class="bibEntry">Jacobian adjustments are discussed in manual for Stan: https://mc-stan.org/docs/2_28/stan-users-guide/changes-of-variables.html</p>
+
+    <p class="bibEntry">Krushcke, J. (2015): Doing Bayesian Data Analysis &ndash; A tutorial with R, JAGS and Stan, 2nd Edition. Jacobians are discussed in Section 25.3. Reparameterization.</p>
+
+    <p class="bibEntry">Gelman, A., Carlin, J., Stern, H., Dunson, D., Vehtari, A., &amp; Rubin, D. (2014): Doing Bayesian Data Analysis, 3rd Edition. Jacobians are discussed in Section 1.8 Some useful results from probability theory.</p>
+
+    </main>
+
+    <footer>
+        &copy; Joni Pääkkö
+    </footer>
+        <script src="../../js/graphicsLibrary/SVGVisualization.js"></script>
+        <script src="js/visualizations.js"></script>
+    </body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Hevibändien klusterointi</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/blather.css">
+        <link rel="stylesheet" href="../../css/slideShowStyle.css">
+    </head>
+    <body>
+
+        <main>
+
+            <h1>Hevibändien klusterointi</h1>
+
+            <p>Käsittelen tässä kirjoituksessa Lauri Nummenmaan vuonna 2021 julkaistua kirjaa <em>Tilastotieteen käsikirja</em>, tai tarkemmin sanottuna erästä klusterointiesimerkkiä.</p>
+
+            <p>Kirjassa käytettävät datasetit ovat ladattavissa Nummenmaan laboratorion sivulta[1] &ndash; tästä suuri plussa, ja toivoisin tämän käytännön yleistyvän. Siellä sattui olemaan mukana datasetti, jossa 25 ihmistä olivat arvioitsineet tunnettuja hevibändejä esimerkiksi sellaisilla dimensiolla kuin aggressiivisuus, maskuliinisuus ja virtuositeetti. Kyseisen musiikkityylin ystävänä piti tietenkin lähteä katsomaan, että mitäkö niistä omista lempparibändeistä on sanottu! Onko arvioitu oikein! </p>
+
+            <p>Arviot ovat melko humoristisia. Käyn tässä aluksi läpi niitä hieman kieli poskessa; myöhemmin käsittelen hieman vakavammin klusterointianalyysia ja datan laatua.</p>
+
+            <p>Olen liittänyt mukaan kuvat dimensioista melodisuus, maskuliinisuus, aggressiivisuus ja virtuositeetti (R-koodi kuvaajien tuottamiseksi löytyy <a href="R/klusteroinnin_visualisointi.R">tästä</a>. Koodia käyttäen voit visualisoida myös muita dimensiot, tarvitset vain tuon kirjan kotisivuilta löytyvän R-paketin): </p>
+
+
+            <div class="slideShow">
+                <div class="slides">
+                    <div class="slide">
+                        <img src="figs/aggressiivisuus.svg">
+                    </div>
+                    <div class="slide">
+                        <img src="figs/maskuliinisuus.svg">
+                    </div>
+                    <div class="slide">
+                        <img src="figs/melodisuus.svg">
+                    </div>
+                    <div class="slide">
+                        <img src="figs/virtuositeetti.svg">
+                    </div>
+                </div>
+            </div>
+
+            <p>Motörhead on (datasetissä mukana olevista) bändeistä kaikkein <em>vähiten</em> aggressiivinen. HIM taasen toisiksi aggressiivisin, heti Sepulturan jälkeen. No, kyllähän "Join me in Death" tietenkin tietyssä mielessä erittäin aggressiivinen kappale onkin! Ja ne on sitä paitsi aina ne runopojan oloiset, jotka on niitä vaarallisimpia...</p>
+
+            <p>Sepultura on myös kaikista bändeistä virtuositeettisin, mutta yllätyksenä saattaa tulla, että Rammstein on virtuositeettisempaa kuin esimerkiksi Van Halen, Children of Bodom tai Nightwish. Kaikkein vähiten virtuositeettinen on Metallica. Ne Lassen käsituplat ja Kirkin wahi... voi voi...</p>
+
+            <p>Häntäpäähän on Metallica jäänyt myös melodisuudessa. Ei auta ei Nothing else mattersit tässä kisassa. Megadeath on kaikkein melodisin ja neljän parhaan joukosta löytyy hieman yllättäen Motörhead ja kuuden parhaan joukosta myös Slayer. Ei mennyt hukkaan Arayan äänenkuljetuksen oppitunnit, kun hän sulkakynä viuhuen kirjoitteli Raining Bloodin laulumelodialinjoja partituuriin. </p>
+
+            <p>Kaikkein maskuliinisimpia bändejä ovat AC/DC ja HIM. Häntäpäähän ovat jääneet Gunnarit ja Motorhead. Hieman yllättäen Nightwish on rankattu maskuliinisemmaksi kuin kaikki nuo mainitut - ja myös Slayer. No, onhan Floor tietenkin aika äijä - eikä sillä Radio Rock -tavalla! Tai ehkä se on se Hietalan olemus, joka myös muuhun bändiin tihkuu.</p>
+
+            <hr>
+
+            <p>Kirjassa aineistoa on käytetty niin sanottuun klusterointianalyysiin, eli siis sellaiseen, jossa joidenkin asioiden välille lasketaan etäisyysmittoja, ja näihin perustuen niitä sitten niputetaan erilaisin ryppäisiin, klustereihin. Esimerkiksi eläinlajien luokittelu eri haaroihin on esimerkki tällaisesta - taitaapa koko tekniikka olla muistaakseni peräisin sieltä. Samanlaiset - käytetyllä etäisyysmittarilla laskettuna - niputetaan samoihin klustereihin. Näistä klustereista voidaan sitten vielä yhdistellä korkeamman tason nippuja, jos tehdään niin sanottua hierarkista klusterointia.</p>
+
+            <p>Kirjan käsitelyn alla olevassa luvussa kyseinen analyysi suoritetaan hymyssä suin, ja tuloksia vielä kehaistaan silmämääräisesti sopiviksi, koska "Perinteisempää raskasta musiikkia soittavat bändit (Motörhead, Pantera) niputtuvat yhteen klusteriin, samoin klassiset hevibändit kuten Deep Purple ja Metallica. Keskellä on selvästi vauhdikkaan tilutteluhevin keskittyvä (Yngwie Malmsteen, Van Halen, Children of Bodom), Sepultura ja HIM jäävät viimeiseen klusteriin". Niinpä niin. </p>
+
+            <p>Tämä on hyvä esimerkki siitä, kuinka tärkeää datan silmäily on. On selkeää, että nämä arvioinnit ovat suurelta osin roskaa, eivätkä nuo klusteroinnitkaan nyt ihan onnistuneilta vaikuta, vaikka sieltä voi &ndash; jos oikein niin haluaa &ndash; voi nähdä yhteyksiä, jotka näyttäisivät käyvän järkeen. Tästä tämäntyyppistä analyysia onkin kritisoitu: on helppo huijata itsensä luulemaan, että se teki sen, mitä sen oli tarkoituskin. Ehkäpä tosiaan Sepultura ja HIM kuuluvat samaan klusteriin? Ja Metallica ja Nightwish? Ehkäpä prosessi paljastaa jotain, mitä me emme itse tietoisesti tiedä, saamme näkymän johonkin piilotettuun ulottuvuuteen? </p>
+
+            <p>Tai sitten asia on niin, että jos klusterointiin käytetty data on huonoa &ndash; kuten se tässä tapauksessa on &ndash; myös klusterointi on huono. </p>
+
+            <p>Täytyy tästä vielä sanoa se, että jos oletamme asteikon olleen nollasta sataan, ovat nuo kaikki arviot aika lailla keskivaiheilla. Bändit ovat siis olleet verrattain samanlaisia tällä asteikolla - tai ainakin arviointien keskiarvot, joita nuo datapisteet ovat. Oudot tulokset johtunevat siitä, että kun arvioijien tuloksista on laskettu keskiarvoja, poikkeavien arvioiden vaikutuksesta nuo keskiarvot ovat vinoutuneet omituisiin suuntiin. Data siis todennäköisesti on suurelta osin vain kohinaa.</p>
+
+            <p>Ongelmana on toki myös se, että kuinka bändin koko tuotanto voidaan tiivistää yhteen arviointiin. Tämä liittyy nimenomaan datan huonouteen tässä tapauksessa: kun yritämme kuvata vaikkapa Metallican virtuositeettisuutta tai melodisuutta yhdellä numerolla, on selvää, että se ei onnistu, tai että siihen arvioon liittyy paljon satunnaisuutta.</p>
+
+            <h2>Alaviitteet</h2>
+
+            <p>[1] https://emotion.utu.fi/tilastotiede/</p>
+
+
+        </main>
+
+        <footer>
+            &copy; Joni Pääkkö (2021)
+        </footer>
+        
+        <script src="../../js/slideshow.js"></script>
+        <script>
+            let slideshow = new SlideShow("dimensioShow");
+        </script>
+    </body>
+</html>

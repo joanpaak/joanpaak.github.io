@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="fi">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../../css/blather.css">
+  <link rel="stylesheet" href="css/styleSDT.css">
+  <title>Johdatus signaalintunnistusteoriaan</title>
+</head>
+<body>
+
+<main>
+
+  <h1>Signaalintunnistusteoria</h1>
+
+  <h2>Alku</h2>
+  
+  <noscript>
+  <p>Sinulla  ei ole Javascript käytössä: tämän sivun (ikävä kyllä) graafeissa kuitenkin sitä käytetään, etkä niitä siis tule kokemaan, jos et JS:ää päälle kytke. Kytke vain - ei se niin paha ole!</p>
+  </noscript>
+  
+  <p>Tämä kirjoitus on tarkoitettu johdannoksi signaalintunnistusteoriaan sellaisille lukijoille, joilla ei ole minkäänlaista aikaisempaa käsitystä aiheesta. Matematiikkaan ei tässä juurikaan mennä: tämä on hyvin pintapuolinen ja ylimalkainen johdatus siihen, mistä signaalintunnistusteoriassa on kyse. Jonkin verran joudumme kuitenkin lukuja pyörittelemään ynnä laskeskelemaan, mutta pysyttelemme hyvin yksinkertaisissa laskuissa.</p>
+  
+  <p>Tekstin pääteema on jaettu kolmeen osaan. Kahdessa ensimmäisessä käsittelen koneita: signaalintunnistusteorian pohja on kehitetty nimenomaan elektronisten laitteiden analyysia varten, joten siinä asiayhteydessä se on luonnollisimmillaan.</p>
+
+ <p>Aivan aluksi puhun tulitikkukasojen tikkumääriä laskevasta ja sen perusteella niitä luokittelevasta koneesta. Tämän tarkoituksena on johdattaa ajattelemaan asioiden jakamista luokkiin, kun niistä saatu tieto sisältää virheitä. Tämän lisäksi siinä esitellään kuvaajatyyppi, jota tyypillisesti käytetään tämän kaltaisten mallien esittämiseen.</p>
+  
+  <p>Toisessa osassa käsitellään hieman monimutkaisempaa jauhosäkkien painoja laskevaa laitetta. Siinä missä ensimmäisessä osassa käsiteltiin virheitä kokonaislukuina (tulitikkujen määrät) tässä puhutaan virheistä, jotka voivat olla myös murtolukuja (virheet painon mittaamisessa), ja joiden mallina käytetään normaalijakaumaa. Tämä vastaa laajalti psykologiassa käytettyä tapaa rakentaa signaalintunnistusteorian mukaisia malleja.</p>
+  
+  <p>Kolmannessa osassa käyn läpi signaalintunnistusteorian soveltamista psykologiseen tutkimukseen. Tarkoituksena on huomata, että voimme käyttää jauhosäkkimallia aika lailla suoraan, mutta joudumme pohtimaan, miten mallia pitäisi itse asiassa tulkita.</p> 
+  
+  <p>Aivan lopuksi mainitsen joitakin huomioonotettavia seikkoja kun tällaista varsin mekanistista teoriaa sovelletaan ihmisen psyyken analyysiin.</p>
+  
+  <h2>Tulitikkukasojen luokittelukone</h2>
+  
+  <h3>Johdatus ongelmaan</h3>
+  
+  <p>Signaalintunnistusteorian perinteisin sovellus on tilanteeseen, jossa asioita <em>luokitellaan</em>, mutta saatu tieto ominaisuudesta, johon luokittelu perustuu, sisältää virheitä &ndash; ja niinpä siis tuo luokittelukin voi sisältää virheitä.</p>
+  
+  <p>Kuvitellaanpa että tehtaalla on kone, joka lajittelee sille annettuja tulitikkukasoja joko <em>pieniin</em> tai <em>suuriin</em>. Sisäisesti kone laskee kuinka monta tikkua sille annetussa kasassa on, ja jos tuo määrä on yhtä suuri tai se ylittää ennalta asetetun kynnysarvon, kasa luokitellaan isoksi, muutoin se luokitellaan pieneksi.</p>
+  
+  <p>Kone on kuitenkin epätäydellinen. Kun se laskee tikkuja, tekee se toisinaan virheitä: joskus tikku tai pari jää laskematta; joskus sama tikku tulee lasketuksi moneen kertaan. Tämä johtaa luokitteluvirheisiin silloin kun tikkujen todellinen määrä on lähellä luokat erottavaa kynnysarvoa: joskus kasa, joka pitäisi luokitella pieneksi, tuleekin luokitelluksi suureksi, koska siinä olevien tikkujen määrä lasketaan liian suureksi.</p>
+  
+  <p>Peruskysymys johon haluamme tietää vastauksen on: mikä on todennäköisyys, jolla luokittelussa tapahtuu virheitä?</p>
+  
+  <p>Tähän vastaamiseksi meidän täytyy tietää kolme asiaa:<p> 
+  <ol>
+    <li>Koneelle annettujen tikkujen todellinen määrä.</li>
+    <li>Sen tekemien virheiden suuruus, tätä kutsutaan tässä kirjoituksessa <em>hajonnaksi.</em></li>
+    <li>Kuinka suureksi luokkien välinen <em>kynnysarvo</em> on asetettu.</li>
+  </ol>
+  
+  <p>Voimme olettaa, että meillä on käytössä testikäyttöön tarkoitettu kokoelma tulitikkukasoja, joissa olevan tikkujen todellisen määrän tunnemme. Sen sijaan tikkujen laskemisessa tapahtuvaa hajontaa emme tunne, emmekä koneen käyttämää kynnysarvoa (johtuen siitä, että luokittelussa tapahtuu virheitä, emme aivan täysin tiedä, kuinka säädöt vaikuttavat siihen). Nämä kaksi asiaa pitäisi päätellä sen perusteella, kuinka kone luokittelee testikasat.</p>
+  
+  <h3>Mistä luokittelutodennäköisyydet tulevat?</h3>
+  
+  <p>Voimme kuvitella, että laskettu tikkujen määrä saadaan lisäämällä todelliseen tikkujen määrään virhenopan silmäluku. Nopan silmäluvut alkavat negatiivisesta hajonnasta ja ulottuvat positiiviseen hajontaan: jos hajonta on 2, nopan silmäluvut ovat -2, 1, 0, 1, ja 2. Jos siis esimerkiksi todellinen tikkujen määrä on 115 ja hajonta on kaksi laskettujen tikkujen määrä voi olla 112, 113, 115, 116 tai 117. Jos nyt kynnysarvo on 116, luokitellaan kasa suureksi kahdessa tapauksessa viidestä; todennäköisyys suureksi luokittelulle on siis 2/5 eli 0.4. (Huomaa että todennäköisyydet esitetään matematiikassa välillä 0 ja 1, jossa 0 on mahdoton tapahtuma ja 1 on varma tapahtuma. Todennäköisyys 0.4 luettaisiin arkikielessä, että "neljänkymmenen prosentin mahdollisuus").</p>
+  
+  <p>Kaikkien virheiden todennäköisyys on oletettu tässä siis yhtä suureksi. Eli jos hajonta on, sanotaan, kolme, on aivan yhtä todennäköistä, että kone laskee kolme tikkua liikaa kuin yhden liian vähän. Olisi ehkä realistisempaa olettaa, että pienet virheet ovat todennäköisempiä, mutta  käytössä oleva hieman epärealistinen oletus on tässä tehty asioiden yksinkertaisena pitämisen vuoksi. On kuitenkin syytä huomata, että se on vain tietynlainen subjektiivinen mallintamisratkaisu ja myöhemmin käsittelemme monimutkaisempaa tapausta, jossa nimenomaan pienempien virheiden todennäköisyys on suurempi.</p>
+  
+  <h3>Luokittelutodennäköisyydet tikkujen todellisen määrän mukaan</h3>
+  
+  <p>Usein on käytännöllistä kuvata, kuinka luokittelutodennäköisyydet muuttuvat todellisten tikkujen määrän mukaan, kun hajonta ja kynnysarvo on asetettu tiettyihin arvoihin. Alla olevassa kuvaajassa tämä onkin esitetty juuri näin.</p>
+  
+  <p>Kuvaajassa vaaka-akselilla (x-akseli) on tulitikkujen todellinen määrä: akseli ulottuu 100 tikusta 120 tikkuun, pienet pallot on asetettu yhden tikun välein. Pystyakselilla (y-akseli) on todennäköisyys sille, että kasa luokitellaan suureksi. Y-akselin nimiön "P(Suuri)" alkukirjain "P" tulee englannin kielen sanasta <em>probability</em>.</p> 
+  
+  <p>Jos viet hiiren kuvaajassa olevan pallon päälle, näyttää se x- ja y-arvot, eli todellisen tikkujen määrän ja todennäköisyyden sille, että se luokitellaan suureksi.</p>
+  
+  <p>Huomaa myös, että koska kone luokittelee tikkuja kahteen kategoriaan (suuri/pieni), meidän tarvitsee oikeastaan tietää vain toinen: jos todennäköisyys sille, että kasa luokitellaan suureksi on vaikkapa 0.4, tiedämme että todennäköisyys luokitella se pieneksi on 1 - 0.4 =  0.6. Se, kumman kategorian todennäköisyyden valitsemme näytettäväksi on oma valintamme: usein tuo kategoria valitaan (ainakin psykologiassa) niin, että todennäköisyys nousee oikealle mentäessä.</p>
+
+  <p>Kuvaajan muotoa voidaan säätää vaihtamalla sen hajontaa ja kynnysarvoa. Oletusarvoisesti hajonta on 2 ja kynnysarvo 116. Äskenhän laskimme, että kun näin on, todennäköisyys luokitella kasa, jossa on 115 tikkua suureksi, on 2/5 eli 0.4. Etsi vaaka-akselilta kohta jossa on 115, sitten liiku ylöspäin kunnes törmäät käyrään, sitten katso, miten korkealla käyrä on: huomannet sen olevan kohdassa 0.4.</p>
+  
+  <p>(Jos graafi näyttää omituiselta, se on ehkäpä ikään kuin rypistynyt pieneksi, päivitä sivu.)</p>
+  
+   <div class="interactiveFigure">
+    
+    <svg height="300" id="vis_1"></svg>
+
+    <div class="controlSlice">
+      <label for="vis_1_variance">Hajonta:</label>   
+      <input type="range" id="vis_1_variance" min="0" max="20" step="1" value="2" oninput=drawVis1()>
+      <div></div>
+    </div>
+    
+    <div class="controlSlice">
+      <label for="vis_1_crit">Kynnysarvo:</label>
+      <input type="range" id="vis_1_crit" min="100" max="120" step="1" value="116" oninput=drawVis1()>
+      <div></div>
+    </div>
+    
+   </div>
+   
+  <p>Katso mitä tapahtuu, kun virheiden suuruutta lisätään: välimatka, jolla luokittelussa tapahtuu virheitä tulee pidemmäksi, toisin ilmaistuna tuon todennäköisyyksiä kuvaavan keltaisen käppyrän <em>kulmakerroin</em> pienenee. On varmastikin melko selkeää miksi näin käy. Kynnysarvon muuttaminen &ndash; suosittelen sitä kokeilemaan &ndash; vaikuttaa edelleenkin samoin kuin ennenkin: se siirtää tuota käppyrää x-akselilla eteen- ja taaksepäin, vaikka tämä saattaa olla hieman vaikea huomata, jos hajonta on asetettu kovin suureksi.</p>
+  
+  <h3>Voimmeko päätellä kynnysarvon ja hajonnan?</h3>
+  
+  <p>Osion alussa olimme siis tilanteessa, jossa <em>emme tunne</em> koneen hajontaa ja kynnysarvoa, mutta meillä oli käytössämme testiaineisto, jossa tiedämme täsmälleen kuinka monta tikkua siinä on. Voimmeko päätellä koneen hajonnan ja kynnysarvon syöttämällä koneelle testiaineistomme ja katsomalla kuinka se suoriutuu? Tätä voit kokeilla alla olevassa pelissä.</p>
+  
+  <p>Pelikentällä on kaksi elementtiä:</p>
+  
+  <ol>
+    <li>Pienet pallot kuvaavat koneen mitattua toimintaa. Konetta on testattu kahdella tikkukasalla, joissa olevan todellisen tikkujen määrän tunnemme. Koneen on annettu luokitella näitä kasoja lukemattoman monta kertaa, niin, että on saatu tarkka kuva siitä, millä todennäköisyydellä ne luokitellaan suureksi.</li>
+    <li>Käyrä kuvaa nykyisillä kynnysarvolla ja hajonnalla ennustettuja todennäköisyyksiä</li>
+  </ol>
+
+  <p>Sinun tehtävänäsi on säätää kynnysarvoa ja hajontaa kunnes ennustettuja arvoja kuvaava käyrä osuu yhteen havaittujen todennäköisyyksien kanssa. Aina kun painat <em>Aloita peli</em> -nappia, sinulle arvotaan uusi peli: voit siis kokeilla tätä niin monta kertaa kuin vain suinkin tahdot.</p>
+  
+  <div class="interactiveFigure">
+    <button type="button" id="startSDTGameButton" onclick="initializeSDTGame()">Aloita peli</button><br>
+ 
+    <svg height="300" id="sdt_game"></svg>
+    
+    <div id="sdt_game_info_text"></div>
+    
+    <div class="controlSlice">
+      <label for="sdt_game_variance" class="variabilityLabel">Hajonta:</label>
+      <input type="range" id="sdt_game_variance" min="0" max="20" step="1" value="0" oninput=drawSDTGame()>
+      <div></div>
+    </div>
+    
+    <div class="controlSlice">
+      <label for="sdt_game_criterion" class="criterionLabel">Kynnysarvo:</label>
+      <input type="range" id="sdt_game_criterion" min="100" max="120" step="1" value="105" oninput=drawSDTGame()>
+      <div></div>
+    </div>
+  </div>
+  
+  <p>Meidän on siis mahdollista päätellä jostain laitteesta (tai psykologiassa: ihmisestä - tästä myöhemmin) miten paljon sen tunnistimissa on hajontaa ja mikä sen käyttämä kynnysarvo on. Tämä vaatii tosin sen, että meillä on testiaineisto, jonka tunnemme, ja että voimme toistuvasti mitata, miten laite luokittelee tuon testiaineiston.</p>
+  
+  <h2>Tikuista murtolukuihin</h2>
+  
+  <p>Tulitikkukasojen luokittelukoneesta puhuessa virhemäärät olivat aina kokonaislukuja: kone ei koskaan erehtynyt puolikkaalla tai kolmasosatikulla. On kuitenkin yleisempää käyttää malleja, joissa virheet voivat olla myös desimaalilukuja.</p>
+  
+  <p>Tämä tulee kyseeseen esimerkiksi sillon, jos tulitikkujen määrän sijaan arvioimmekin <em>jauhosäkkien painoja</em>. Kone voi erehtyä esimerkiksi 3.45 grammalla. (Oletamme tässä, että koneen vaaka on mielivaltaisen tarkka, eli että se ei ole rajoittunut mittaamaan esimerkiksi vain gramman tarkkuudella).</p>
+  
+  <p>Tällä kertaa säkkejä luokitellaan keveisiin ja painaviin. Aivan kuten edelläkin, näiden luokkien välillä on kynnysarvo, mutta tässä tapauksessa luokat ovat 1) kevyt ja 2) painava. Edellä tulitikkujen määrä saatettiin laskea väärin, mutta tässä tapauksessa koneen vaaka saattaa tehdä virheitä, jolloin säkin paino tulee arvioiduksi väärin ja sen kautta myös mahdollisesti luokitelluksi väärin.</p>
+  
+  <p>Olettakaamme, että pienet virheet ovat tavanomaisempia kuin suuret. Voimme olettaa, että virheet ovat jakautuneet laajalti tunnetun normaalijakauman mukaisesti. Alla oleva demonstraatio näyttää normaalijakauman. Sen keskiarvo on tässä tapauksessa aina nolla &ndash; oletamme, että keskimäärin koneemme tekemät virheet ovat nolla &ndash; mutta voit vaihdella jakauman keskihajontaa säätimestä. Kun hajonta on esimerkiksi 0.1, ei kone käytännössä koskaan erehdy edes kahta grammaa; toisalta jos hajonta on 3.0, saattaa kone erehtyä jopa kuusi grammaa.</p>
+  
+  <p>(Huomaa, että kun asetat hajonnan suureksi, jakauma ikään kuin läsähtää kasaan: tämä johtuu siitä, että mahdolliset virheet jakautuvat suuremmalle alueelle. Ajattele vaikkapa kahta noppaa, joista toinen on kuusi- ja toinen kaksikymmentätahkoinen. Kuusitahkoisen nopan tapauksessa yksittäisten silmälukujen todennäköisyys on 1/6 kun taas kaksikymmentätahkoisen tapauksessa 1/20. Jos piirtäisimme nuo, niin  kaksikymmentätahkoisen nopan silmälukujen todennäköisyydet olisivat "levinneet" suuremalle alalle: mahdolliset silmäluvut kattaisivat suuremman alan, mutta yksittäisten todennäköisyydet olisivat pienempiä kuin kuusitahkoisessa.)</p>
+  
+  <div class="interactiveFigure">
+  
+    <svg height="300" id="vis_2"></svg>
+     
+    <div class="controlSlice">
+      <label for="vis_2_variance">Hajonta</label>
+      <input type="range" id="vis_2_variance" min="0.4" max="3" step="0.01" value="0.4" oninput=drawVis2()>
+      <div></div>
+    </div>      
+
+  </div>
+ 
+  <p>Nyt kun normaalijakauma on tullut tutuksi, katsotaan miten sitä käytetään jauhosäkkien luokittelun mallintamisessa. Seuraavassa demonstraatiossa kynnysarvo on kiinteästi 49.5 grammaa &ndash; sitä painavammat pitäisi siis luokitella painaviksi ja kevyemmät kevyiksi. Kynnysarvoa kuvaa pystyviiva. Voit säätää painon mittauksen hajontaa sekä säkin todellista painoa. </p>
+  
+  <p>Tulitikkukoneen tapauksessa ajattelimme, että laskettu tikkujen määrä on silmäluku nopasta, jonka keskimmäinen arvo oli aina todellinen tikkujen määrä. Nyt taasen ajattelemme, että mitattu säkin paino on satunnaisluku normaalijakaumasta, jonka keskiarvo vastaa säkin todellista painoa. Jos tuo satunnaisluku on kynnysarvoa suurempi, säkki luokitellaan painavaksi.</p> 
+  
+  <p>Kun haluamme tietää todennäköisyyden sille, että säkki luokitellaan suureksi, meidän täytyy löytää pinta-ala normaalijakauman osalle joka ylittää kynnysarvon. Kuvaajassa kynnysarvon ylittävä osa on väritetty punaisella värillä: tämä pinta-ala vastaa siis todennäköisyyttä, jolla säkki luokitellaan painavaksi. Jäljelle jäävä värittämätön osuus vastaa todennäköisyyttä sille, että säkki luokitellaan kevyeksi.</p> 
+  
+  <p>Voit viedä hiiren jomman kumman osan päälle, ja osoittimen kohdalle avautuu kenttä,  joka näyttää tuon osan pinta-alan, mutta nuo pinta alat printataan myös demonstraation alareunaan. Tarkkaile kuinka nuo todennäköisyydet muuttuvat, kun vaihdat todellista painoa ja hajontaa.</p>
+  
+  <p>(Tällaista pinta-alojen laskentaa kutsutaan integroinniksi, mutta siihen ei mennä tässä tekstissä sen syvemmälle: integroinnin hoitaa tässä tapauksessa tietokone.)</p>
+  
+   <div class="interactiveFigure">
+   <h3>Virheet säkin painon arvioinnissa</h3>
+    <svg  height="300" id="vis_3"></svg>
+
+    <p class="visInfoText" id="vis_3_probs"></p>
+    
+    <div class="controlSlice">     
+      <label for="vis_3_variance">Hajonta:</label>
+      <input type="range" id="vis_3_variance" min="0.4" max="3" step="0.01" value="0.5" oninput=drawVis3()> 
+      <div></div>
+    </div>
+    
+    <div class="controlSlice">
+      <label for="vis_3_true" id="true_weight_label">Todellinen paino:</label>
+      <input type="range" id="vis_3_true" min="40" max="60" step="0.1" value="50" oninput=drawVis3()>
+      <div></div>
+    </div> 
+  </div>
+  
+  <p>Kokeile asettaa hajonta suureksi ja sitten muuta säkin todellista painoa hitaasti pienestä suureksi. Tarkkaile miten nopeasti todennäköisyys luokitella säkki suureksi muuttuu nollasta yhteen. Tämän jälkeen aseta hajonta pieneksi ja toista sama. Miten nopeasti todennäköisyys muuttui nyt?</p>
+  
+  <p>Huomasit varmaan, että kun hajonta on asetettu pieneksi, todennäköisyys muuttuu nopeasti &ndash; muistanet, että aikaisemmassa tulitikkujenluokitteluesimerkissä kävi samoin. Seuraavassa demonstraatiossa todennäköisyys säkin luokittelemiseksi on esitetty säkin todellisen painon mukaan. Aivan kuten aikaisemmassa tulitikkuesimerkissä, nytkin x-akselilla (vaaka-akseli) on säkin todellinen paino ja y-akselilla (pystyakseli) on todennäköisyys sille, että säkki luokitellaan painavaksi.</p>
+  
+  <p>Katkottu pystyviiva kuvaa kynnysarvoa.</p>
+  
+  <div class="interactiveFigure">
+    <h3>Jauhosäkkien luokittelu</h3>
+    <svg  height="300" id="vis_4"></svg>
+    
+    <div class="controlSlice">
+      <label for="vis_4_var">Hajonta:</label>
+      <input type="range" id="vis_4_var" min="0.5" max="3" step="0.01" value="0.5" oninput=drawVis4()>
+      <div></div>
+    </div>
+    <div class="controlSlice">
+      <label for="vis_4_crit">Kynnysarvo:</label>
+      <input type="range" id="vis_4_crit" min="55" max="75" step="0.01" value="0.1" oninput=drawVis4()>
+      <div></div>
+    </div>
+  </div>
+  
+  <p>Huomaamme, että tämä esittää matemaattisesti aikaisemmasta demonstraatiosta saamamme intuition: kun hajonta on asetettu pieneksi, todennäköisyys luokittelulle muuttuu hyvin nopeasti kynnysarvon tienoilla; jos taas hajonta on suuri, on tuo muutos hitaampaa, sillä väli, jolla luokitteluvirheitä tapahtuu, on pidempi.</p>
+  
+  <p>Näillä kahdella parametrilla &ndash; hajonnalla ja kynnysarvolla &ndash; onkin samankaltainen vaikutus kuin aikasemmassa tulitikkuesimerkissä. Ero on vain se, että edellisessä esimerkissä laskimmme kokonaislukuja &ndash; tulitikkujen määriä &ndash; kun taas nyt meillä on jatkuva suure, säkkien paino. Tämän vuoksi myös tuo funktio, joka kuvaa todennäköisyyttä, että säkki luokitellaan suureksi, on (piirto-ohjelman tarkkuuden rajoissa) pehmeämpi.</p>
+  
+  <h2>Yhteenveto käsitellyistä asioista</h2>
+  
+  <p>Ennen kuin menen siihen, kuinka signaalintunnistusteoriaa sovelletaan psykologiassa, käyn kokoavasti läpi muutamia asioita, jotka juuri käydyistä esimerkeistä olisi syytä huomata:</p>
+  
+  <ol>
+    <li>Signaali (tulitikkujen määrä/säkkien paino) on kohinainen (siinä on mittausvirhettä)</li>
+    <li>Luokkiin jako tapahtuu asettamalla kynnysarvo tuolle kohinaiselle signaalille</li>
+    <li>Koska luokittelu perustuu kohinaiseen signaaliin, siinä tapahtuu virheitä</li>
+    <li>Emme yleensä tunne kiinnostuksen kohteena olevan laitteen/järjestelmän parametreja (kynnysarvo ja kohinan määrä)</li>
+    <li>Koska kynnysarvolla ja virheiden määrällä on erilainen vaikutus luokitteluun, parametrit voidaan päätellä tarkkailemalla luokitteluvirheitä todellisen signaalin funktiona</li>
+  </ol>
+ 
+  <h2>Taajuuserojen erotuskynnys</h2>
+  
+  <p>Käydään lopuksi nopeasti yhden esimerkin kautta läpi sitä, miten signaalintunnistusteoriaa voidaan soveltaa psykologiassa. Esimerkki koskee, kuten otsikko jo lupaa, taajuuserojen erotuskynnystä.</p>
+  
+  <p>Taajuuserojen erotuskynnys viittaa siihen, mikä on pienin ero taajudessa, minkä voimme havaita kahden äänen välillä. Tyypillisesti tällaisessa koeasetelmassa koehenkilölle esitetään ensin niin sanottu <em>referenssiääni</em>, joka on aina sama, ja sen jälkeen <em>testiääni</em>, joka saattaa taajudeltaan poiketa referenssiäänestä. Osanottajan tehtävänä on vastata "kyllä niissä oli eroa" tai "ei niissä ollut eroa" sen mukaan, kuulivatko he äänten välillä eroa. Toisaalta voisimme sanoa, että ihminen luokittelee kuulemiaan ärsykepareja "kyllä"- tai "ei"-luokkiin kuulemansa perusteella.</p>
+  
+  <p>Kun puhuimme jauhosäkkien luokittelemisesta painaviin ja kevyisiin, oli koneen tekemillä virheillä selkeä tulkinta: joskus koneen vaaka punnitsee säkin painon väärin. Voisimme käsitteellistää tämän myös puhumalla <em>todellisista signaaleista</em> (true signal) ja <em>sisäisistä suureista</em> (internal quantity). Todellinen signaali tarkoittaa esimerkiksi jauhossäkin todellista painoa, sisäinen suure taasen koneen mittaamaa painoa: mitä kone "sisäisesti" säkin painosta ajattelee. Luokittelu siis perustuu nimenomaan tälle sisäiselle suureelle, jossa voi olla virhettä - se ei vastaa täydellisesti todellista signaalia.</p>
+
+  <p>Kun puhumme ihmisen sielullisesta toiminnasta, tässä tapauksessa ääniärsykkeiden havaitsemisesta, olemme ikävä kyllä hieman teoreettisesti epäselvemmillä vesillä. Se, <em>mikä</em> on tuo sisäinen suure, jolle ihmisen suorittama luokittelu perustuu, ei ole yhtä selkeää: ihminen ei ole vaaka, joka "punnitsee" ärsykkeitä.</p>
+  
+  <p>Usein psykologiassa ajatellaan, että tuo sisäinen suure, jolle luokittelu perustuu, on ärsykkeestä saatu <em>varmuus</em> tai <em>näyttö</em> (evidence). Jos varmuus ylittää sisäisen kynnysarvon, osanottaja vastaa myöntävästi. Esimerkiksi havaintojärjestelmämme rajallisuus taas puolestaan vaikuttaa siihen, että tuo varmuuden määrä vaihtelee satunnaisesti ja aivan kuten tulitikkukasoja tai jauhoäkkejä luokitelleissa koneissa, jos ärsyke on lähellä kynnysarvoa, tämä johtaa luokittelussa vaihteluun.</p>
+  
+  <p>Sinänsä siis tämä toimii samoin kuten aikaisemmissa kone-esimerkeissä, mutta tulkinta siitä, mitä "koneen" sisällä tapahtuu muuttuu. Nämä yhteydet eri esimerkkien välillä on koottu alla olevaan taulukkoon.</p>
+  
+  <table>
+    <tr>
+      <td>Suure:</td>
+      <td>Tulitikut</td>
+      <td>Jauhosäkit</td>
+      <td>Taajuuserot</td>
+    </tr>
+    <tr>
+      <td>Todellinen signaali:</td>
+      <td>Tikkujen todellinen määrä</td>
+      <td>Säkin todellinen paino</td>
+      <td>Taajuuseron todellinen määrä</td>
+    </tr>
+    <tr>
+      <td>Sisäinen suure:</td>
+      <td>Laskettu tikkujen määrä</td>
+      <td>Mitattu säkin paino</td>
+      <td>Ääniärsykkeestä saatu varmuus</td>
+    </tr>
+    <tr>
+      <td>Virhe:</td>
+      <td>Laskuvirhe määrässä</td>
+      <td>Mittausvirhe painossa</td>
+      <td>Vaihtelu varmuudessa</td>
+    </tr>
+    <tr>
+      <td>Luokittelu:</td>
+      <td>Pieni/Suuri</td>
+      <td>Kevyt/Painava</td>
+      <td>Kyllä/Ei</td>
+    </tr>
+  </table>
+  
+  <p>Samoin kuin jauhosäkkien mitattujen painojen, myös ääniärsykkeistä saatujen vaikutelmien voidaan olettaa olevan jakautuneen normaalijakauman mukaisesti. Alla olevassa demonstraatiossa oletetaan, että osanottaja vastaa <em>kyllä</em> jos ärsykkeen aiheuttama vaikutelma ylittää kolmen hertsin kynnysarvon. Matemaattisesti tämä siis toimii tismalleen samalla tavoin kuin aikaisempi jauhosäkkiesimerkki: ainoastaan akseleiden nimet ja sisällölliset tulkinnat ovat erilaisia, kuten juuri puhuimme.</p>
+  
+  <p>(Saattaa tulla tietenkin mieleen, että miksei osanottaja vastaisi <em>kyllä</em> aina kun ärsyke antaa minkäänlaista vaikutelmaa siitä, että siinä olevien äänten välillä on eroa. Tämä johtuu siitä, että myös sellaiset ärsykkeet, joissa eroa <em>ei</em> ole, antavat jonkinmoisen vaikutelman siitä, että niissä kuitenkin saattaisi olla eroa äänten välillä. Osanottaja siis joutuu tiukentamaan kynnysarvoaa jonkin verran, jos hän haluaa välttää vastailemasta erheellisesti ärsykkeisiin, joissa eroa ei ole. Tätä tilannetta mallintaa se, jos säädät todellisen taajuuseron alla olevassa kuvaajassa nollaksi.)</p>
+  
+  <div class="interactiveFigure">
+    <h3>Vaihtelu ääniärsykkeen vaikutelmissa</h3>
+   
+    <svg  height="300" id="vis_5"></svg>
+    
+    <p class="visInfoText" id="vis_5_probs"></p>
+    <div class="controlSlice">
+      <label for="vis_5_var">Hajonta:</label>
+      <input type="range" id="vis_5_var" min="0.4" max="3" step="0.1" value="0.5" oninput=drawVis5()>
+      <div></div>
+    </div>
+    <div class="controlSlice">
+      <label for="vis_5_true">Todellinen taajuusero:</label>
+      <input type="range" id="vis_5_true" min="0" max="5" step="0.1" value="2" oninput=drawVis5()>
+      <div></div>
+    </div>
+    
+  </div>
+  
+  <p>Edelleenkin, samoin kuin jauhosäkin luokittelua suureksi kuvattiin todellisen painon funktiona, voimme kuvata todennäköisyyttä, jolla ihminen luokittelee ääniärsykkeen kategoriaan "kyllä siinä oli ero" todellisen taajuuseron funktiona. Alla oleva demonstraatio piirtää käyrän, joka kuvaa todennäköisyyttä vastata <em>kyllä</em> todellisen taajuuseron mukaan. Tämän kaltaista käyrää, joka esittää vastaustodennäköisyyden ärsykkeen jonkin ominaisuuden funktiona, kutsutaan <em>psykometriseksi funktioksi</em>.</p>
+  
+  <div class="interactiveFigure">  
+    <svg  height="300" id="vis_6"></svg>
+     
+    <div class="controlSlice">
+      <label for="vis_6_variance">Hajonta:</label>     
+      <input type="range" id="vis_6_variance" min="0.4" max="3" step="0.1" value="2" oninput=drawVis6()>
+      <div></div>
+    </div>
+    <div class="controlSlice">
+      <label for="vis_6_crit">Kynnysarvo:</label>
+      <input type="range" id="vis_6_crit" min="0.5" max="10" step="0.1" value="2" oninput=drawVis6()>
+      <div></div>
+    </div>
+  </div>
+  
+  <p>Viimeinen käsiteltävä asia on kynnysarvon ja hajonnan tulkinta psykologiassa. Yleensä ajatellaan, että kynnysarvo liittyy koehenkilön valitsemaan <em>vastaustapaan</em> tai <em>motivaatioon</em> ja hajonta varsinaiseen aistien toimintaan.</p>
+  
+  <p>Käytännössä tämä tarkoittaa sitä, että hajonta määrää fyysisen erotuskynnyksen taajuuseroille, mutta toinen osanottaja voi olla vastauksissaan varovaisempi kuin toinen, hän ei oikein tahtoisi vastata <em>kyllä</em> ennen kuin hän on aivan varma. Ero näiden osanottajien välillä, joiden fyysinen erotuskynnys on siis sama, näkyisi siinä, että heidän <em>kynnysarvonsa</em> ovat erilaiset. Kokeellisissa tutkimuksissa onkin saatu näyttöä siitä, että kun koehenkilöä pyydetään &ndash; tai muuten manipuloidaan &ndash; vaihtamaan vastaustapaansa, tämä vaikuttaa ensisijaisesti arvioituun kynnysarvon paikkaan.</p>
+  
+  <h2>Loppu</h2>
+  
+  <p>Olen tässä kirjoituksessa esitellyt lyhyesti joitain signaalintunnistusteorian peruskäsitteitä, joista tärkeimpänä on se, että voimme hajottaa luokittelua suorittavan "koneen" tai "järjestelmän" toiminnan siinä olevaan hajontaan ja toisaalta sen kynnysarvoon. Tähän loppuun olen kerännyt kritiikkejä tai asioita, joita kannattaa pohtia kun soveltaa signaalintunnistusteoriaa psykologiassa.</p>
+  
+  <h3>Mitä sisäinen suure kuvaa?</h3>
+  
+  <p>Puhuttaessa koneista, jotka luokittelevat nyt vaikkapa tulitikkuja tai jauhosäkkejä, signaalintunnistusteoreettinen tulkinta on melko selkeä. On helppo ymmärtää, että jauhosäkkejä punnitseva vaaka ei ole täydellinen, ja se tekee joskus mittausvirheitä; on helppo ymmärtää, että koneelle on asetettu kynnysarvo, johon luokittelu perustuu. Nämä ovat hyvin konkreettisia, silmin tai käsin havaittavia asioita.</p> 
+  
+  <p>Ihmisen psyologiaan sovellettuna kuitenkin alamme puhua asioista, joita emme voi nähdä tai koskettaa. On epäselvempää, mistä oikein puhumme, kun käytämme signaalintunnistusteoreettista tapaa puhua "sisäisten vaikutelmien" satunnaisuudesta tai niiden jakaumista.</p>
+  
+  <p>Täytyy myös muistaa, että tämä on vain tietynlainen hyvin yleisen tason malli - sen ei ole siis tarkoituskaan olla eritysen <em>konkreettinen</em> kuvaus siitä, miten ihmisen havaintojärjestelmä tai päätöksentekoprosessi toimii. Se on matemaattinen/teoreettinen työkalu, jonka avulla ihmisen luokittelutoiminta voidaan hajoittaa tietynlaisiin palasiin.</p>
+  
+  <p>Esimerkissämme puhuimme taajuuserojen havaitsemisesta: se, missä oletimme hajontaa olevan, oli nimenomaan yksittäinen ärsykepari, kuinka voimakkaan "vaikutelman" kyseinen ärsykepari antaa siitä, että siinä olevissa äänissä on eroa. Mutta miksi pitäisi mallintaa juuri tuota ärsykeparin tuottamaa vaikutelmaa, miksemme mallintaisi tuon ärsykeparin muodostamia ääniä niinä elementteinä, joihin liittyy epävarmuutta: ehkäpä juuri nuo yksittäiset taajuudet sinänsä ovat ne, jotka luovat hämäriä vaikutelmia täsmällisestä arvostaan. Tämä johtaisi hyvin samankaltaiseen malliin, myös näin voisimme selittää sitä vaihtelua, jota havaitsemme, kun ihminen yrittää kuunnella hyvin pieniä taajuuseroja.</p>
+  
+  <h3>Mitkä tekijät vaikuttavat havaittuun hajontaan</h3>
+  
+  <p>Puhuimme siitä, kuinka kynnysarvo kuvaa koehenkilön asettamaa kynnystä ärsykkeiden aiheuttamille vaikutelmille. On kuitenkin epärealistista ajatella, että moinen kynnysarvo pysyisi täsmälleen vakiona kokonaisen koesarjan ajan. Ihminenhän saattaa siinä ärsykkeitä kuunnellessaan säätää vastaustapaansa: jos hän huomaa vaikkapa, että ärsykkeet ovat todella vaimeita, säätänee hän kynnyksensä matalammaksi &ndash; muutenhan hän tuskin koskaan vastaisi myöntävästi.</p>
+
+  <p>Kaikenlainen tämän kynnysarvon säätäminen tai vaeltelu koesarjan aikana lisää vaihtelua luokitteluun, joka signaalintunnistusteoreettisessa analyysissa näkyy lisääntyneenä hajontana. Esimerkiksi siis voi olla, että tulitikkujenluokittelukone on täydellinen, niin, ettei se koskaan erehdy laskuissaan, mutta jos se on epävarma kone &ndash; siis niin, että se vaihtelee kynnysarvoaan satunnaisesti &ndash; aiheuttaa tämä luokitteluun <em>täsmälleen samanlaista</em> vaihtelua kuin laskuvirheet: tuloksena olisi samanlaisia funktioita kuin mitä aiemmin näimme.</p> 
+  
+  <p>Luokittelusta laskettu hajonta siis kuvaa <em>kaikkea</em> vaihtelua vastailussa, ei ainostaan aistien toiminnasta johtuvaa, eikä ole olemassa yksinkertaista matemaattista tapaa erottaa näitä toisistaan.</p>
+  
+  <h3>Havaitut todennäköisyydet ovat kohinaisia</h3>
+  
+  <p>Ensimmäisessä osiossa ollut signaalintunnistusteoriapeli, jossa ennustetut luokittelutodennäköisyydet piti saada osumaan yhteen mitattujen todennäköisyyksien kanssa, on siinä mielessä epärealistinen, ettemme yleensä voi mitata luokittelutodennäköisyyksiä täydellisesti. Tämä johtuu siitä, että luokittelu on nimenomaan satunnaista ja keräämämme data vaillinnaista.</p> 
+  
+  <p>Se että todennäköisyys jollekin tapahtumalle on vaikkapa 2/3 ei tarkoita, että havaintoaineistossamme se noudattaisi tuota suhdetta. Reilu kollikkokaan ei aina tuota heittosarjoja, joissa olisi täsmälleen puolet kruunuja ja puolet klaavoja, vaan joskus &ndash; aivan vain sattumasta johtuen &ndash; kruunujen/klaavojen suhde voi poiketa paljonkin tasaisesta.</p> 
+  
+  <p>Tämä havaitun aineiston hajonnaisuus johtaa siihen, että samaan aineistoon voi sopia monta eri käyrää lähes yhtä hyvin. Tämän epävarmuuden analyysiin käytetään tilastollisia menetelmiä, joista ehkäpä luontevin on Bayes-tilastotiede. Näitä teemoja käsitellään toisessa kirjoituksessa.</p>
+  
+  <!--h3>Sovellus riippuu tehtävän tyypistä</h3>
+  
+  <p>On myös syytä huomata, että signaalintunnistusteoriaa sovelletaan psykologiassa monin eri tavoin, vaikkakkin perusperiaatteet ovat samat. Tässä kirjoituksessa käytetyssä esimerkissä signaalintunnistusteoriaa sovellettiin niin sanottuun kyllä/ei-asetelmaan. Jos sen sijaan sovelluskohteena olisi ollut <em>kaksoispakkovalintakoe</em> (2-alternative forced choice, 2AFC), olisi sovellus ollut hieman erilainen. 2AFC-asetelmassa koehenkilön tehtävänä on verrata kahta ärsykettä toisiinsa. Jos ajattelemme siis, että esimerkiksi alussa esitelty tulitikkujenluokittelukone vertaisi kahta  kasaa toisiinsa, olisivat sen tekemien virheiden määrät suurempia, sillä olisi mahdollista että joskus se laskee toiseen kasaan liian vähän ja toiseen liian paljon tikkuja. Samoin voisi olla, että toisinaan koehenkilön saama varmuus toisesta ärsykkeestä on liian paljon ja toisesta liian vähän, mikä suurentaa niiden välistä eroa.</p-->
+  
+  <h3>Mallit ovat vain malleja</h3>
+  
+  <p>Signaalintunnistuteoria perustuu sille, että luomme matemaattisen mallin luokittelusta &ndash; ja mallit ovat aina yksinkertaistuksia. Ensimmäisessä tulitikkukone-esimerkissähän oli tehty se epärealistinen ja yksinkertaistava oletus, että kaikki virheet olisivat yhtä todennäköisiä, siis että olisi yhtä todennäköistä, että kone erehtyy yhdellä kuin viidellä tikulla. Tämä sama pätee kaikkiin malleihin: ne ovat yksinkertaistuksia todellisesta maailmasta. Toisessa esimerkissä ollut punnituskone tuskin tekee virheitä, jotka ovat täsmälleen normaalisti jakautuneita. Entäpä sitten oletettu ihmisen sisäinen varmuus ärsykkeestä? Miten se on jakautunut?</p>
+  
+  <p><em>"All models are wrong, but some are useful"</em>, loihe lausumahan George Box. Mallit ovat kuin karttoja: kaupungin kartta ei ole sama kuin kaupunki, siinä on aina jotain vääristymää tai siitä pitää jättää jotain pois. Sen voimme vielä sietää, etteivät järvet oikeasti ole kaksiulotteisia tasaisia läiskiä, mutta jos käytössä oleva kartta väittää, että oikealla puolellamme tulisi siintää suuria vuoria vaikka siellä loiskii meri, on ehkä syytä epäillä tuon kartan käyttökelpoisuutta. Samoin voimme edetä matemaattisten mallien kanssa: verrata niiden tuottamia ennustuksia havaintoihin ja katsoa miten paljon ne poikkeavat ja ovatko nuo poikkeamat merkittäviä; saammekko toisin oletuksin lähemmin mitattuun aineistoon sopivia ennustuksia. Tämä tosin on laaja aihe, jonka käsittely jääköön toiseen kertaan.</p>
+
+</main>
+
+  <footer>
+  &copy; Joni Pääkkö
+  </footer>
+
+<script src="../../js/statisticsLibrary/statisticalFunctions.js"></script>
+<script src="../../js/graphicsLibrary/SVGVisualization.js"></script>
+<script src="js/sdt_intro_3.js"></script>
+
+</body>
+
+</html>

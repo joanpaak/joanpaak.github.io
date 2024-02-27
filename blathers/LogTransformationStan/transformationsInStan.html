@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" >
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Log transformation in Stan</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="../../css/blather.css">
+    </head>
+    <body>
+
+        
+
+        <main>
+            <h1>Log transformation in Stan</h1>
+
+            <p>In the <a href="../LogTransformation/VeryShortIntroToParameterTransformations.html">previous installment of this series</a> I discussed the ubiquitous logarithm transformation, and how to do Jacobian adjustment in the context of the classic Metropolis algorithm. Nowadays, however, all the cool kids are using Stan (https://mc-stan.org/) for drawing their MCMC samples. A common question on the Stan messaging board is whether we have to care about such adjustments. We'll explore this issue by, again, sampling from the Gamma(3,1) distribution.</p>
+
+            <p>We will define two Stan files. The first file will contain three models, which can be chosen by supplying an integer as data.</p>
+
+            <ol>
+                <li>The first model does not use transformation at all, the constraint is not taken into account at all</li>
+                <li>In the second model the samples are (assumed to be) log transformed, but there's no Jacobian adjustment.</li>
+                <li>The third model is the same as the second, but now with Jacobian adjustment.</li>
+                <li>The fourth model uses Stan's built-in constraint.</li>
+            </ol>
+
+            <p>Enough with the blabber, here're the codes for the models. Note that again, in the code, only the <em>inverse transform</em> is present:</p>
+
+            <pre>
+data {
+    int s;
+}
+                      
+parameters {
+    real theta;
+}
+                      
+model {
+    if(s == 0){
+    // Model 1: No transformation, will result in divergences
+        target += gamma_lpdf(theta | 3, 1);
+    } else if(s == 1){
+    // Model 2: Transformation but no Jacobian
+        target += gamma_lpdf(exp(theta) | 3, 1);
+    } else if(s == 2){
+    // Model 3: Transformation and Jacobian:
+        target += gamma_lpdf(exp(theta) | 3, 1);
+        target += log(fabs(exp(theta)));
+    }
+}     
+                </pre>            
+                
+                <pre>
+// Model 4: Transformation and Jacobian under the hood
+data {
+}
+                    
+parameters {
+    real&lt;lower = 0&gt; theta;
+}
+                    
+model {
+    target += gamma_lpdf(theta | 3, 1);
+}    
+                </pre>
+
+            <p>When running the first model (R code is <a href="R/R_file.R">here</a>), Stan will complain about divergences: it is not happy about the discontinuity at 0.0.</p>
+
+<pre>
+Warning messages:
+1: There were 241 divergent transitions after warmup. See
+http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+to find out why this is a problem and how to eliminate them. 
+2: Examine the pairs() plot to diagnose sampling problems    
+</pre>
+
+            <p>Despite this problem, the samples approximate the target distribution well (see the figure below). Simple remedy to the divergences is to log transform the parameter <code>theta</code>. Or, again, in other words we sort of pretend that the sampler works on the log scale, and we use the inverse of that transfrom in our model.</p>
+
+            <p>The second model implements the log transformation, but there's no Jacobian adjustment. The samples from this model do not approximate the Gamma(3,1) distribution.</p>
+
+            <p>In the third model the Jacobian is taken into account. Samples from this model <em>do</em> approximate the Gamma(3,1) distribution.</p>
+
+            <p>In the fourth model (which is in a separate file) we use Stan's built-in constraint for &theta;. Now the transformation and Jacobian adjustment are done under the hood.</p>
+            
+            <p>Note that since Stan operates on the <em>log</em> posterior, we will also have to use log Jacobian. This means that instead of <em>multiplying</em> the posterior density we will <em>add</em> the (log) Jacobian to it.</p>
+
+            <p>Here are histograms of the samples against the target distribution for each of the models:</p>
+
+            <figure>
+                <img src="figs/results.svg">
+            </figure>
+
+            <p>It's clear that the model in which the samples are log transformed, the Jacobian adjustment is needed. Again, if you use Stan's built-in constraints, all of this will be done under the hood for you.</p>
+
+        </main>
+
+        <footer>&copy; Joni Pääkkö (2022)</footer>
+    </body>
+</html>

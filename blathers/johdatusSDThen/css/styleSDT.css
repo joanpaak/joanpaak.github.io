@@ -1,0 +1,59 @@
+#sdt_game_info_text{
+    font-family: "Garamond", serif;
+    font-size: 18pt;
+}
+
+svg{
+    width: 100%;
+    max-width: 600px;
+}
+
+svg circle:hover{
+    fill: black;
+}
+
+svg polygon:hover{
+    fill: rgb(100, 180, 255);   
+}
+
+/* Style used for printing the probabilities for visualizations 3 and 5 */
+.visInfoText{
+    margin-left: 10%;
+    margin-right: 10%;
+    font-size: 18px;
+}
+
+
+/* TABLES */
+
+tr:nth-child(odd) {
+    background-color: rgb(250, 245, 230);
+}
+
+table{
+    /*width: 100%;*/
+    display: inline-block;
+    border-collapse: collapse;
+    border-top: 2px solid rgb(0, 0, 0);  
+}
+
+/* ERROR: Dunno what this is... */
+.caption{
+    font-size: 18px;
+    font-style: italic;
+}
+
+tr:first-child{
+  border-bottom: 2px solid rgb(0, 0, 0);  
+}
+
+td:first-child{
+    text-align: right;
+}
+
+td {
+  border-bottom: 1px solid rgb(140, 140, 140);
+  padding: 5px;
+}
+
+
