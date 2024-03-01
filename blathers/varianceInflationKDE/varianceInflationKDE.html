@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Variance inflation</title>
+        <link rel="stylesheet" href="../../css/blather.css">
+    </head>
+    <body>
+        <main>
+            <h1>Variance inflation in Kernel Density Estimation</h1>
+
+            <h2>Introduction</h2>
+
+            <p>In this text I'll discuss kernel density estimation with Gaussian kernels. This is what e.g. R does by default when you call the density()-function. A relatively little-known, or at least it's not spoken much about, feature of Gaussian kernel density estimation is that it will always result in larger variance than in the data points from which it is being computed from.</p>
+
+            <p>To bring some concreteness to this soup of concepts, I'll show variance inflation at work using a simulation. In the same context I'll also show how to correct for it.</p>
+
+            <h2>Gaussian mixtures</h2>
+
+            <p>Well, why does this happen? The density estimate is essentially a mixture of normal distributions. There are essentially two ways to go about this. First, one can divide the range (inside which the density is suspected to lay) into discrete grid points and imagine a weighted Gaussian kernel at each point; secondly, one can imagine there's a normal distribution centered on each data point. The first way is the way R does it, and it's equivalent to the second.</p>
+
+            <p>Check out this example. Here we take a random sample (N = 100) from the standard normal distribution and approximate its density using a kernel with bandwidth h = 0.5. We also approximate the sample's density by placing a normal distribution on each data point, and normalize it in an appropriate way. We then draw R's density estimate against one using the second procedure.</p>
+
+            <pre>
+x = rnorm(100)
+h = 0.5
+
+d1 = density(x, bw = h)
+
+x1 = seq(min(d1$x), max(d1$x), length.out = 1000)
+y = rep(0, length(x1))
+
+for(i in 1:length(x)){
+    y = y + dnorm(x1, x[i], h)
+}
+
+y = y / sum(y) / diff(x1)[1]
+
+par(mfrow = c(1, 2))
+plot(d1, main = "Grid", ylab  ="Density", xlab = "x")
+plot(x1, y, type = "l", ylab  ="Density", 
+        xlab = "x", main = "Data points")
+            </pre>
+
+            <p>Let us suppose that <b>&mu;</b> is a vector of means for a Gaussian mixture and that each of the components of this mixture has variance &sigma;<sup>2</sup>. Variance of this mixture is simply</p>
+
+            <p class="equation">V[<b>&mu;</b>] + &sigma;<sup>2</sup></p>
+
+            <p>Since the density estimate is formed by placing normal distributions on top of the data points, the KDE's minimum variance is always that of the data set (the V[<b>&mu;</b>] of the expression above). Variance is inflated by the factor h which is the bandwidth of the Gaussian kernel density estimator.</p>
+
+            <p>Taking this observation as a starting point, it's relatively simple to come up with a correction. Jones (1989) offers this simple correction, in which the original data set is replaced with this for the purpose of creating the KDE. Given bandwidth h and a set of observations x, means for the Gaussian kernels are:</p>
+
+            <p class="equation">&mu; = E[x] + (1/&sigma;) &radic;(&sigma;<sup>2</sup> - h<sup>2</sup>)(x - E[x])</p>
+
+            <p>(The radical applies only to the first parentheses).</p>
+
+            <p>Note that this correction simply just shifts the locations of the points (at which density is estimated at) so that the variance of the micture matches that of the sample.</p>
+
+
+            <h2>Simulation</h2>
+
+            <p>The variance of the Gaussian mixture can be calculated analytically, as was discussed earlier, but I'll be approximating it here with random samples -- just to give this text a nice sense of concreteness.</p>
+
+            <p>But, let's not get ahead of ourselves. In this simulation I take random sample from standard normal distribution (N = 10). The optimal bandwidth for density estimation is then calculated using R's bw.nrd()-function. The variance of the KDE is then approximated by drawing random samples from the mixture. This is done twice: first by placing kernels directly on the data points, then by placing kernels on the corrected loci. </p>
+
+            <pre>
+#
+# HOX: R's var()-function calculates the _sample_ variance. For this 
+# reason I calculate it by hand.
+
+nSim = 1000
+trueVar = rep(NaN, nSim)
+kdeVar  = rep(NaN, nSim)
+kdeVarCorr = rep(NaN, nSim)
+
+for(i in 1:nSim){
+    x = rnorm(10)
+    trueVar[i] = mean((mean(x) - x)^2)
+    
+    h = bw.nrd(x)
+    
+    # First we approximate the variance of the mixture by just
+    # placing the kernels on the data points:
+    xRep = rnorm(1e5, x, h)
+    kdeVar[i] = mean((mean(xRep) - xRep)^2) 
+    
+    # Then we apply Jones's correction. We create a new vector w
+    # and place the kernels on those points:
+    SD = sqrt(trueVar[i])
+    w = mean(x) + 1/SD * sqrt(SD^2 - h^2) * 
+        (x - mean(x))
+    
+    xRep2 = rnorm(1e5, w, h)
+    kdeVarCorr[i] = mean((mean(xRep2) - xRep2)^2) 
+}
+
+d1 = kdeVar - trueVar
+d2 = kdeVarCorr - trueVar                
+            </pre>
+
+            <p>Results are shown in the figure below. Since -- indeed -- the correction makes it so that the variance of the mixture matches that of the sample, it is not surprising that the difference is zero in that simulation condition.</p>
+
+
+            <figure>
+                <img src="simulation1_small.png">
+                <figcaption>Well, how much does KDE inflate variance? Results from the simulation detailed in the text.</figcaption>
+            </figure>
+
+            <h2>That's it!</h2>
+
+            <p>Well that's it! It's a nice little observation -- I mean that the variance is inflated in KDE. How much this effects your practical work -- that I don't know. I will be returning to that point it the context of sequential importance sampling: how much does this inflation affect posterior estimates if the uncorrected KDE is used for rejuvenating the particle set. But that's a whole other story.</p>
+
+            <h2>Literature</h2>
+
+            <p>Jones, M.C. (1991). On correcting for variance inflation in kernel density estimation. Computational Staistics & Data Analysis 11, 3-15.</p>
+        </main>
+
+        <footer>&copy; Joni Pääkkö</footer>
+    </body>
+</html>
