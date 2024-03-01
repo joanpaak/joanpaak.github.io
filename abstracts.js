@@ -144,7 +144,7 @@ A continuation on the Sequential Importance Sampling tutorial above. In this tut
 Well, if you didn't take a peek at this text. This is not a long one. 
 </text>
 <link>blathers/varianceInflationKDE/varianceInflationKDE.html</link>
-<image>figs/varianceInflationThumb.png</image>
+<image>varianceInflationThumb.png</image>
 </abstract>
 
 
