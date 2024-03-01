@@ -135,6 +135,18 @@ A continuation on the Sequential Importance Sampling tutorial above. In this tut
 <image>importanceSample.png</image>
 </abstract>
 
+<abstract>
+<title>Variance inflation in KDE</title>
+<language>English</language>
+<tags>statistics, blather, beginner text</tags>
+<text>We use kernel density all the time to summarize data sets, but did you know that the variance inferred from KDE is always larger than the variance of the data?
+
+Well, if you didn't take a peek at this text. This is not a long one. 
+</text>
+<link>blathers/varianceInflationKDE/varianceInflationKDE.html</link>
+<image>figs/varianceInflationThumb.png</image>
+</abstract>
+
 
 
 <abstract>
