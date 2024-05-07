@@ -175,21 +175,6 @@ This model has been built using the Stan programming language. It is a two-dimen
 </abstract>
 
 <abstract>
-<title>REPO: Resample-Move algorithm in Java</title>
-<language>English</language>
-<tags>statistics, bayes</tags>
-<text>
-It is often the case in Bayesian statistics that the posterior probability distributions - on which statistical inference is based on - don't have a closed form solution. Monte Carlo methods, that is methods that are based on drawing random samples from the posterior distributions, constitute a widely used family of methods for approximating them.
-
-This algorithm is based on Chopin's 2002 article A sequential particle filter method for static models. The idea is that it is usually easy to draw a random sample of so called particles from the prior distribution. These particles can then be weighted sequentially with observations. If these weights become too concentrated on just a few particles, the sample can be "rejuvenated" by incorporating a Resample-Move step into the algorithm.
-
-The good side of this algorithm is that when it's tuned correctly, it can be very fast. It is also readily applied to situations in which data arrives sequentially: for example when using adaptive methods in psychophysics. In these situations fast approximations of the posterior distributions are needed, and naturally data is sequential.
-</text>
-<link></link>
-<image>importanceSample.png</image>
-</abstract>
-
-<abstract>
 <title>Bayesian one-sample t-test with known variance</title>
 <language>English</language>
 <tags>statistics, bayes, blather</tags>
