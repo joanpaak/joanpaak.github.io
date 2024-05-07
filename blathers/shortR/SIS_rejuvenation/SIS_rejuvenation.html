@@ -44,17 +44,35 @@
 
     <ol>
       <li>Resample particles</li>
-      <li>Generate proposals from a transition kernel.</li>
-      <li>Accept proposals with the probability P(&theta;<sub>Proposal</sub> | y) / P(&theta;<sub>Original</sub> | y)</li>
+      <li>Generate proposals from a proposal distribution.</li>
+      <li>Accept proposals with the probability (P(&theta;<sub>Proposal</sub> | y) / P(&theta;<sub>Original</sub> | y)) &times; (P(&theta;<sub>Original</sub> | &theta;<sub>Proposal</sub>) / P(&theta;<sub>Proposal</sub> | &theta;<sub>Original</sub>)) </li>
       <li>Set uniform weights.</li>
     </ol>
 
-    <p>You are free to choose the transition kernel as you wish, here I follow Chopin (2002) and use a multivariate normal distribution for which the marginal means and standard deviations are calculated from the particle set. Correlations are not taken into accout in this example.</p>
+    <p>You are free to choose the proposal distribution as you wish, here I follow Chopin (2002) and use a multivariate normal distribution for which the marginal means and standard deviations are calculated from the particle set. Correlations are not taken into accout in this example.</p>
 
     <p>Since the calculation of the acceptance ratio requires one to evaluate the posterior density at both the original
      and the proposed &theta;, this step is usually the most computationally expensive one. In R, especially, this can
       be sluggish, if the calculations can't be easily vectorized: in these cases I would suggest writing the likelihood
-      function, for example, in c++ and exporting that to R.</p>
+      function, for example, in c++ and exporting that to R. Or if it's possible, make two versions of the functions: one of which is optimal for computing the likelihoods and one that's optimal for posterior calculations. The example shown here can be optimized in that way, but for clarity, I've opted not to -- I'll leave that to you as an exercise.</p>
+
+    <p>A word about the acceptance probability. We can think about it as consisting of two parts: there's the "usual" Metropolis acceptance probability, in which the probability for accepting the proposal is proportional to the previous value: P(&theta;<sub>Proposal</sub> | y) / P(&theta;<sub>Original</sub> | y). But then there's this part, which might be more mysterious: P(&theta;<sub>Original</sub> | &theta;<sub>Proposal</sub>) / P(&theta;<sub>Proposal</sub> | &theta;<sub>Original</sub>)</p>
+
+    <p>I will call that "mysterious part" the Metropolis.Hastings ratio although that in no way is a real or official name for it. Why that term is needed, though, is because we are generating proposals from a single distribution. An easy intuition for this is that since we are (usually) generating proposals from a multivariate normal distribution, there will be more proposals around the mode, so there's greater chance that proposals near the mode get accepted. The "MH ratio" corrects for that. The reason I call it the MH ratio is because that ratio arises in the case of asymmetrical proposal distributions in the Metropolis-Hastings algorithm.</p>
+
+    <p>In practice calculating it is simple. Let us say we have generated proposals from a multivariate Normal distribution N(<b>&mu;</b>, <b>&sigma;</b>) in which <b>&mu;</b> and <b>&sigma;</b> are vectors of marginal means and standard deviations. We simply calculate N(&theta;<sub>Original</sub>| <b>&mu;</b>, <b>&sigma;</b>) / N(&theta;<sub>Proposal</sub>| <b>&mu;</b>, <b>&sigma;</b>). Given that the correlations in the proposal distribution are zero, a multivariate normal distribution reduces to a product of univariate normal densities, which is easy to calculate in R.</p>
+
+    <p>For example, say that we generate proposals from a 3-dimensional normal distribution with <b>&mu;</b> = {-1, 0, 1} and <b>&sigma;</b> = {3, 1, 2}. We have generated a proposal &theta;<sub>Proposal</sub> = {2, 3, 1}. We can calculate the term P(&theta;<sub>Proposal</sub> | &theta;<sub>Original</sub>) like this</p>
+
+    <pre>
+      dnorm(2, -1, 3) * dnorm(3, 0, 1) * dnorm(1, 1, 2)
+    </pre>
+
+    or
+
+    <pre>
+      prod(dnorm(c(2, 3, 1), c(-1, 0, 1), c(3, 1, 2)))
+    </pre>
 
     <h2>Exemplar model</h2>
 
@@ -77,396 +95,407 @@
     <h2>R code</h2>
 
     <pre>
-# Resample/Move particle filter for a simple Gaussian model
+      # Resample/Move particle filter for a simple Gaussian model
 
-# Prior probability of theta.
-# theta[1] = mu
-# theta[2] = sd
-prior = function(theta){
-  dnorm(theta[1], 0, 2) * dlnorm(theta[2], 0, 0.5)
-}
-
-# Likelihood function
-# y : vector of observations
-# theta[1] = mu
-# theta[2] = sd
-likelihood = function(y, theta){
-  prod(dnorm(y, theta[1], theta[2]))
-}
-
-# Posterior probability of theta
-posterior = function(theta, y){
-  # Technically all functions should have this check
-  # but for this particular algorithm that is not an
-  # issue
-  if(theta[2] < 0) {
-    return(0)
-  }
-  likelihood(y, theta) * prior(theta)
-}
-
-# Parameters for generating the data:
-N = 100                  # Number of observations
-y = rep(NaN, N)          # Vector for storing obs.
-trueTheta = c(3.0, 0.7)  # Generating values 
-
-# Parameters for the particle filter:
-NParticles = 1000
-particles  = matrix(NaN, ncol = 2, nrow = NParticles)
-weights    = rep(1/NParticles, NParticles)
-# If the effective sample size gets below this limit, the 
-# particle set is rejuvenated:
-rejuvenationLimit  = round(NParticles/2)
-
-# Initial particle set is generated from the prior:
-particles[,1] = rnorm(NParticles, 0, 2)
-particles[,2] = rlnorm(NParticles, 0, 0.5)
-
-# Initialize arrays for storing stuff (see inside)
-# the main loop for explanation):
-E_mu  = rep(NaN, N) 
-E_sd  = rep(NaN, N)
-SD_mu = rep(NaN, N)
-SD_sd = rep(NaN, N)
-N_eff = rep(NaN, N)
-
-for(t in 1:N){
-  # 1) Observe a data point
-  y[t] = rnorm(1, trueTheta[1], trueTheta[2])
-  
-  # 2) Reweight the particle set based on the observation
-  for(i in 1:NParticles){
-    weights[i] = weights[i] * likelihood(y[t], particles[i,])
-  }
-  
-  # 3) Normalize weights
-  weights = weights / sum(weights)
-  
-  # We could store the full particle sets on each iteration, 
-  # and that might be necessary for some applications, 
-  # but here I am saving only the marginal expecations
-  # and standard deviations - and effective sample sizes
-  # so we can monitor particle degeneracy
-  
-  # Expected values (marginal posterior means):
-  E_mu[t] = sum(weights * particles[,1])
-  E_sd[t] = sum(weights * particles[,2])
-  
-  # Standard deviations (marginal posterior SD's)
-  SD_mu[t] = sqrt(sum((E_mu[t] - particles[,1])^2 * weights))
-  SD_sd[t] = sqrt(sum((E_sd[t] - particles[,2])^2 * weights))
-  
-  # Effective sample size:
-  N_eff[t] = 1 / sum(weights^2)
-  
-  # Here we monitor the effective sample size and rejuvenate 
-  # the particle set if it gets too low
-  
-  if(N_eff[t] <  rejuvenationLimit){
-    
-    # 1) Resample particles with replacement
-    resampledIndices = sample(1:NParticles, NParticles, TRUE, weights)
-    particles = particles[resampledIndices,]
-    
-    # 2) Move
-    # 2.1) Generate proposals
-    proposals = matrix(NaN, ncol = 2, nrow = NParticles)
-    
-    proposals[,1] = rnorm(NParticles, E_mu[t], SD_mu[t])
-    proposals[,2] = rnorm(NParticles, E_sd[t], SD_sd[t])
-    
-    # 2.2) Calculate posterior probabilities for proposals and particles:
-    proposalWeights = rep(NaN, NParticles)
-    particleWeights = rep(NaN, NParticles)
-    
-    for(j in 1:NParticles){
-      proposalWeights[j] = posterior(proposals[j,], y[1:t])
-      particleWeights[j] = posterior(particles[j,], y[1:t])
-    }
-    
-    # 2.3 Calculate acceptance probabilities
-    acceptProb = proposalWeights / particleWeights
-    acceptProb[which(is.nan(acceptProb))] = 0
-    
-    # 2.4 Accept proposals probabilistically
-    s = runif(NParticles, 0, 1)
-    acceptedIndices = which(s < acceptProb)
-    particles[acceptedIndices,] = proposals[acceptedIndices,]
-    #
-    weights = rep(1/NParticles, NParticles)
-  }
-}
-
-# We can plot the trial-by-trial errors in posterior means: 
-plot(E_mu - trueTheta[1], type = "b"); abline(h = 0, lty = 2, col  = "red")
-plot(E_sd - trueTheta[2], type = "b"); abline(h = 0, lty = 2, col = "red")
-#...or the raw posterior means::
-plot(E_mu, type = "b"); abline(h = trueTheta[1], lty = 2)
-plot(E_sd, type = "b"); abline(h = trueTheta[2], lty = 2)
-
+      # Prior probability of theta.
+      # theta[1] = mu
+      # theta[2] = sd
+      prior = function(theta){
+        dnorm(theta[1], 0, 2) * dlnorm(theta[2], 0, 0.5)
+      }
+      
+      # Likelihood function
+      # y : vector of observations
+      # theta[1] = mu
+      # theta[2] = sd
+      likelihood = function(y, theta){
+        prod(dnorm(y, theta[1], theta[2]))
+      }
+      
+      # Posterior probability of theta
+      posterior = function(theta, y){
+        # Technically all functions should have this check
+        # but for this particular algorithm that is not an
+        # issue
+        if(theta[2] < 0) {
+          return(0)
+        }
+        likelihood(y, theta) * prior(theta)
+      }
+      
+      # Parameters for generating the data:
+      N = 100                  # Number of observations
+      y = rep(NaN, N)          # Vector for storing obs.
+      trueTheta = c(3.0, 0.7)  # Generating values 
+      
+      # Parameters for the particle filter:
+      NParticles = 1000
+      particles  = matrix(NaN, ncol = 2, nrow = NParticles)
+      weights    = rep(1/NParticles, NParticles)
+      # If the effective sample size gets below this limit, the 
+      # particle set is rejuvenated:
+      rejuvenationLimit  = round(NParticles/2)
+      
+      # Initial particle set is generated from the prior:
+      particles[,1] = rnorm(NParticles, 0, 2)
+      particles[,2] = rlnorm(NParticles, 0, 0.5)
+      
+      # Initialize arrays for storing marginal 
+      # expectations and standard deviations 
+      # (matrices E and SD) as well as effective 
+      # sample size (N_eff)
+      
+      E   = matrix(NaN, ncol = 2, nrow = N)
+      SD  = matrix(NaN, ncol = 2, nrow = N)
+      N_eff = rep(NaN, N)
+      
+      for(t in 1:N){
+        # 1) Observe a data point
+        y[t] = rnorm(1, trueTheta[1], trueTheta[2])
+        
+        # 2) Reweight the particle set based on the observation
+        for(i in 1:NParticles){
+          weights[i] = weights[i] * likelihood(y[t], particles[i,])
+        }
+        
+        # 3) Normalize weights
+        weights = weights / sum(weights)
+        
+        # We could store the full particle sets on each iteration, 
+        # and that might be necessary for some applications, 
+        # but here I am saving only the marginal expecations
+        # and standard deviations - and effective sample sizes
+        # so we can monitor particle degeneracy
+        
+        # Expected values (marginal posterior means):
+        E[t,1] = sum(weights * particles[,1])
+        E[t,2] = sum(weights * particles[,2])
+        
+        # Standard deviations (marginal posterior SD's)
+        SD[t,1] = sqrt(sum((E[t,1] - particles[,1])^2 * weights))
+        SD[t,2] = sqrt(sum((E[t,2] - particles[,2])^2 * weights))
+        
+        # Effective sample size:
+        N_eff[t] = 1 / sum(weights^2)
+        
+        # Here we monitor the effective sample size and rejuvenate 
+        # the particle set if it gets too low
+        
+        if(N_eff[t] <  rejuvenationLimit){
+          
+          # 1) Resample particles with replacement
+          resampledIndices = sample(1:NParticles, NParticles, TRUE, weights)
+          particles = particles[resampledIndices,]
+          
+          # 2) Move
+          # 2.1) Generate proposals
+          proposals = matrix(NaN, ncol = 2, nrow = NParticles)
+          
+          proposals[,1] = rnorm(NParticles, E[t,1], SD[t,1])
+          proposals[,2] = rnorm(NParticles, E[t,2], SD[t,2])
+          
+          # 2.2) Calculate posterior probabilities for proposals and particles; in addition
+          #      calculate the "Metropolis-Hastings ratio" (my term):
+          proposalWeights = rep(NaN, NParticles)
+          particleWeights = rep(NaN, NParticles)
+          mhRatio         = rep(NaN, NParticles)
+          
+          for(j in 1:NParticles){
+            proposalWeights[j] = posterior(proposals[j,], y[1:t])
+            particleWeights[j] = posterior(particles[j,], y[1:t])
+            mhRatio[i] = prod(dnorm(particles[j,], E[t,], SD[t,])) / 
+              prod(proposals[j,], E[t,], SD[t,])
+          }
+          
+          # 2.3 Calculate acceptance probabilities
+          acceptProb = proposalWeights / particleWeights * mhRatio
+          acceptProb[which(is.nan(acceptProb))] = 0
+          
+          # 2.4 Accept proposals probabilistically
+          s = runif(NParticles, 0, 1)
+          acceptedIndices = which(s < acceptProb)
+          particles[acceptedIndices,] = proposals[acceptedIndices,]
+          #
+          weights = rep(1/NParticles, NParticles)
+        }
+      }
+      
+      # We can plot the trial-by-trial errors in posterior means: 
+      plot(E[,1] - trueTheta[1], type = "b"); abline(h = 0, lty = 2, col  = "red")
+      plot(E[,2] - trueTheta[2], type = "b"); abline(h = 0, lty = 2, col = "red")
+      #...or the raw posterior means::
+      plot(E[,1], type = "b"); abline(h = trueTheta[1], lty = 2)
+      plot(E[,2], type = "b"); abline(h = trueTheta[2], lty = 2)
+      
 </pre>
 
     <h2>R code (log version)</h2>
 <pre>
-
-# Prior probability of theta.
-# theta[1] = mu
-# theta[2] = sd
-logprior = function(theta){
-  dnorm(theta[1], 0, 2, log = T) + dlnorm(theta[2], 0, 0.5, log = T)
-}
-
-loglikelihood = function(y, theta){
-  sum(dnorm(y, theta[1], theta[2], log = T))
-}
-
-# Posterior probability of theta
-logposterior = function(theta, y){
-  if(theta[2] < 0){
-    return(-Inf)
-  }
-  loglikelihood(y, theta) + logprior(theta)
-}
-
-# Parameters for generating the data set:
-N = 100                   # Number of observations
-y = rep(NaN, N)          # Vector for storing obs.
-trueTheta = c(3.0, 0.7)  # Generating values 
-
-# Initialize SIS
-
-NParticles  = 1000
-particles   = matrix(NaN, ncol = 2, nrow = NParticles)
-logweights  = rep(log(1/NParticles), NParticles)
-
-# Initial particle set is generated from the prior:
-particles[,1] = rnorm(NParticles, 0, 2)
-particles[,2] = rlnorm(NParticles, 0, 0.5)
-
-# Initialize arrays for storing stuff (see inside)
-# the main loop for explanation):
-E_mu  = rep(NaN, N) 
-E_sd  = rep(NaN, N)
-SD_mu = rep(NaN, N)
-SD_sd = rep(NaN, N)
-N_eff = rep(NaN, N)
-
-resamplingLimit = round(NParticles/2)
-acceptanceRatio = rep(NaN, N)
-
-for(t in 1:N){
-  # 1) Observe a data point
-  y[t] = rnorm(1, trueTheta[1], trueTheta[2])
-  
-  # 2) Reweight the particle set based on the observation
-  for(i in 1:NParticles){
-    logweights[i] = logweights[i] + loglikelihood(y[t], particles[i,])
+  # Prior probability of theta.
+  # theta[1] = mu
+  # theta[2] = sd
+  logprior = function(theta){
+    dnorm(theta[1], 0, 2, log = T) + dlnorm(theta[2], 0, 0.5, log = T)
   }
   
-  # 3) Normalize weights
-  logweights = logweights - log(sum(exp(logweights)))
+  loglikelihood = function(y, theta){
+    sum(dnorm(y, theta[1], theta[2], log = T))
+  }
   
-  # We could store the full particle sets on each iteration, 
-  # and that might be necessary for some applications, 
-  # but here I am saving only the marginal expecations
-  # and standard deviations - and effective sample sizes
-  # so we can monitor particle degeneracy
+  # Posterior probability of theta
+  logposterior = function(theta, y){
+    if(theta[2] < 0){
+      return(-Inf)
+    }
+    loglikelihood(y, theta) + logprior(theta)
+  }
   
-  # Weights are exponentiated for calculating the summary statistics
-  weights = exp(logweights)
+  # Parameters for generating the data set:
+  N = 100                   # Number of observations
+  y = rep(NaN, N)          # Vector for storing obs.
+  trueTheta = c(3.0, 0.7)  # Generating values 
   
-  # Expected values (marginal posterior means):
-  E_mu[t] = sum(weights * particles[,1])
-  E_sd[t] = sum(weights * particles[,2])
+  # Initialize SIS
   
-  # Standard deviations (marginal posterior SD's)
-  SD_mu[t] = sqrt(sum((E_mu[t] - particles[,1])^2 * weights))
-  SD_sd[t] = sqrt(sum((E_sd[t] - particles[,2])^2 * weights))
+  NParticles  = 1000
+  particles   = matrix(NaN, ncol = 2, nrow = NParticles)
+  logweights  = rep(log(1/NParticles), NParticles)
   
-  # Effective sample size:
-  N_eff[t] = 1 / sum(weights^2)
+  # Initial particle set is generated from the prior:
+  particles[,1] = rnorm(NParticles, 0, 2)
+  particles[,2] = rlnorm(NParticles, 0, 0.5)
   
-  if(N_eff[t] < resamplingLimit){
-    # Particles are resampled using multinomial resampling:
-    resampledIndices = sample(1:NParticles, NParticles, TRUE, weights)
-    particles = particles[resampledIndices,]
+  # Initialize arrays for storing marginal 
+  # expectations and standard deviations 
+  # (matrices E and SD) as well as effective 
+  # sample size (N_eff)
+  
+  E   = matrix(NaN, ncol = 2, nrow = N)
+  SD  = matrix(NaN, ncol = 2, nrow = N)
+  N_eff = rep(NaN, N)
+  
+  resamplingLimit = round(NParticles/2)
+  acceptanceRatio = rep(NaN, N)
+  
+  for(t in 1:N){
+    # 1) Observe a data point
+    y[t] = rnorm(1, trueTheta[1], trueTheta[2])
     
-    proposals = matrix(NaN, ncol = 2, nrow = NParticles)
-    
-    proposals[,1] = rnorm(NParticles, E_mu[t], SD_mu[t])
-    proposals[,2] = rnorm(NParticles, E_sd[t], SD_sd[t])
-
-    # 2.2) Calculate posterior probabilities for proposals and particles:
-    proposalWeights = rep(NaN, NParticles)
-    particleWeights = rep(NaN, NParticles)
-    
-    for(j in 1:NParticles){
-      proposalWeights[j] = logposterior(proposals[j,], y[1:t])
-      particleWeights[j] = logposterior(particles[j,], y[1:t])
+    # 2) Reweight the particle set based on the observation
+    for(i in 1:NParticles){
+      logweights[i] = logweights[i] + loglikelihood(y[t], particles[i,])
     }
     
-    acceptProb = proposalWeights - particleWeights
-    acceptProb[which(is.nan(acceptProb))] = -Inf
+    # 3) Normalize weights
+    logweights = logweights - log(sum(exp(logweights)))
     
-    # 2.4 Accept proposals probabilistically
-    s = log(runif(NParticles, 0, 1))
-    acceptedIndices = which(s < acceptProb)
-    particles[acceptedIndices,] = proposals[acceptedIndices,]
-    #
-    logweights = rep(log(1/NParticles), NParticles)
+    # We could store the full particle sets on each iteration, 
+    # and that might be necessary for some applications, 
+    # but here I am saving only the marginal expecations
+    # and standard deviations - and effective sample sizes
+    # so we can monitor particle degeneracy
+    
+    # Weights are exponentiated for calculating the summary statistics
+    weights = exp(logweights)
+    
+    # Expected values (marginal posterior means):
+    E[t,1] = sum(weights * particles[,1])
+    E[t,2] = sum(weights * particles[,2])
+    
+    # Standard deviations (marginal posterior SD's)
+    SD[t,1] = sqrt(sum((E[t,1] - particles[,1])^2 * weights))
+    SD[t,2] = sqrt(sum((E[t,2] - particles[,2])^2 * weights))
+    
+    # Effective sample size:
+    N_eff[t] = 1 / sum(weights^2)
+    
+    if(N_eff[t] < resamplingLimit){
+      # Particles are resampled using multinomial resampling:
+      resampledIndices = sample(1:NParticles, NParticles, TRUE, weights)
+      particles = particles[resampledIndices,]
+      
+      proposals = matrix(NaN, ncol = 2, nrow = NParticles)
+      
+      proposals[,1] = rnorm(NParticles, E[t,1], SD[t,1])
+      proposals[,2] = rnorm(NParticles, E[t,2], SD[t,2])
+      
+      # 2.2) Calculate posterior probabilities for proposals and particles:
+      proposalWeights = rep(NaN, NParticles)
+      particleWeights = rep(NaN, NParticles)
+      mhRatio = rep(NaN, NParticles)
+      
+      for(j in 1:NParticles){
+        proposalWeights[j] = logposterior(proposals[j,], y[1:t])
+        particleWeights[j] = logposterior(particles[j,], y[1:t])
+        mhRatio[j] = sum(dnorm(particles[j,], E[t,], SD[t,], log  = TRUE)) - 
+          sum(dnorm(proposals[j,], E[t,], SD[t,], log = TRUE))
+      }
+      
+      acceptProb = proposalWeights - particleWeights + mhRatio
+      acceptProb[which(is.nan(acceptProb))] = -Inf
+      
+      # 2.4 Accept proposals probabilistically
+      s = log(runif(NParticles, 0, 1))
+      acceptedIndices = which(s < acceptProb)
+      particles[acceptedIndices,] = proposals[acceptedIndices,]
+      #
+      logweights = rep(log(1/NParticles), NParticles)
+    }
   }
-}
-
-# We can plot the trial-by-trial errors in posterior means: 
-plot(E_mu - trueTheta[1], type = "b"); abline(h = 0, lty = 2)
-plot(E_sd - trueTheta[2], type = "b"); abline(h = 0, lty = 2)
-#...or the raw posterior means::
-plot(E_mu, type = "b"); abline(h = trueTheta[1], lty = 2)
-plot(E_sd, type = "b"); abline(h = trueTheta[2], lty = 2)
-
-# Or the final marginals (note that the weights are supplied for the density nction):
-plot(density(particles[,1], weights = weights)); abline(v = trueTheta[1], lty = 2) 
-plot(density(particles[,2], weights = weights)); abline(v = trueTheta[2], lty = 2)
-
-# By plotting the effective sample size, we can see that the proportion 
-# of particles that have non-neglible weights get small very fast:
-plot(N_eff / NParticles, type = "b")
   
+  # We can plot the trial-by-trial errors in posterior means: 
+  plot(E[,1] - trueTheta[1], type = "b"); abline(h = 0, lty = 2)
+  plot(E[,2] - trueTheta[2], type = "b"); abline(h = 0, lty = 2)
+  #...or the raw posterior means::
+  plot(E[,1], type = "b"); abline(h = trueTheta[1], lty = 2)
+  plot(E[,2], type = "b"); abline(h = trueTheta[2], lty = 2)
+  
+  # Or the final marginals (note that the weights are supplied for the density function):
+  plot(density(particles[,1], weights = weights)); abline(v = trueTheta[1], lty = 2) 
+  plot(density(particles[,2], weights = weights)); abline(v = trueTheta[2], lty = 2)
+  
+  # By plotting the effective sample size, we can see that the proportion 
+  # of particles that have non-neglible weights get small very fast:
+  plot(N_eff / NParticles, type = "b")  
 </pre>
 
-<p>We can make one more modification to the calculation of acceptance probabilities. Since the log posterior probabilities for the current particles are just the log posterior plus all the log likelihoods up to that point, we can initialize an array in the beginning, and calculate this sequntially as we go, making the rejuvenation step lighter, since we now only have to compute log posteriors for only the proposals. However, note that some of this computation is spread across the complete runtime of the algorithm.</p>
+<p>We can make one more modification to the calculation of acceptance probabilities. Since the log posterior probabilities for the current particles are just the log prior plus all the log likelihoods up to that point, we can initialize an array in the beginning, and calculate this sequntially as we go, making the rejuvenation step lighter, since we now only have to compute log posteriors for only the proposals. However, note that some of this computation is spread across the complete runtime of the algorithm, and that we have to be sure to also select correct weights when resampling and moving the particle set.</p>
 
-<p>In this implementation the array <i>unnormLogWeightsPlusPrior</i> houses the current unnormalized log posteriors for the particles:</p>
+<p>In this implementation the array <i>unnormLogweights</i> houses the current unnormalized log posteriors for the particles:</p>
 
 <pre>
-# Prior probability of theta.
-# theta[1] = mu
-# theta[2] = sd
-logprior = function(theta){
-  dnorm(theta[1], 0, 2, log = T) + dlnorm(theta[2], 0, 0.5, log = T)
-}
-
-loglikelihood = function(y, theta){
-  sum(dnorm(y, theta[1], theta[2], log = T))
-}
-
-# Posterior probability of theta
-logposterior = function(theta, y){
-  if(theta[2] < 0){
-    return(-Inf)
-  }
-  loglikelihood(y, theta) + logprior(theta)
-}
-
-# Parameters for generating the data set:
-N = 100                   # Number of observations
-y = rep(NaN, N)          # Vector for storing obs.
-trueTheta = c(3.0, 0.7)  # Generating values 
-
-# Initialize SIS
-
-NParticles  = 1000
-particles   = matrix(NaN, ncol = 2, nrow = NParticles)
-logweights  = rep(log(1/NParticles), NParticles)
-
-# Initial particle set is generated from the prior:
-particles[,1] = rnorm(NParticles, 0, 2)
-particles[,2] = rlnorm(NParticles, 0, 0.5)
-
-unnormLogWeightsPlusPrior = apply(particles, 1, logprior)
-
-# Initialize arrays for storing stuff (see inside)
-# the main loop for explanation):
-E_mu  = rep(NaN, N) 
-E_sd  = rep(NaN, N)
-SD_mu = rep(NaN, N)
-SD_sd = rep(NaN, N)
-N_eff = rep(NaN, N)
-
-resamplingLimit = round(NParticles/2)
-acceptanceRatio = rep(NaN, N)
-
-for(t in 1:N){
-  # 1) Observe a data point
-  y[t] = rnorm(1, trueTheta[1], trueTheta[2])
-  
-  # 2) Reweight the particle set based on the observation
-  for(i in 1:NParticles){
-    ll = loglikelihood(y[t], particles[i,])
-    logweights[i] = logweights[i] + ll
-    unnormLogWeightsPlusPrior[i] = unnormLogWeightsPlusPrior[i] + ll
+  # Prior probability of theta.
+  # theta[1] = mu
+  # theta[2] = sd
+  logprior = function(theta){
+    dnorm(theta[1], 0, 2, log = T) + dlnorm(theta[2], 0, 0.5, log = T)
   }
   
-  # 3) Normalize weights
-  logweights = logweights - log(sum(exp(logweights)))
+  loglikelihood = function(y, theta){
+    sum(dnorm(y, theta[1], theta[2], log = T))
+  }
   
-  # We could store the full particle sets on each iteration, 
-  # and that might be necessary for some applications, 
-  # but here I am saving only the marginal expecations
-  # and standard deviations - and effective sample sizes
-  # so we can monitor particle degeneracy
+  # Posterior probability of theta
+  logposterior = function(theta, y){
+    if(theta[2] < 0){
+      return(-Inf)
+    }
+    loglikelihood(y, theta) + logprior(theta)
+  }
   
-  # Weights are exponentiated for calculating the summary statistics
-  weights = exp(logweights)
+  # Parameters for generating the data set:
+  N = 100                   # Number of observations
+  y = rep(NaN, N)          # Vector for storing obs.
+  trueTheta = c(3.0, 0.7)  # Generating values 
   
-  # Expected values (marginal posterior means):
-  E_mu[t] = sum(weights * particles[,1])
-  E_sd[t] = sum(weights * particles[,2])
+  # Initialize SIS
   
-  # Standard deviations (marginal posterior SD's)
-  SD_mu[t] = sqrt(sum((E_mu[t] - particles[,1])^2 * weights))
-  SD_sd[t] = sqrt(sum((E_sd[t] - particles[,2])^2 * weights))
+  NParticles  = 1000
+  particles   = matrix(NaN, ncol = 2, nrow = NParticles)
+  logweights  = rep(log(1/NParticles), NParticles)
+  unnormLogweights = logweights
   
-  # Effective sample size:
-  N_eff[t] = 1 / sum(weights^2)
+  # Initial particle set is generated from the prior:
+  particles[,1] = rnorm(NParticles, 0, 2)
+  particles[,2] = rlnorm(NParticles, 0, 0.5)
   
-  if(N_eff[t] < resamplingLimit){
-    # stop()
-    # Particles are resampled using multinomial resampling:
-    resampledIndices = sample(1:NParticles, NParticles, TRUE, weights)
-    particles = particles[resampledIndices,]
+  # Initialize arrays for storing marginal 
+  # expectations and standard deviations 
+  # (matrices E and SD) as well as effective 
+  # sample size (N_eff)
+  
+  E   = matrix(NaN, ncol = 2, nrow = N)
+  SD  = matrix(NaN, ncol = 2, nrow = N)
+  N_eff = rep(NaN, N)
+  
+  resamplingLimit = round(NParticles/2)
+  acceptanceRatio = rep(NaN, N)
+  
+  for(t in 1:N){
+    # 1) Observe a data point
+    y[t] = rnorm(1, trueTheta[1], trueTheta[2])
     
-    proposals = matrix(NaN, ncol = 2, nrow = NParticles)
-    
-    proposals[,1] = rnorm(NParticles, E_mu[t], SD_mu[t])
-    proposals[,2] = rnorm(NParticles, E_sd[t], SD_sd[t])
-    
-    # 2.2) Calculate posterior probabilities for proposals and particles:
-    proposalWeights = rep(NaN, NParticles)
-    particleWeights = unnormLogWeightsPlusPrior[resampledIndices]
-    
-    for(j in 1:NParticles){
-      proposalWeights[j] = logposterior(proposals[j,], y[1:t])
+    # 2) Reweight the particle set based on the observation
+    for(i in 1:NParticles){
+      ll = loglikelihood(y[t], particles[i,])
+      unnormLogweights[i] = unnormLogweights[i] + ll
+      logweights[i] = logweights[i] + ll
     }
     
-    acceptProb = proposalWeights - particleWeights
-    acceptProb[which(is.nan(acceptProb))] = -Inf
+    # 3) Normalize weights
+    logweights = logweights - log(sum(exp(logweights)))
     
-    # 2.4 Accept proposals probabilistically
-    s = log(runif(NParticles, 0, 1))
-    acceptedIndices = which(s < acceptProb)
-    particles[acceptedIndices,] = proposals[acceptedIndices,]
-    #
-    logweights = rep(log(1/NParticles), NParticles)
-    unnormLogWeightsPlusPrior[acceptedIndices] = 
-      unnormLogWeightsPlusPrior[acceptedIndices]
+    # We could store the full particle sets on each iteration, 
+    # and that might be necessary for some applications, 
+    # but here I am saving only the marginal expecations
+    # and standard deviations - and effective sample sizes
+    # so we can monitor particle degeneracy
+    
+    # Weights are exponentiated for calculating the summary statistics
+    weights = exp(logweights)
+    
+    # Expected values (marginal posterior means):
+    E[t,1] = sum(weights * particles[,1])
+    E[t,2] = sum(weights * particles[,2])
+    
+    # Standard deviations (marginal posterior SD's)
+    SD[t,1] = sqrt(sum((E[t,1] - particles[,1])^2 * weights))
+    SD[t,2] = sqrt(sum((E[t,2] - particles[,2])^2 * weights))
+    
+    # Effective sample size:
+    N_eff[t] = 1 / sum(weights^2)
+    
+    if(N_eff[t] < resamplingLimit){
+      # Particles are resampled using multinomial resampling:
+      resampledIndices = sample(1:NParticles, NParticles, TRUE, weights)
+      particles = particles[resampledIndices,]
+      unnormLogweights = unnormLogweights[resampledIndices] 
+      
+      proposals = matrix(NaN, ncol = 2, nrow = NParticles)
+      
+      proposals[,1] = rnorm(NParticles, E[t,1], SD[t,1])
+      proposals[,2] = rnorm(NParticles, E[t,2], SD[t,2])
+      
+      # 2.2) Calculate posterior probabilities for proposals and particles:
+      proposalWeights = rep(NaN, NParticles)
+      particleWeights = unnormLogweights
+      mhRatio = rep(NaN, NParticles)
+      
+      for(j in 1:NParticles){
+        proposalWeights[j] = logposterior(proposals[j,], y[1:t])
+        #particleWeights[j] = logposterior(particles[j,], y[1:t])
+        mhRatio[j] = sum(dnorm(particles[j,], E[t,], SD[t,], log  = TRUE)) - 
+          sum(dnorm(proposals[j,], E[t,], SD[t,], log = TRUE))
+      }
+      
+      acceptProb = proposalWeights - particleWeights + mhRatio
+      acceptProb[which(is.nan(acceptProb))] = -Inf
+      
+      # 2.4 Accept proposals probabilistically
+      s = log(runif(NParticles, 0, 1))
+      acceptedIndices = which(s < acceptProb)
+      particles[acceptedIndices,] = proposals[acceptedIndices,]
+      #
+      unnormLogweights = unnormLogweights[acceptedIndices]
+      logweights = rep(log(1/NParticles), NParticles)
+    }
   }
-}
-
-# We can plot the trial-by-trial errors in posterior means: 
-plot(E_mu - trueTheta[1], type = "b"); abline(h = 0, lty = 2)
-plot(E_sd - trueTheta[2], type = "b"); abline(h = 0, lty = 2)
-#...or the raw posterior means::
-plot(E_mu, type = "b"); abline(h = trueTheta[1], lty = 2)
-plot(E_sd, type = "b"); abline(h = trueTheta[2], lty = 2)
-
-# Or the final marginals (note that the weights are supplied for the density nction):
-plot(density(particles[,1], weights = weights)); abline(v = trueTheta[1], lty = 2) 
-plot(density(particles[,2], weights = weights)); abline(v = trueTheta[2], lty = 2)
-
-# By plotting the effective sample size, we can see that the proportion 
-# of particles that have non-neglible weights get small very fast:
-plot(N_eff / NParticles, type = "b")
+  
+  # We can plot the trial-by-trial errors in posterior means: 
+  plot(E[,1] - trueTheta[1], type = "b"); abline(h = 0, lty = 2)
+  plot(E[,2] - trueTheta[2], type = "b"); abline(h = 0, lty = 2)
+  #...or the raw posterior means::
+  plot(E[,1], type = "b"); abline(h = trueTheta[1], lty = 2)
+  plot(E[,2], type = "b"); abline(h = trueTheta[2], lty = 2)
+  
+  # Or the final marginals (note that the weights are supplied for the density function):
+  plot(density(particles[,1], weights = weights)); abline(v = trueTheta[1], lty = 2) 
+  plot(density(particles[,2], weights = weights)); abline(v = trueTheta[2], lty = 2)
+  
+  # By plotting the effective sample size, we can see that the proportion 
+  # of particles that have non-neglible weights get small very fast:
+  plot(N_eff / NParticles, type = "b")
+  
 </pre>
 
 
