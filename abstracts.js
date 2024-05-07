@@ -170,7 +170,7 @@ General Recognition Theory (GRT) is a multidimensional generalization of the Sig
 
 This model has been built using the Stan programming language. It is a two-dimensional model with 2 response categories on each dimension.
 </text>
-<link></link>
+<link>https://github.com/joanpaak/General_Recognition_Theory_Bayes</link>
 <image>genRecogFig.png</image>
 </abstract>
 
