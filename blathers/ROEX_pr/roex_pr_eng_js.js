@@ -1,11 +1,7 @@
 "use strict";
 
-/*
-NOTE: classes extending this 
-*/
 class ROEXDrawer{
     constructor(visName){
-        
         this.visName = visName;
         
         /* Define controls*/
@@ -15,15 +11,17 @@ class ROEXDrawer{
         this.rText = document.getElementById(this.visName + "_r_text");
         this.pText = document.getElementById(this.visName + "_p_text");
         
-        this.rSlider.addEventListener("input", e => this.drawVisualization());
-        this.pSlider.addEventListener("input", e => this.drawVisualization());        
+        this.rSlider.addEventListener("input", 
+            e => this.drawVisualization());
+        this.pSlider.addEventListener("input", 
+            e => this.drawVisualization());        
     }
     
     
     initialize(){
-        
         if(this.x === undefined){
-            this.f0    = 1000;
+            this.f0 = 1000;
+            
             if(this.min_x === undefined) this.min_x = 500;
             if(this.max_x === undefined) this.max_x = 1500;
             
@@ -39,15 +37,23 @@ class ROEXDrawer{
                      
         document.getElementById(this.visName).setAttribute("width", 
           Math.min(window.innerWidth * 0.8, 600));
-        this.canvas = new SVGVisualization(document.getElementById(this.visName), 
-          [this.min_x, this.max_x], [0, 1], [70, 70, 70, 50]);
-          
+        this.canvas = new Plot(
+            document.getElementById(this.visName), 
+            null,
+            {
+                xlim : [this.min_x, this.max_x],
+                ylim : [0, 1],
+                mar : [70, 70, 70, 50],
+                xlab : "Frequency (Hz)",
+                ylab : "Weight",
+                main : "Roex(r, p)"
+            });
+
         this.drawVisualization();
     }
     
     drawFilter(){
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
+        this.canvas.clearData();
         
         let r = parseFloat(this.rSlider.value);
         let p = parseFloat(this.pSlider.value);
@@ -64,17 +70,17 @@ class ROEXDrawer{
             respMagn[i] = W(g(this.x[i], this.f0), Math.pow(10, r/10), p);
         }
         
-        this.canvas.drawLines(this.x, respMagn);
-        this.canvas.addTitleToLastElement("Weight of the filter");
-        this.canvas.drawLine([this.f0, this.f0], [0, 1]);
-        this.canvas.addTitleToLastElement("Center frequency of the filter");
-        
-        this.canvas.addXLabel("Frequency (Hz)");
-        this.canvas.addYLabel("Weight");
-        this.canvas.addMainLabel("Roex(r, p)")
-        
-        this.canvas.addYTickmarks(3, [0, 0.5, 1], ["0.0", "0.5", "1.0"]);
-        this.canvas.addXTickmarks(5, undefined, undefined, 0);  
+        let wline = this.canvas.drawLines(this.x, respMagn);
+        let wlineTitle = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        wlineTitle.textContent = "Weight of the filter";
+        wline.appendChild(wlineTitle);
+
+        let cfline = this.canvas.drawLine([this.f0, this.f0], [0, 1]);
+        let cflineTitle = document.createElementNS("http://www.w3.org/2000/svg", "title");
+        cflineTitle.textContent = "Center frequency of the filter";
+        cfline.appendChild(cflineTitle);
+
+        this.canvas.hline(0, {stroke : "black", lty : 2}); 
     }   
 }
 
@@ -140,27 +146,43 @@ class ThresholdVis extends ROEXDrawer{
             nm_2_y[i] = N0 * W(g(nm_2_x[i], this.f0), r, p);
         }
         
-        this.canvas.drawPolygon([edge_1, edge_1, edge_2, edge_2], [0, N0, N0, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.4");
-        this.canvas.addTitleToLastElement("This rectangle represents one side of the notched noise masker");
+        this.canvas.drawPolygon(
+            [edge_1, edge_1, edge_2, edge_2], 
+            [0, N0, N0, 0],
+        {
+            "fill-opacity" : "0.4",
+            label : "This rectangle represents one side of the notched noise masker"
+        });
 
-        this.canvas.drawPolygon([edge_3, edge_3, edge_4, edge_4], [0, N0, N0, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.4");
-        this.canvas.addTitleToLastElement("This rectangle represents one side of the notched noise masker");        
+        this.canvas.drawPolygon(
+            [edge_3, edge_3, edge_4, edge_4], 
+            [0, N0, N0, 0],
+        {
+            "fill-opacity": "0.4",
+            label : "This rectangle represents one side of the notched noise masker" 
+        });
         
-        this.canvas.drawPolygon([edge_1, ...nm_1_x, edge_2], [0, ...nm_1_y, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.4");
-        this.canvas.addTitleToLastElement("This part of the noise contributes to masking");
+        this.canvas.drawPolygon(
+            [edge_1, ...nm_1_x, edge_2], 
+            [0, ...nm_1_y, 0],
+        {
+            "fill-opacity": "0.4",
+            label : "This part of the noise contributes to masking"
+        });
 
-        this.canvas.drawPolygon([edge_3, ...nm_2_x, edge_4], [0, ...nm_2_y, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.4");
-        this.canvas.addTitleToLastElement("This part of the noise contributes to masking");        
+        this.canvas.drawPolygon(
+            [edge_3, ...nm_2_x, edge_4], 
+            [0, ...nm_2_y, 0],
+        {
+            "fill-opacity" : "0.4",
+            label : "This part of the noise contributes to masking"
+
+        });
     }   
 }
 
 class PredThresholdVis{
     constructor(){
-        
         this.rSlider = document.getElementById("predThresholdVis_r");
         this.pSlider = document.getElementById("predThresholdVis_p");
         this.kSlider = document.getElementById("predThresholdVis_k");
@@ -199,23 +221,23 @@ class PredThresholdVis{
         
         let ylim = [-115, -40];
       
-        this.canvas = new SVGVisualization(document.getElementById("predThresholdVis"), 
-          [0, this.maxNW], ylim, [70, 100, 70, 50]);
+        this.canvas = new Plot(
+            document.getElementById("predThresholdVis"),
+            null,
+            {
+                xlim : [0, this.maxNW],
+                ylim : ylim,
+                mar : [70, 100, 70, 50],
+                xlab : "Notch width (Hz)",
+                ylab : "Threshold (dB)"
+            })
         
         this.drawVisualization();
     }
     
     drawVisualization(){
-        this.canvas.clearCanvas();
+        this.canvas.clearData();
         
-        this.canvas.drawAxes();
-        //this.canvas.addMainLabel("Predicted thresholds");
-        this.canvas.addXLabel("Notch width (Hz)");
-        this.canvas.addYLabel("Threshold (dB)");    
-        
-        this.canvas.addXTickmarks(5, undefined, undefined, 0);
-        this.canvas.addYTickmarks(5, undefined, undefined, 0);
-
         let K = parseFloat(this.kSlider.value);
         let r = parseFloat(this.rSlider.value);
         let p = parseFloat(this.pSlider.value);
@@ -224,9 +246,16 @@ class PredThresholdVis{
         this.rText.innerText = r.toFixed(4);
         this.pText.innerText = p.toFixed(2);         
 
-        this.canvas.drawLines(this.nws, this.calculateThresholds(this.nws, K, Math.pow(10, (r/10)), p), true);
-        this.canvas.setAttributeOfLastElement("stroke-dasharray", [2, 4]);
-        this.canvas.drawPoints(this.notchWidths, this.calculateThresholds(this.notchWidths, 1, 0.0001, 20));  
+        this.canvas.drawLines(
+            this.nws, 
+            this.calculateThresholds(this.nws, K, Math.pow(10, (r/10)), p), 
+            {
+                "stroke-dasharray" : "2, 4"
+            });
+
+        this.canvas.drawPoints(
+            this.notchWidths, 
+            this.calculateThresholds(this.notchWidths, 1, 0.0001, 20));  
     }
     
     /* Calculates thresholds
@@ -267,6 +296,8 @@ class RectNoiseVis{
         this.lBoundSlider.addEventListener("input", e => this.drawVisualization()); 
         this.N0Slider.addEventListener("input", e => this.drawVisualization());
         this.f0Slider.addEventListener("input", e => this.drawVisualization());
+
+        this.xvals = [1000, 1200, 1400, 1600, 1800, 2000];
     }
     
     switchScale(){
@@ -285,8 +316,16 @@ class RectNoiseVis{
         document.getElementById("rectNoiseVis").setAttribute("width", 
           Math.min(window.innerWidth * 0.8, 600));
         
-        this.canvas = new SVGVisualization(document.getElementById("rectNoiseVis"), 
-          [1000, 2000], [0, 1], [70, 100, 70, 50]);  
+        this.canvas = new Plot(
+            document.getElementById("rectNoiseVis"),
+            null, 
+            {
+                xlim : [1000, 2000],
+                ylim : [0, 1],
+                mar  : [70, 100, 70, 50],
+                ylab  : "Magnitude",
+                xtickPlaces : this.xvals
+            });  
 
         this.drawVisualization();         
     }
@@ -297,65 +336,94 @@ class RectNoiseVis{
         let N0 = parseFloat(this.N0Slider.value);
         let f0 = parseFloat(this.f0Slider.value);
         
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
+        this.canvas.clearData();;
         
-        this.canvas.addYLabel("Magnitude");
-        
-        this.canvas.drawPolygon([lowEdge, lowEdge, uppEdge, uppEdge, lowEdge], [0, N0, N0, 0, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.4");
-        this.canvas.addTitleToLastElement("The noise masker");
+        this.canvas.drawPolygon(
+            [lowEdge, lowEdge, uppEdge, uppEdge, lowEdge], 
+            [0, N0, N0, 0, 0],
+            {
+                "fill-opacity" : "0.4",
+                label : "The noise masker"
+            });
 
-        this.canvas.drawLine([lowEdge, lowEdge], [0, 1]);
-        this.canvas.addTitleToLastElement("Lower edge of the noise masker");
-        this.canvas.setAttributeOfLastElement("stroke-width", "3.0");
-             
-        this.canvas.drawLine([uppEdge, uppEdge], [0, 1]);
-        this.canvas.addTitleToLastElement("Upper edge of the noise masker");
-        this.canvas.setAttributeOfLastElement("stroke-width", "3.0");
-        
+        this.canvas.drawLine(
+            [lowEdge, lowEdge], 
+            [0, 1],
+            {
+                label : "Lower edge of the noise masker",
+                "stroke-width" : "3.0"
+            });
+
+        this.canvas.drawLine(
+            [uppEdge, uppEdge], 
+            [0, 1], 
+            {
+                label : "Upper edge of the noise masker",
+                "stroke-width" : "3.0"
+            });
+
         this.canvas.addText("Lower", lowEdge, 1.05);
         this.canvas.addText("Upper", uppEdge, 1.05);
-        this.canvas.addText("Bounds", (uppEdge + lowEdge) / 2, 1.15);
+        this.canvas.addText(
+            "Bounds", 
+            (uppEdge + lowEdge) / 2, 
+            1.15, 
+            {
+                "alignment-baseline" : "after-edge"
+            });
         
-        this.canvas.drawLine([lowEdge, uppEdge], [1.10, 1.10]);
-        this.canvas.setAttributeOfLastElement("stroke", "black");
+        this.canvas.drawLine(
+            [lowEdge, uppEdge], 
+            [1.10, 1.10],
+            {
+                "stroke" : "black"
+            });
         
-        this.canvas.drawLine([lowEdge, uppEdge + 5], [N0, N0]);
-        this.canvas.setAttributeOfLastElement("stroke", "black");
+        this.canvas.drawLine(
+            [lowEdge, uppEdge + 5], 
+            [N0, N0], 
+            {
+                "stroke" : "black"
+            });
         
-        this.canvas.addText("N0", uppEdge + 10, N0);
-        this.canvas.setAttributeOfLastElement("text-anchor", "start");
-        
-        
-        /* Construct x axis labels:*/
-        let xvals = [1000, 1200, 1400, 1600, 1800, 2000];
-        
-        let xlabs = new Array(xvals.length);
-        
-        for(let i = 0; i < xvals.length; i++){
-          xlabs[i] = xvals[i] + " / " + g(xvals[i], f0).toFixed(2);
-        }
+        this.canvas.addText(
+            "N0", 
+            uppEdge + 10, 
+            N0,
+            {
+                "text-anchor" : "start"
+            });
+
+        this.canvas.hline(0, {stroke : "black", lty : 2});
+    
+
+        /* ERROR: This axis switcharoo should be it's own thing... it's no 
+           use to check and rebuild them after each change */
         if(this.scale === "linear"){
-            this.canvas.addXTickmarks(xvals.length, xvals, xvals);
+            let labels = this.canvas.xaxisGroup.getElementsByClassName("tickmarkText");
+
+            for(let i = 0; i < this.xvals.length; i++){
+                labels[i].textContent = this.xvals[i];
+             }
+ 
             this.canvas.addXLabel("Frequency (Hz)");
-            
-            this.textBox.innerText = "Area: " + ((uppEdge - lowEdge) * N0).toFixed(2);
+            this.textBox.innerText = "Area: " + 
+                ((uppEdge - lowEdge) * N0).toFixed(2);
             
         } else if(this.scale === "normalized"){
-            let gvals = new Array(xvals.length);
+            let labels = this.canvas.xaxisGroup.getElementsByClassName("tickmarkText");
+
+            let gvals = new Array(this.xvals.length);
              
-            for(let i = 0; i < xvals.length; i++){
-               gvals[i] = g(xvals[i], f0).toFixed(2);
+            for(let i = 0; i < this.xvals.length; i++){
+               gvals[i] = g(this.xvals[i], f0).toFixed(2);
+               labels[i].textContent = gvals[i];
             }
             
-            this.canvas.addXTickmarks(xvals.length, xvals, gvals);
-            this.canvas.addXLabel("Normalized frequency");
-            
-            this.textBox.innerText = "Area: " + ((g(uppEdge, f0) - g(lowEdge, f0)) * N0).toFixed(3);
+            this.canvas.addXLabel("Normalized frequency");            
+            this.textBox.innerText = "Area: " + 
+                ((g(uppEdge, f0) - g(lowEdge, f0)) * N0).toFixed(3);
         }
-        
-        this.canvas.addYTickmarks(5);
 
     }
 }
@@ -390,15 +458,22 @@ class AreaVis{
         document.getElementById("areaVis").setAttribute("width", 
           Math.min(window.innerWidth * 0.8, 600));
         
-        this.canvas = new SVGVisualization(document.getElementById("areaVis"), 
-          [0, this.maxG], [0, 1], [70, 100, 70, 50]);  
+        this.canvas = new Plot(
+            document.getElementById("areaVis"),
+            null,
+            {
+                xlim : [0, this.maxG],
+                ylim : [0, 1],
+                mar : [70, 100, 70, 50],
+                xlab : "Frequency",
+                ylab : "Magnitude"
+            });  
 
         this.drawVisualization();          
     }
     
     drawVisualization(){
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
+        this.canvas.clearData();
         
         let r = parseFloat(this.rSlider.value);
         let p = parseFloat(this.pSlider.value); 
@@ -425,43 +500,77 @@ class AreaVis{
             area_y[i] = N0 * W(area_x[i], Math.pow(10, r/10), p);
         }
         
-        this.canvas.drawPolygon([lowEdge, lowEdge, uppEdge, uppEdge], [0, N0, N0, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.4");
-        this.canvas.addTitleToLastElement("The noise masker");
+        this.canvas.drawPolygon(
+            [lowEdge, lowEdge, uppEdge, uppEdge], 
+            [0, N0, N0, 0],
+        {
+            "fill-opacity" : "0.4",
+            label : "The noise masker"
+        });
         
-        this.canvas.drawPolygon([area_x[0], ...area_x, area_x[area_x.length - 1]], [0,...area_y, 0]);
-        this.canvas.setAttributeOfLastElement("fill-opacity", "0.8");
-        this.canvas.addTitleToLastElement("Noise that passes through the filter, this is what we want to calculate");
+        this.canvas.drawPolygon(
+            [area_x[0], ...area_x, area_x[area_x.length - 1]], 
+            [0,...area_y, 0],
+        {
+            "fill-opacity":  "0.8",
+            label : "Noise that passes through the filter, this is what we want to calculate"
+        });
         
-        this.canvas.drawLines(this.g, magnitude);
-        this.canvas.addTitleToLastElement("W(g, r, p)");
+        this.canvas.drawLines(
+            this.g, 
+            magnitude,
+        {
+            label : "W(g, r, p)"
+        });
         
-        this.canvas.drawLine([lowEdge, lowEdge], [0, 1]);
-        this.canvas.addTitleToLastElement("Lower edge of the noise masker");
-        this.canvas.setAttributeOfLastElement("stroke-width", "3.0");
-             
-        this.canvas.drawLine([uppEdge, uppEdge], [0, 1]);
-        this.canvas.addTitleToLastElement("Upper edge of the noise masker");
-        this.canvas.setAttributeOfLastElement("stroke-width", "3.0");
+        this.canvas.drawLine([
+            lowEdge, lowEdge], 
+            [0, 1],
+        {
+            label : "Lower edge of the noise masker",
+            "stroke-width" : "3.0"
+        });
+
+        this.canvas.drawLine(
+            [uppEdge, uppEdge], 
+            [0, 1],
+            {
+                label : "Upper edge of the noise masker",
+                "stroke-width" : "3.0"
+            });
         
         this.canvas.addText("Lower", lowEdge, 1.05);
         this.canvas.addText("Upper", uppEdge, 1.05);
-        this.canvas.addText("Bounds", (uppEdge + lowEdge) / 2, 1.15);
+        this.canvas.addText("Bounds", 
+            (uppEdge + lowEdge) / 2, 
+            1.15,
+            {
+                "alignment-baseline" : "after-edge"
+            });
         
-        this.canvas.drawLine([lowEdge, uppEdge], [1.10, 1.10]);
-        this.canvas.setAttributeOfLastElement("stroke", "black");
+        this.canvas.drawLine(
+            [lowEdge, uppEdge], 
+            [1.10, 1.10],
+            {
+                "stroke" : "black"
+            });
         
-        this.canvas.drawLine([lowEdge, uppEdge + 0.01], [N0, N0]);
-        this.canvas.setAttributeOfLastElement("stroke", "black");
+        this.canvas.drawLine(
+            [lowEdge, uppEdge + 0.01], 
+            [N0, N0],
+            {
+                "stroke" : "black"
+            });
         
-        this.canvas.addText("N0", uppEdge + 0.01, N0);
-        this.canvas.setAttributeOfLastElement("text-anchor", "start");
-        
-        this.canvas.addXTickmarks(4);
-        this.canvas.addYTickmarks(4);
-        this.canvas.addYLabel("Magnitude/Weight");
-        this.canvas.addXLabel("Normalized frequency")
-        
+        this.canvas.addText(
+            "N0", 
+            uppEdge + 0.01, 
+            N0,
+            {
+                "text-anchor" : "start"
+            });
+
+        this.canvas.hline(0, {stroke : "black", lty : 2});
     }
 }
 
