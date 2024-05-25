@@ -13,25 +13,75 @@ Jauhosäkkienluokittelukoneen visuaalisaatiot:
 Taajuuserojen havaitseminen:
   vis_5 = Normaalisti jakautuneet "vaikutelmat"
   vis_6 = Psykometrinen funktio
-  
+   
 */
-  
-const vis_1 = new SVGVisualization(document.getElementById("vis_1"),
-  [100, 120], [0, 1], [80, 70, 10, 30]);
-  
-const vis_2 = new SVGVisualization(document.getElementById("vis_2"),
-  [-10, 10], [0, 1], [50, 80, 10, 30]);
-  
-const vis_3 = new SVGVisualization(document.getElementById("vis_3"),
-  [40, 60], [0, 1], [50, 80, 10, 30]);
-  
-const vis_4 = new SVGVisualization(document.getElementById("vis_4"), [50, 80], [0, 1], [50, 80, 10, 30]);
 
-const vis_5 = new SVGVisualization(document.getElementById("vis_5"),
-  [0, 10], [0, 1], [50, 80, 10, 30]);
+const vis_1 = new Plot(
+  document.getElementById("vis_1"),
+  null,
+  {
+    xlim : [100, 120],
+    ylim : [0, 1],
+    mar : [80, 70, 10, 30],
+    ylab: "P(Suuri)",
+    xlab : "Todellinen määrä"
+  });
+
+
+    
+const vis_2 = new Plot(
+  document.getElementById("vis_2"),
+  null,
+  {
+    xlim : [-10, 10],  
+    ylim : [0, 1], 
+    mar : [50, 80, 10, 30],
+    ylab : "Tiheys",
+    xlab : "Virheiden suuruus (g)"
+  });
   
-const vis_6 = new SVGVisualization(document.getElementById("vis_6"),
-  [0, 10], [0, 1], [50, 80, 10, 30]);
+const vis_3 = new Plot(
+  document.getElementById("vis_3"),
+  null,
+  {
+    xlim : [40, 60], 
+    ylim : [0, 1], 
+    mar : [50, 80, 10, 30],
+    ylab : "Tiheys",
+    xlab : "Paino (g)"
+  });
+  
+const vis_4 = new Plot(
+  document.getElementById("vis_4"),
+  null, 
+  {
+    xlim : [50, 80], 
+    ylim : [0, 1], 
+    mar : [50, 80, 10, 30],
+    xlab : "Todellinen paino (g)",
+    ylab : "P(Suuri)"
+  });
+
+const vis_5 = new Plot(
+  document.getElementById("vis_5"),
+  null,
+  {
+    xlim : [0, 10], 
+    ylim : [0, 1], 
+    mar : [50, 80, 10, 30],
+    xlab : "Vaikutelma",
+    ylab : "Tiheys"
+  });
+  
+const vis_6 = new Plot(
+  document.getElementById("vis_6"),
+  null, {
+    xlim : [0, 10], 
+    ylim : [0, 1], 
+    mar : [50, 80, 10, 30],
+    xlab : "Taajuusero (Hz)",
+    ylab : "P(Kyllä)"
+  });
 
 ///  
 
@@ -78,6 +128,7 @@ function seq(start, end, length){
 function drawVis1(){
     let variance  = parseFloat(document.getElementById("vis_1_variance").value);
     let criterion = parseFloat(document.getElementById("vis_1_crit").value);
+    
     let x = new Array(21);
     
     for(let i = 0;  i <= 20; i++){
@@ -90,21 +141,12 @@ function drawVis1(){
       y[i] = PLarger(x[i], [variance, criterion]);
     }
     
-    vis_1.clearCanvas();
-
+    vis_1.clearData();
     
-    vis_1.drawAxes();
+    vis_1.hline(0, {stroke : "black", lty : 2});
     vis_1.drawLine([criterion, criterion], [0,1]);
-    vis_1.addXTickmarks(5, undefined, undefined, 0);
-    vis_1.addYTickmarks(5);
-
     vis_1.drawLines(x, y);
-    vis_1.drawPoints(x, y, true);
-    
-    vis_1.addYLabel("P(Suuri)");
-    vis_1.addXLabel("Todellinen määrä");        
-
-
+    vis_1.drawPoints(x, y);
 }
 
 /////////
@@ -120,12 +162,8 @@ function drawVis2(){
       y[i] = normalPDF(x[i], 0, variance);
     }
     
-    vis_2.clearCanvas();
-    vis_2.drawAxes();
-    vis_2.addXTickmarks(11);
-    vis_2.addYTickmarks(5);
-    vis_2.addYLabel("Tiheys");
-    vis_2.addXLabel("Virheiden suuruus (g)");
+    vis_2.clearData();
+    vis_2.hline(0, {stroke : "black", lty : 2});
     vis_2.drawLines(x, y);   
 }
 
@@ -151,28 +189,34 @@ function drawVis3(){
         y_after_crit[i] = normalPDF(x_after_crit[i], mu, sigma);
     }
        
-    vis_3.clearCanvas();
-    vis_3.drawAxes();
-    vis_3.addXTickmarks(11);
-    vis_3.addYTickmarks(5);
+    vis_3.clearData();
+
+    vis_3.hline(0, {stroke : "black", lty : 2});
 
     vis_3.drawLines([...x_before_crit,...x_after_crit], 
      [...y_before_crit,...y_after_crit]);
      
     vis_3.drawPolygon([49.5, ...x_after_crit, 60], [0, ...y_after_crit, 0]);
-    vis_3.drawPolygon([40, ...x_before_crit, 49.5], [0, ...y_before_crit, 0], "rgba(255,255,255,0)");
+    vis_3.drawPolygon(
+      [40, ...x_before_crit, 49.5], 
+      [0, ...y_before_crit, 0], 
+      {
+        col : "rgba(255,255,255,0)"
+      });
     
     vis_3.drawLine([49.5, 49.5], [0, 1]);
     
-    vis_3.drawLine([mu,mu],[0, normalPDF(mu, mu, sigma)]);
-    vis_3.svgElement.lastChild.setAttribute("stroke-dasharray", 4);
-    
-    vis_3.addYLabel("Tiheys");
-    vis_3.addXLabel("Paino (g)");
+    vis_3.drawLine(
+      [mu,mu],
+      [0, normalPDF(mu, mu, sigma)],
+      {
+        "stroke-dasharray": 4
+      });
     
     let probSmall = normalCDFApprox((49.5 - mu) / sigma);
     let probLarge = 1.0 - probSmall;
     
+    // ERROR: Fix this!
     let pgons = vis_3.svgElement.getElementsByTagName("polygon");
     
     const title_1 = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -190,10 +234,9 @@ function drawVis3(){
 }
 
 function drawVis4(){
-    vis_4.clearCanvas();
+    vis_4.clearData();
     
     let x = seq(50, 80, 200);
-  
     let y = new Array(x.length);
     
     for(let i = 0; i < x.length; i++){
@@ -201,19 +244,18 @@ function drawVis4(){
         parseFloat(document.getElementById("vis_4_var").value));
     }
     
-    vis_4.drawAxes();
-    vis_4.addXTickmarks(5);
-    vis_4.addYTickmarks(5);
-    vis_4.addYLabel("P(Suuri)");
-    vis_4.addXLabel("Todellinen paino (g)");
+    vis_4.hline(0, {stroke : "black", lty : 2});
     vis_4.drawLines(x, y);
-    vis_4.drawLine([parseFloat(document.getElementById("vis_4_crit").value), 
-      parseFloat(document.getElementById("vis_4_crit").value)], [0,1]);
-    vis_4.svgElement.lastChild.setAttribute("stroke-dasharray", 4);     
+    vis_4.drawLine(
+      [parseFloat(document.getElementById("vis_4_crit").value), 
+       parseFloat(document.getElementById("vis_4_crit").value)], 
+      [0,1], 
+      {
+        "stroke-dasharray" : 4
+      });     
 }
 
 function drawVis5(){
-    vis_5.clearCanvas();
     let mu    = parseFloat(document.getElementById("vis_5_true").value);
     let sigma = parseFloat(document.getElementById("vis_5_var").value);
     
@@ -233,28 +275,33 @@ function drawVis5(){
         y_after_crit[i] = normalPDF(x_after_crit[i], mu, sigma);
     }
     
-    vis_5.clearCanvas();
-    vis_5.drawAxes();
-    vis_5.addXTickmarks(11);
-    vis_5.addYTickmarks(5);
+    vis_5.clearData();
     
+    vis_5.hline(0, {stroke : "black", lty : 2});
     vis_5.drawPolygon([3.0, ...x_after_crit, 10], [0, ...y_after_crit, 0]);
-    vis_5.drawPolygon([0.0, ...x_before_crit, 3.0], [0.0, ...y_before_crit, 0], "rgba(255,255,255,0)");
+    vis_5.drawPolygon(
+      [0.0, ...x_before_crit, 3.0], 
+      [0.0, ...y_before_crit, 0], 
+      {
+        col : "rgba(255,255,255,0)"
+      });
 
     vis_5.drawLines([...x_before_crit,...x_after_crit], 
      [...y_before_crit,...y_after_crit]);
      
     vis_5.drawLine([3.0, 3.0], [0, 1]);
     
-    vis_5.drawLine([mu,mu],[0, normalPDF(mu, mu, sigma)]);
-    vis_5.svgElement.lastChild.setAttribute("stroke-dasharray", 4);
-    
-    vis_5.addYLabel("Tiheys");
-    vis_5.addXLabel("Vaikutelma");        
+    vis_5.drawLine(
+      [mu,mu],
+      [0, normalPDF(mu, mu, sigma)], 
+      {
+        "stroke-dasharray" : 4
+      });
 
     let probSmall = normalCDFApprox((3.0 - mu) / sigma);
     let probLarge = 1.0 - probSmall;
     
+    // ERROR: Fix this
     let pgons = vis_5.svgElement.getElementsByTagName("polygon");
     
     const title_1 = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -282,13 +329,9 @@ function drawVis6(){
       y[i] = logisticCDF(x[i], criterion, variance);
     }
     
-    vis_6.clearCanvas();
-    vis_6.drawAxes();
-    vis_6.addXTickmarks(5);
-    vis_6.addYTickmarks(5);
+    vis_6.clearData();
+    vis_6.hline(0, {stroke : "black", lty : 2});
     vis_6.drawLines(x, y);
-    vis_6.addYLabel("P(Kyllä)");
-    vis_6.addXLabel("Taajuusero (Hz)");        
 }
 
 
@@ -312,9 +355,17 @@ class SDTGame{
       this.criterionInput = document.getElementById("sdt_game_criterion");
       
       //
-      
-      this.gameVis = new SVGVisualization(document.getElementById("sdt_game"),
-        [100, 120], [0, 1], [50, 80, 10, 30]);
+
+      this.gameVis = new Plot(
+        document.getElementById("sdt_game"),
+        null, 
+        {
+          xlim : [100, 120], 
+          ylim : [0, 1], 
+          mar : [50, 80, 10, 30],
+          xlab : "Todellinen määrä",
+          ylab : "P(Suuri)"
+        });
       
       
       this.infoTextField = document.getElementById("sdt_game_info_text");
@@ -344,10 +395,7 @@ class SDTGame{
       
       // Draw everything:
       
-      this.gameVis.clearCanvas();
-      this.gameVis.drawAxes();
-      this.gameVis.addXTickmarks(5);
-      this.gameVis.addYTickmarks(5);
+      this.gameVis.clearData();
       this.gameVis.drawLines(this.x, this.curve_y);
       this.gameVis.drawPoints(this.x_measured, this.target_y);
       
@@ -362,9 +410,7 @@ class SDTGame{
       this.gameVis.ctx.setLineDash([]);
       */
       //
-      
-      this.gameVis.addYLabel("P(Suuri)");
-      this.gameVis.addXLabel("Todellinen määrä");        
+              
           
       // Check for winning condition
       
