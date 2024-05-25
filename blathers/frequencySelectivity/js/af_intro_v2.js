@@ -59,12 +59,19 @@ class Demo{
 }
 
 class Demo1 extends Demo{
-    
     constructor(){
         super(document.getElementById("demo1Toggle"));
 
-        this.canvas = new SVGVisualization(document.getElementById("vis_1"),
-          [50, 2000], [0, 1], [80, 70, 10, 30]);
+        this.canvas = new Plot(
+            document.getElementById("vis_1"),
+            null,
+            {
+                xlim : [50, 2000], 
+                ylim : [0, 1], 
+                mar : [80, 70, 10, 30],
+                xlab : "Frequency (Hz)",
+                ylab : "Magnitude"
+            });
         
         this.freqSlider = document.getElementById("demo1FreqSlider");
         this.freqSlider.addEventListener("input", e => this.handleFreqChange(), false);
@@ -91,36 +98,40 @@ class Demo1 extends Demo{
     }
     
     drawVisualization(){
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
-        this.canvas.addXTickmarks(5, undefined, undefined, 0);
-        this.canvas.addYTickmarks(2);
-        this.canvas.addXLabel("Frequency (Hz)");
-        this.canvas.addYLabel("Magnitude");
-        this.canvas.drawLine([parseFloat(this.freqSlider.value), parseFloat(this.freqSlider.value)], [0, 1]);
-        this.canvas.svgElement.lastElementChild.classList.add("signalLine");
+        this.canvas.clearData();
+        let signalLine = this.canvas.drawLine(
+            [parseFloat(this.freqSlider.value), 
+                parseFloat(this.freqSlider.value)], 
+                [-1, 1]);
+        signalLine.classList.add("signalLine"); // ERROR: I don't think this is necessary
         
         const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
         title.textContent = "Signal, the sine wave you (should) hear";
 
-        this.canvas.svgElement.
-              getElementsByClassName("signalLine")[0].appendChild(title);
+        signalLine.appendChild(title);
     }
 }
 
-class Demo2 extends Demo{
-    
+class Demo2 extends Demo{    
     constructor(){
         super(document.getElementById("demo2Toggle"));
 
         this.freqSlider = document.getElementById("demo2FreqSlider");
         this.QSlider = document.getElementById("demo2QSlider");
         
-        this.freqSlider.addEventListener("input", e => this.handleFreqChange(), false);
-        this.QSlider.addEventListener("input", e => this.handleQChange());
+        this.freqSlider.addEventListener("input", 
+            e => this.handleFreqChange(), false);
+        this.QSlider.addEventListener("input", 
+            e => this.handleQChange());
         
-        this.canvas = new SVGVisualization(document.getElementById("vis_2"),
-          [0, 2000], [0, 1], [50, 75, 10, 30]);
+        this.canvas = new Plot(
+            document.getElementById("vis_2"),
+            null, 
+            {
+                xlim : [0, 2000], 
+                ylim : [0, 1], 
+                mar : [50, 75, 10, 30]
+            });
           
         this.drawVisualization();
     }
@@ -142,7 +153,8 @@ class Demo2 extends Demo{
         
         // Create buffered source to which the noise is put into:
         this.source = this.audioCtx.createBufferSource(); 
-        this.buffer = this.audioCtx.createBuffer(1, this.noiseMasker.length, this.audioCtx.sampleRate);
+        this.buffer = this.audioCtx.createBuffer(
+            1, this.noiseMasker.length, this.audioCtx.sampleRate);
         this.buffer.copyToChannel(this.noiseMasker, 0);
         this.source.loop = true;  
         this.source.buffer = this.buffer;  
@@ -178,12 +190,8 @@ class Demo2 extends Demo{
     }
     
     drawVisualization(){
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
-        this.canvas.addXTickmarks(5, undefined, undefined, 0);
-        this.canvas.addYTickmarks(2);
-        this.canvas.addXLabel("Frequency (Hz)");
-        this.canvas.addYLabel("Magnitude");
+        this.canvas.clearData();
+        this.canvas.hline(0, { stroke : "black", "stroke-dasharray" : 4});
         
         if(this.demoActive){
             let fr = frequencyResponse(this.filter, 0, 2000, 100);
@@ -194,17 +202,13 @@ class Demo2 extends Demo{
             x.push(x[x.length-1]); // This just "closes the loop" so that 
             y.push(0);             // the polygon can be drawn correctly.
     
-            this.canvas.drawPolygon(x, y, NOISE_COLOR);
+            let poly = this.canvas.drawPolygon(x, y, { fill : NOISE_COLOR});
 
             //
 
             const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
             title.textContent = "This grey block represents the noise you hear when this demo is active";
-
-            //
-
-            this.canvas.svgElement.
-              getElementsByTagName("polygon")[0].appendChild(title);            
+            poly.appendChild(title);            
         }     
     }
 }
@@ -213,11 +217,17 @@ class Demo3 extends Demo{
     constructor(){
         super(document.getElementById("demo3toggle"));
         
-        this.canvas = new SVGVisualization(document.getElementById("vis_3"),
-          [0, 2000], [0, 1], [50, 75, 10, 30]);
+        this.canvas = new Plot(
+            document.getElementById("vis_3"),
+            null, {
+                xlim : [0, 2000], 
+                ylim : [0, 1], 
+                mar :[50, 75, 10, 30]
+            });
         
         this.CFSlider =  document.getElementById("demo3CFSlider");
-        this.CFSlider.addEventListener("input", e => this.handleCFChange(), false);
+        this.CFSlider.addEventListener(
+            "input", e => this.handleCFChange(), false);
 
         //
          
@@ -262,7 +272,8 @@ class Demo3 extends Demo{
         //this.filter.frequency.value = getCFFromSlider();
         this.getCFFromSlider();
         this.source = this.audioCtx.createBufferSource();
-        this.buffer = this.audioCtx.createBuffer(1, this.noiseMasker.length, this.audioCtx.sampleRate);
+        this.buffer = this.audioCtx.createBuffer(
+            1, this.noiseMasker.length, this.audioCtx.sampleRate);
         this.buffer.copyToChannel(this.noiseMasker, 0);
         this.source.loop = true;
         this.source.buffer = this.buffer;
@@ -285,13 +296,9 @@ class Demo3 extends Demo{
     }   
     
     drawVisualization(){
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
-        this.canvas.addXTickmarks(5, undefined, undefined, 0);
-        this.canvas.addYTickmarks(2);
-        this.canvas.addXLabel("Frequency (Hz)");
-        this.canvas.addYLabel("Magnitude");
-        
+        this.canvas.clearData();
+        this.canvas.hline(0, { stroke : "black", "stroke-dasharray" : 4});
+
         if(this.demoActive){
             let fr = frequencyResponse(this.filter, 0, 2000, 100);
             
@@ -301,10 +308,9 @@ class Demo3 extends Demo{
             x.push(x[x.length-1]); // This just "closes the loop" so that 
             y.push(0);             // the polygon can be drawn correctly.
             
-            this.canvas.drawPolygon(x, y, NOISE_COLOR);
+            let poly = this.canvas.drawPolygon(x, y, {fill : NOISE_COLOR});
                
-            this.canvas.drawLine([1000, 1000], [0, 1]);
-            this.canvas.svgElement.lastElementChild.classList.add("signalLine");
+            let sl = this.canvas.drawLine([1000, 1000], [-1, 1]);
             
             //
             const title_1 = document.createElementNS("http://www.w3.org/2000/svg", "title");
@@ -313,10 +319,8 @@ class Demo3 extends Demo{
             const title_2 = document.createElementNS("http://www.w3.org/2000/svg", "title");
             title_2.textContent = "This grey block represents the noise you hear when this demo is active";
            
-            this.canvas.svgElement.
-              getElementsByClassName("signalLine")[0].appendChild(title_1);
-            this.canvas.svgElement.
-              getElementsByTagName("polygon")[0].appendChild(title_2);             
+            sl.appendChild(title_1);
+            poly.appendChild(title_2);             
         }
     }
 }
@@ -334,10 +338,18 @@ class Demo4 extends Demo{
     constructor(){
         super(document.getElementById("demo4toggle"));
         
-        this.canvas = new SVGVisualization(document.getElementById("vis_4"), [0, 2000], [0, 1.25], [50, 75, 10, 30]);
+        this.canvas = new Plot(
+            document.getElementById("vis_4"), 
+            null, 
+            {
+                xlim : [0, 2000], 
+                ylim : [0, 1.25], 
+                mar : [50, 75, 10, 30]
+            });
         
         this.QSlider = document.getElementById("demo4QSlider");
-        this.QSlider.addEventListener("input", e => this.handleQChange(), false);
+        this.QSlider.addEventListener(
+            "input", e => this.handleQChange(), false);
              
         this.noiseFilterCF        = 1500;
         this.noiseFilterBandwidth = 1500;
@@ -413,13 +425,9 @@ class Demo4 extends Demo{
     }
     
     drawVisualization(){
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
-        this.canvas.addXTickmarks(5, undefined, undefined, 0);
-        this.canvas.addYTickmarks(2);
-        this.canvas.addXLabel("Frequency (Hz)");
-        this.canvas.addYLabel("Magnitude");
-        
+        this.canvas.clearData();
+        this.canvas.hline(0, { stroke : "black", "stroke-dasharray" : 4});
+
         if(this.demoActive){
             let frNoise = frequencyResponse(this.noiseFilter, 0, 2000, 100);
             
@@ -432,7 +440,7 @@ class Demo4 extends Demo{
             xNoise.push(xNoise[0]);
             yNoise.push(0);
             
-            this.canvas.drawPolygon(xNoise, yNoise, 'rgba(0, 0, 0, 0.2)');
+            this.canvas.drawPolygon(xNoise, yNoise, {fill : 'rgba(0, 0, 0, 0.2)'});
             
             // Listening filter:
             
@@ -444,13 +452,15 @@ class Demo4 extends Demo{
             xListening.push(xListening[xListening.length-1]); // This just "closes the loop" so that 
             yListening.push(0);             // the polygon can be drawn correctly.
             
-            this.canvas.drawPolygon(xListening, yListening, 'hsla(45, 100%,  50%, 0.6)');
+            this.canvas.drawPolygon(
+                xListening, 
+                yListening, 
+                {fill : 'hsla(45, 100%,  50%, 0.6)'});
             
             //
                                 
-            this.canvas.drawLine([1000, 1000], [0, 1]);
-            this.canvas.svgElement.lastElementChild.classList.add("signalLine");
-
+            let sl = this.canvas.drawLine([1000, 1000], [0, 1]);
+            
             // Add titles:
 
             let pgons = this.canvas.svgElement.getElementsByTagName("polygon");
@@ -467,10 +477,7 @@ class Demo4 extends Demo{
             const title_3 = document.createElementNS("http://www.w3.org/2000/svg", "title");
             title_3.textContent = "Signal, the sine wave you (should) hear";
 
-            //
-
-            let lines = this.canvas.svgElement.
-              getElementsByClassName("signalLine")[0].appendChild(title_3);            
+            sl.appendChild(title_3);            
         }        
     }
 }
