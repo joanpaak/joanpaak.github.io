@@ -35,15 +35,22 @@ h1{
     font-family: 'Times New Roman', Times, serif;
     font-variant:  small-caps;
     text-align:    center;
-    font-size:     2rem;
+    font-size:     2.25rem;
     font-weight:   100;
     margin-top:    5%;
     margin-bottom: 5%;
 }
 
 h2{
+    font-size: 1.75rem;
     font-variant: small-caps;
     font-weight: 100;
+}
+
+h3{
+    font-size: 1.50rem;
+    font-weight: 100;
+    font-variant: small-caps;
 }
 
 .quote{
@@ -52,13 +59,26 @@ h2{
 }
 
 
-
 p{
-
     text-align: justify;
 }
 
 
+table{
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+}
+
+table th{
+    border-bottom: 1px solid black;
+    font-weight: 100;
+    font-variant: small-caps;
+}
+
+table td{
+    padding: 0 1rem;
+}
 
 
 /* 
@@ -72,8 +92,8 @@ SPECIALTIES
 /*
 A floating image div is something like this
 <div class="floatingImgDiv">
-  <img src="image.png">
-  <div></div>
+<img src="image.png">
+<div></div>
 </div>
 
 where the div element is taken to be a caption for the image.
@@ -100,11 +120,15 @@ where the div element is taken to be a caption for the image.
 
 /*         */
 
-
 .equation{
     text-align: center;
     line-height: 175%;
     font-size: 1.0rem;
+}
+
+.eqlab{
+    display: inline-block;
+    margin-left: 3rem;
 }
 
 pre{
@@ -125,3 +149,62 @@ pre{
     margin-right: auto;
     padding: 10px 15px;
 }
+
+/* For limits of integration
+&int; <span class="lims"><sub>0</sub><sup>1</sup></span>
+*/
+.lims{
+
+}
+
+.lims sub{
+    position: relative;
+    bottom: -0.2rem;
+}
+
+.lims sup{
+    position: relative;
+    top: -0.2rem;
+    left: -0.3rem;
+}
+
+.bibEntry{
+    margin-left: 2rem;
+}
+
+.bibEntry::first-letter{
+    margin-left: -2rem;
+}
+
+/* */
+
+.interactiveFigure{
+    text-align: center;
+}
+
+.controlSlice{
+    display: block;
+}
+
+.controlSlice * {
+    display: inline-block;
+}
+
+.interactiveFigure button{
+    border: 1px solid black;
+    font-size: 1rem;
+    font-variant: petite-caps;
+    font-weight: 100;
+    padding: 0.1rem 0.5rem;
+    background-color: floralwhite;
+}
+
+.interactiveFigure button:hover{
+    cursor: pointer;
+    background-color: beige;
+}
+
+.interactiveFigure button:active{
+    background-color: var(--highlightColor);
+}
+
