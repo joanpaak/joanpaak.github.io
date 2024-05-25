@@ -1,4 +1,4 @@
-"use strict;"
+"use strict";
 
 function normalize(x){
     let curmax = Math.abs(x[0]);
@@ -17,14 +17,25 @@ function normalize(x){
 class SamplingVis{
     
     constructor(){
+        this.res  = 20; // The low resolution sampled signal
+        this.res2 = 200; // High resolution true signal
         
-        this.res = 20;
-        this.res2 = 200;
+        document.getElementById("samplingVis").
+            setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
         
-        document.getElementById("samplingVis").setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
-        
-        this.canvas = new SVGVisualization(document.getElementById("samplingVis"), [1, this.res], [-1, 1], [80, 110, 10, 30]);
-        
+
+        this.canvas = new Plot(
+            document.getElementById("samplingVis"),
+            null,
+            {
+                xlim : [1, this.res],
+                ylim : [-1, 1],
+                mar : [80, 110, 10, 30],
+                xlab : "Time",
+                ylab : "Amplitude"
+            }
+        );
+
         /* This is for the low resulution "sampled signal" */
         this.x = new Array(this.res);
         this.y = new Array(this.res);
@@ -43,20 +54,18 @@ class SamplingVis{
             this.y2[i] = Math.sin(i * (this.res / this.res2) * 0.5);
         }
         
-        this.canvas.clearCanvas(); // This is good to do if the visualization is redrawn due to resizing the window
-        this.canvas.drawAxes();
-        this.canvas.addXLabel("Time");
-        this.canvas.addYLabel("Amplitude");
-        
-        this.canvas.addXTickmarks(3, [1, 10, 20], ["1", "10", "20"]);
-        this.canvas.addYTickmarks(6, undefined, undefined, 2);
+        //this.canvas.clearCanvas(); // This is good to do if the visualization is redrawn due to resizing the window
         
         this.canvas.drawLines(this.x2, this.y2);
         
         for(let i = 0; i < this.res; i++){
-            this.canvas.drawPoint(this.x[i], this.y[i], true);
-            this.canvas.svgElement.lastElementChild.addEventListener("mouseenter", e => this.addCrosshair(this.x[i], this.y[i]));
-            this.canvas.svgElement.lastElementChild.addEventListener("mouseleave", e => this.removeCrosshair());
+            let curPoint = this.canvas.drawPoint(this.x[i], this.y[i], true);
+            curPoint.addEventListener(
+                    "mouseenter", 
+                    e => this.addCrosshair(this.x[i], this.y[i]));
+                curPoint.addEventListener(
+                    "mouseleave", 
+                    e => this.removeCrosshair());
         }
         
         /* This part writes the sampled sine wave to the html: */
@@ -70,33 +79,43 @@ class SamplingVis{
             }
         }
         
-        document.getElementById("sampledSine").innerText = stringToBeWritten;
+        document.getElementById("sampledSine").
+            innerText = stringToBeWritten;
     }
     
     /* These crosshair functions are used for adding/removing the crosshair that 
        aims at the point that the user is hovering on */
     addCrosshair(x, y){
-        this.canvas.drawLines([x,x], [-1,y]);
-        this.canvas.svgElement.lastElementChild.setAttribute("id", "crosshairVertical");
-        this.canvas.svgElement.lastElementChild.setAttribute("stroke-dasharray", [2, 2]);
+        this.verticalCrosshair = this.canvas.drawLines([x, x], [-2, y]);
+        this.verticalCrosshair.setAttribute("stroke-dasharray", [2, 2]);
         
-        this.canvas.drawLines([1,x], [y,y]);
-        this.canvas.svgElement.lastElementChild.setAttribute("id", "crosshairHorizontal");
-        this.canvas.svgElement.lastElementChild.setAttribute("stroke-dasharray", [2, 2]);
+        this.horizontalCrosshair = this.canvas.drawLines([-2, x], [y, y]);
+        this.horizontalCrosshair.setAttribute("stroke-dasharray", [2, 2]);
     }
     
     removeCrosshair(){
-        this.canvas.svgElement.removeChild(this.canvas.svgElement.getElementById("crosshairVertical"));
-         this.canvas.svgElement.removeChild(this.canvas.svgElement.getElementById("crosshairHorizontal"));
+        this.horizontalCrosshair.remove();
+        this.verticalCrosshair.remove();
     }   
 }
 
 class VarFreqVis{
     constructor(){
+        document.getElementById("varFreqVis").
+            setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
         
-        document.getElementById("varFreqVis").setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
-        
-        this.canvas = new SVGVisualization(document.getElementById("varFreqVis"), [0, 10], [-1, 1], [50, 120, 50,  0]);
+        this.canvas = new Plot(
+            document.getElementById("varFreqVis"),
+            null,
+            {
+                xlim : [0, 10],
+                ylim : [-1, 1],
+                mar  : [50, 120, 50,  0],
+                xlab : "Time",
+                ylab : "Amplitude"
+            }
+        );
+
         this.slider = document.getElementById("varFreqVisSlider");
         this.textBox = document.getElementById("varFreqVisText");
         
@@ -108,13 +127,11 @@ class VarFreqVis{
             this.x[i] = i * (10.0 / this.x.length);
         }
         
-        this.slider.addEventListener("input", e=> this.drawVisualization());
-        
+        this.slider.addEventListener("input", e => this.drawVisualization());
         this.drawVisualization();
     }
     
     drawVisualization(){
-        
         let f = parseFloat(this.slider.value);
         
         this.textBox.innerText = "(" + f.toFixed(2) + ")";
@@ -123,24 +140,30 @@ class VarFreqVis{
             this.y[i] = Math.sin(this.x[i] * f);
         }
         
-        this.canvas.clearCanvas();
-        this.canvas.drawAxes();
-        
-        this.canvas.drawLines(this.x, this.y);
-        
-        this.canvas.addXLabel("Time");
-        this.canvas.addYLabel("Amplitude");
-
-        this.canvas.addYTickmarks(6, undefined, undefined, 2);        
+        this.canvas.clearData();
+        this.canvas.drawLines(this.x, this.y);        
     }
 }
 
 class MixtureVis{
     constructor(){
         
-        document.getElementById("mixtureVis").setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
+        document.getElementById("mixtureVis").
+            setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
         
-        this.canvas = new SVGVisualization(document.getElementById("mixtureVis"), [0, 10], [-2, 2], [50, 50, 0, 0]);
+        this.canvas = new Plot(
+            document.getElementById("mixtureVis"),
+            null,
+            {
+                xlim : [0, 10],
+                ylim : [-2, 2],
+                mar : [50, 50, 0, 0],
+                xlab : "Time",
+                ylab : "Amplitude"
+            }
+
+        );
+
         this.slider = document.getElementById("mixtureVisSlider");
         
         this.res = 400;
@@ -162,39 +185,41 @@ class MixtureVis{
         }
         
         this.slider.addEventListener("input", e => this.drawVisualization());
-        
-        this.drawVisualization();
-        
+        this.drawVisualization();    
     }
     
     drawVisualization(){
         let a = parseFloat(this.slider.value);
         
-        this.canvas.clearCanvas();
+        this.canvas.clearData();
         
         for(let i = 0; i < this.res; i++){
-            
-            this.y[i] = Math.sin(this.x[i] * 2) + a * Math.sin(this.x[i] * this.hfFreqs[i]);
+            this.y[i] = Math.sin(this.x[i] * 2) + 
+                a * Math.sin(this.x[i] * this.hfFreqs[i]);
         }
         
         this.canvas.drawLines(this.x, this.y);
-        this.canvas.drawAxes();
-        this.canvas.addXLabel("Time");
-        this.canvas.addYLabel("Amplitude");
-        
     }
 }
 
 class FIRVis{
-    
     constructor(){
         this.res = 200;
         
+        document.getElementById("firVis").
+            setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
         
-        document.getElementById("firVis").setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
+        this.canvas = new Plot(
+            document.getElementById("firVis"),
+            null,
+            {
+                xlim : [0, 10],
+                ylim : [-1.5, 1.5],
+                mar  :[80, 90, 10, 30]
+            }
+        );
         
-        this.canvas = new SVGVisualization(document.getElementById("firVis"), [0, 10], [-1.5, 1.5], [80, 90, 10, 30]);
-            this.a0     = document.getElementById("firVis_a0");
+        this.a0     = document.getElementById("firVis_a0");
         this.a1     = document.getElementById("firVis_a1");
         this.a0text = document.getElementById("firVis_a0_text");
         this.a1text = document.getElementById("firVis_a1_text");
@@ -227,16 +252,15 @@ class FIRVis{
         }
         
         for(let i = 0; i < this.res; i++){
-            this.input[i] = Math.sin(this.x[i] * f1) + 0.4 * Math.sin(this.x[i] * this.hfFreqs[i]);   
+            this.input[i] = Math.sin(this.x[i] * f1) + 
+                0.4 * Math.sin(this.x[i] * this.hfFreqs[i]);   
         }
         
         normalize(this.input);
-        
         this.updateVis();      
     }
     
     switchFilter(){
-  
         if(this.filterApplied == true){
           this.filterApplied = 0;
           this.applyButton.innerText = "Apply Filter";
@@ -254,21 +278,16 @@ class FIRVis{
     }
     
     drawVis(){
-      this.canvas.clearCanvas();
-      this.canvas.drawAxes();
+      this.canvas.clearData();
       
       if(this.filterApplied == true){
         this.canvas.drawLines(this.x, this.output);
       } else {
         this.canvas.drawLines(this.x, this.input);
       }
-      
-      this.canvas.addXLabel("Time");
-      this.canvas.addYLabel("Amplitude");
     }
     
     doFiltering(){
-    
       let a0 = parseFloat(this.a0.value);
       let a1 = parseFloat(this.a1.value);
       
@@ -282,18 +301,26 @@ class FIRVis{
       }
       
       normalize(this.output);
-      
     }
 }
 
-class IIRVis{
-    
+class IIRVis{    
     constructor(){
         this.res = 200;
 
-        document.getElementById("iirVis").setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
+        document.getElementById("iirVis").
+            setAttribute("width", Math.min(window.innerWidth * 0.8, 600));
         
-        this.canvas = new SVGVisualization(document.getElementById("iirVis"), [0, 10], [-1.5, 1.5], [80, 90, 10, 30]);
+        this.canvas = new Plot(
+            document.getElementById("iirVis"),
+            null,
+            {
+                xlim : [0, 10],
+                ylim : [-1.5, 1.5],
+                mar : [80, 90, 10, 30]
+            }
+        );
+
         this.a0     = document.getElementById("iirVis_a0");
         this.a1     = document.getElementById("iirVis_a1");
         this.b1     = document.getElementById("iirVis_b1");
@@ -310,7 +337,6 @@ class IIRVis{
         this.b1.addEventListener("input", e => this.updateVis());
         
         this.applyButton.addEventListener("click", e => this.switchFilter());
-
 
         /* High frequency noise*/
         
@@ -333,7 +359,8 @@ class IIRVis{
         }
         
         for(let i = 0; i < this.res; i++){
-            this.input[i] = Math.sin(this.x[i] * f1) + 0.4 * Math.sin(this.x[i] * this.hfFreqs[i]);   
+            this.input[i] = Math.sin(this.x[i] * f1) + 
+                0.4 * Math.sin(this.x[i] * this.hfFreqs[i]);   
         }
         
         normalize(this.input);
@@ -341,7 +368,6 @@ class IIRVis{
     }
     
     switchFilter(){
-  
         if(this.filterApplied == true){
           this.filterApplied = 0;
           this.applyButton.innerText = "Apply Filter";
@@ -359,21 +385,16 @@ class IIRVis{
     }
     
     drawVis(){
-      this.canvas.clearCanvas();
-      this.canvas.drawAxes();
+      this.canvas.clearData();
       
       if(this.filterApplied == true){
         this.canvas.drawLines(this.x, this.output);
       } else {
         this.canvas.drawLines(this.x, this.input);
       }
-      
-      this.canvas.addXLabel("Time");
-      this.canvas.addYLabel("Amplitude");
     }
     
     doFiltering(){
-    
       let a0 = parseFloat(this.a0.value);
       let a1 = parseFloat(this.a1.value);
       let b1 = parseFloat(this.b1.value);
@@ -385,7 +406,8 @@ class IIRVis{
       this.output[0] = this.input[0];
       
       for(let i = 1; i < this.x.length; i++){
-        this.output[i] = this.input[i] * a0 + this.input[i-1] * a1 - this.output[i -1] * b1; 
+        this.output[i] = this.input[i] * a0 + 
+            this.input[i-1] * a1 - this.output[i -1] * b1; 
       }
       
       normalize(this.output);
@@ -403,6 +425,3 @@ function initilizeVisualizations(){
 initilizeVisualizations();
 
 window.onresize = initilizeVisualizations;
-
-
-
