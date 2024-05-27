@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="../../css/blather.css"></link>
+        <style>
+            #aaltoVisualisaatio, #bernoulliSVG{
+                width: min(600px, 70%);
+                aspect-ratio: 1.75;
+            }
+
+            #onnenpyoraSVG{
+                width: min(600px, 70%);
+                aspect-ratio: 1.75;
+            }
+
+            #bernoulliUskottavuusText, #aaltoUskottavuusText{
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <header><h1>Lyhyt johdatus uskottavuusfunktioihin R-ohjelmointikielellä</h1></header>
+        <main>
+            <h2>Johdanto</h2>
+
+            <p>Lähtökohtana on <em>Bayesin</em> kaava, joka voidaan kirjoittaa muodossa</p>
+
+            <p class="equation">P(H | D) &propto; P(D | H) P(H)</div>
+
+            <p>jossa &propto; tarkoittaa "on suhteessa", H tarkoittaa hypoteesia ja D dataa (havaintoja). Kaava kuvaa <em>posterioritodennäköisyyden</em> (yhtäläisyysmerkin vasemmanpuoleinen termi) laskemisen prioritodennäkösiyyden, P(H), ja termin P(D | H) tulona. Keskitymme tässä termiin P(D | H), jota voidaan kutsua <em>uskottavuusfunktioksi</em>. Tämän tekstin tarkoituksena on purkaa mystisyyttä tuon termin ympäriltä.</p>
+
+            <p>Lähestymistapa on käytännöllinen: emme analysoi uskottavuusfunktioita matemaattisesti, vaan approksimoimme niitä ruudukossa. Ennen kuin jatkat pidemmälle, varmistathan, että olet tutustunut 1- ja 2-ulotteisten funktioiden ruudukkoapproksimointiin R-ohjelmointikielellä. </p>
+
+            <p>Tarkoituksena on saada tarvittava ymmärrys uskottavuusfunktioista, niin, että pystyt määrittelemään tavallisimpien tilastollisten mallien uskottavuusufunktiot. Tämä toimii pohjatietona täydelle bayesiläiselle analyysille, jossa asetat tilastollisille malleille järkevät priorijakaumat ja pystyt approksimoinaan posteriorijakauman joko ruudukolla tai käytäen esimerkiksi MCMC-menetelmiä -- siis että pääsisit tekemään käytännöllisiä bayesiläisiä analyyseja.</p>
+
+
+            <h2>Ehdollinen todennäköisyys</h2>
+
+            <p>Termi P(D | H) on <em>ehdollinen todennäköisyys</em> -- pystyviivat todennäköisyysmerkintöjen sisällä tarkoittavan siis ehtoja. Voisimme lukea tuon termin suomeksi näin: <em>Todennäköisyys havainnolle D sillä EHDOLLA että hypoteesi H on tosi </em>. Mitä tämä tarkoittaa käytännössä?</p>
+
+            <p>Esimerkki on tylsä, tiedän, mutta kuvitellaanpa kaksi paulatonta onnenpyörää. Toiseen on maalattu voittosektori, joka peittää siitä neljäsosan; toiseen on maalattu voittosektori, joka peittää siitä kolmasosan (viivoitetut alueet):</p>
+
+            <figure>
+                <svg id="onnenpyoraSVG" ></svg>
+                <!-- Kuvaaja generoidaan JS:llä -->
+            </figure>
+
+            <p>Voimme päätellä geometrisellä intuitolla, että voiton todennäköisyys pyörälle A on 1/4 ja pyörälle B 1/3.</p>
+
+            <p>No, mitä iloa tästä on käytännössä; miten tämä liittyy bayesin kaavaan -- näihin kysymyksiin lähdemme seuraavassa pureutumaan.</p>
+
+            <h2>Diskreetti hypoteesiavaruus</h2>
+
+            <p>Tomimme noiden kahden onnenpyörän kontekstissa. Sanotaanpa, että olemme havainneet voittavan pyöräytyksen. Mikä on tämän todennäköisyys noille kahdelle pyörälle ehdollistettuna? Tämän on suoraan voiton todennäköisyys:</p>
+
+            <p class="equation">P(Voitto | Pyörä A) = 1/4</p>
+            <p class="equation">P(Voitto | Pyörä B) = 1/3</p>
+
+            <p>Entäpä jos havaitsemme häviävän pyöräytyksen? Silloin todennäköisyydet löytyvät näin:</p>
+
+            <p class="equation">P(Häviö | Pyörä A) = 1 &minus; 1/4 = 3/4</p>
+            <p class="equation">P(Häviö | Pyörä B) = 1 &minus; 1/3 = 2/3</p>
+
+            <p>Tämä lienee melko selvää. Käytännössä kuitenkin olemme yleensä kiinnostuneita havaintosarjoista. Sanotaanpa, että olisimme havaineet sarjan {Voitto, Häviö, Häviö} -- mikä on tämän todennäköisyys ehdollistettuna noille pyörille?</p>
+
+            <p>(Huomaa, että laskemme nyt itseasiassa todennäköisyyttä sarjalle <em>juuri tässä järjestyksessä</em>. Oikeastihan emme ole kiinnostuneita järjestyksestä, ja käytännössä poistaisimme sen vaikutuksen lisäämällä kaavaamme niin kutsutun binomikertoimen, mutta tällä ei ole esimerkissämme käytännössä merkitystä.)</p>
+
+            <table>
+                <tr>
+                    <th>Pyöräytys</th><th>Tulos</th>
+                </tr>
+                <tr>
+                    <td>1</td><td>Voitto</td>
+                </tr>
+                <tr>
+                    <td>2</td><td>Voitto</td>
+                </tr>
+                <tr>
+                    <td>3</td><td>Häviö</td>
+                </tr>
+                <tr>
+                    <td>4</td><td>Voitto</td>
+                </tr>
+            </table>
+
+            <p>Otetaanpa tässä kohdin esille hieman tilastotieteellistä jargonia. Voimme kirjoittaa havaintojoukkomme joukkona y = {Voitto, Voitto, Häviö, Voitto}. Alaindeksillä voimme viitata joukon alkioihin, esimerkiksi y<sub>2</sub> = Voitto. Jos katsomme vaikkapa Stan-ohjelmointikielen dokumentaatiota, datalle yleisesti käytetään merkintänä y:tä.  </p>
+
+            <p>Kun laskemme havaintoaineiston todennäköisyyttä, löydämme todennäköisyyden tulona (yleisesti ottaen tilanne on hieman monimutkaisempi, mutta meidän ei vielä tarvitse välittää poikkeuksista tähän sääntöön):</p>
+
+            <p class="equation">&prod; P(y<sub>i</sub> | &theta;)</p>
+
+            <p>Esimerkiksi siis ehdollistettuna pyörälle A:</p>
+
+            <p class="equation">P(Voitto | Pyörä A)P(Voitto | Pyörä A)P(Häviö | Pyörä A)P(Voitto | Pyörä A)</p>
+
+            <p>Kun asettelemme tunnetut arvot sanallisten ilmaisujen tilalle, päädymme kertolaskuun</p>
+
+            <p class="equation">1/4 &times; 1/4 &times; 3/4 &times; 1/4 = 3/256</p>
+
+            <p>Lasketaapa sama vielä pyörälle B:</p>
+
+            <p class="equation">1/3 &times; 1/3 &times; 2/3 &times; 1/3 = 2/81</p>
+
+            <p>Koska 2/81 &gt; 3/256, voimme päätellä, että havaintoaineisto sopii paremmin yhteen pyörän B kanssa. Tämä on intuitiivisesti selvää, kun huomaamme, että havaintoaineistossa on suhteellisesti enemmän voittoja, ja pyörä B tuottaa enemmän niitä.</p>
+
+            <p>Emme kuitenkaan välttämättä saa tehdä tästä sitä päätelmää, että pyörä B on hypoteesina todennäköisempi -- palaan tähän asiaan lopussa, kun käsittelen lyhyesti priori-todennäköisyyksien määrittelyä.</p>
+            
+            <h2>Jatkuva hypoteesiavaruus</h2>
+
+            <p>Jatkamme vielä onnenpyörän parissa, pahoitteluni, mutta tuntuu siltä, että asiat on helpompi selvittää tällaisen abstraktin joskin tylsän esimerkin puitteissa.</p>
+
+            <p>Sanotaan, että voittosektori voisi olla <em>minkä kokoinen tahansa</em>, p &in; &real;. Emme siis tiedä mitään siitä, miten avustajamme on tuon sektorin pyörään maalannut. Nyt meillä ei ole vain kahta hypoteesia, vaan <em>kaikki</em> arvot ykkösen ja nollan väliltä ovat mahdollisia. </p>
+
+            <table>
+                <tr>
+                    <th>Pyöräytys</th><th>Tulos</th><th>Koodi</th>
+                </tr>
+                <tr>
+                    <td>1</td><td>Voitto</td><td>1</td>
+                </tr>
+                <tr>
+                    <td>2</td><td>Ei voittoa</td><td>0</td>
+                </tr>
+                <tr>
+                    <td>3</td><td>Voitto</td><td>1</td>
+                </tr>
+                <tr>
+                    <td>4</td><td>Voitto</td><td>1</td>
+                </tr>
+                <tr>
+                    <td>5</td><td>Ei voittoa</td><td>0</td>
+                </tr>
+            </table>
+
+            <figure>
+                <svg id="bernoulliSVG"></svg><br>
+                <label>p</label>
+                <input type="range", min="0" max="1" step="0.01" value = "0.5" id="bernoulliSlider">
+                <p id="bernoulliUskottavuusText"></p>
+            </figure>
+
+            <p>Kun parametrin <em>p</em> arvo on suuri, silloin ykkösellä koodattujen tapahtumien havaitsemisen todennäköisyys on suuri, mutta nollalla koodattujan tapahtumien havaitsemisen todennäköisyys pieni. Koko aineiston havaitsemisen todennäköisyys on ikään kuin kompromissi näistä, ja se lasketaan tosiaan yksittäisten havaintojen todennäköisyyksien tulona.</p>
+
+            <p>Tässä tapauksessa meidän olisi mahdollista analysoida tilannetta matemaattisesti, mutta me käytämme niin kutsuttua ruudukkoapproksimointia. Voisi siis ajatella, että periaatteessa muunnamme jatkuvan funktion diskreetiksi funktioksi!</p>
+
+
+            <p>Aivan ensiksi meidän täytyy kirjoittaa data R:ään vektoriksi:</p>
+
+            <pre>
+y = c(1, 0, 1, 1, 0)                
+            </pre>
+
+            <p>Tämän jälkeen täytyy määritellä uskottavuusfunktio R:ssä. Tälle funktiolle syötetään data (y) ja theta ja se palauttaa tuon thetan uskottavuuden. Käytännössä tämän voi ajatella, että funktio palauttaa yllä olevan kuvaajan pallojen korkeuksien tulen, kun theta on jossain tietyssä arvossa.</p>  
+            
+            <p>Funktion voi toteuttaa monella eri tavalla. Alla oleva impementaatio <em>ei</em> ole erityisen tehokas, sillä olen pyrkinyt kirjoittamaan sen ymmärrettävästi. Voit itse kokeilla, osaisitko muokata funktiosta paremman, </p>
+
+            <pre>
+likelihood = function(y, theta){
+  likelihoods = rep(NaN, length(y))
+
+  for(i in 1:length(y)){
+    if(y[i] == 0){
+        likelihoods[i] = 1 - theta
+    } else if(y[i] == 1){
+        likelihoods[i] = theta
+    }
+  }
+
+  return(prod(likelihoods))
+}
+            </pre>
+
+            <p>Voimma alkaa sitten muodostaa varsinaista ruudukkoapproksimointia. Sen totetuttaminen vaatii muutaman asian päättämistä etukäteen: 1) mikä on ruudukon pienin ja suurin arvo sekäå 2) miten tiheän ruudukon luomme. Koska parametri, jota estimoimme, on todennäköisyys, emmekä olleet etukäteen rajoittaneet sitä mitenkään, pienimmäksi ja suurimmaksi arvoksi on luontevaa asettaa nolla ja ykkönen. Ruudukon tiheys on makuasia: tiheämpi ruudukko antaa tarkemman approksimaation, mutta sen laskeminen vielä enemmän aikaa ja tallentaminen enemmän muistia.</p>
+
+            <p>Pidemmittä puheitta, valitkaamme siis ääriarvoksi nolla ja ykkönen ja välitykseksi esimeriksi 0.01. Näin:</p>
+
+            <pre>
+gridMin  = 0
+gridMax  = 1
+gridStep = 0.01
+            </pre>
+
+            <p>Theta:n arvojen määrittely käy näppärästi R:n seq()-funktiolla:</p>
+           
+            <pre>
+gridTheta = seq(from = gridMin, to = gridMax, by = gridStep)                
+            </pre>
+
+            <p>Varsinaisen approksimaation voimme laskea silmukassa.</p>
+
+            <pre>
+likelihoods = rep(NaN, length(gridTheta))          
+
+for(i in 1:length(gridTheta)){
+    likelihoods[i] = likelihood(y, gridTheta[i])
+}      
+            </pre>
+
+            <p>Voimme analysoida funktiota silmämääräisesti piirtämällä sen:</p>
+
+            <pre>
+plot(gridTheta, likelihoods, type = "l")                
+            </pre>
+
+            <figure>
+                <img src="likelihoodEsimerkki.png">
+            </figure>
+
+            <p>Mitä tämä funktio nyt sitten kertoo meille? Se kertoo eri thetojen suhteellisen sopivuuden havaintoaineistoon. Funktion maksimiarvo näyttäisi olevan 0.6:n tienoilla. Aineistossammehan oli kolme voittoa ja kaksi häviötä, eli aineiston keskiar on 3/5, joka vastaa 0.6:tta. Ei siis ole yllättävää, että tuo thetan arvo näyttäisi sopivan hyvin yhteen havaintojen kanssa. Funktio on kuitenkin varsin laakea: aineistoa ei ole paljon, joten se ei rajoita sopivuutta täysin, vaan myös arvot kaukana keskiarvosta näyttäisivät sopivan aineistoon suhteellisen hyvin.</p>
+
+            <h3>Binomijakaumasta</h3>
+
+            <p>Voimme tehdä käyttämämme mallin vielä eksplisiittisemmäksi. Mehän laskemme funktion sisällä <em>Bernoulli-jakauman todennäköisyysmassafunktion arvoja</em>. </p>
+
+            <p class="equation">y &sim; Bernoulli(&theta;)</p>
+
+            <p>Sanomme tässä siis, että havainnot (y) ovat jakautuneet Bernoulli-jakauman mukaan ja että tuolla bernoulli-jakaumalla on yksi tuntematon parametri.</p>
+
+            <p>Voisimme määritellä Bernoullijakauman R:ssä esimerkiksi näin:</p>
+
+            <pre>
+dbernoulli = function(y, theta){
+    if(y == 0) {
+        return(1 - theta)
+    } else if(y == 1){
+        return(theta)
+    }
+}
+            </pre>
+
+            <p>Nyt voisimme kirjoittaa likelihood-funktion sisällä olevan silmukan uudestaan, käyttäen yllä olevaa funktiota:</p>
+
+            <pre>
+likelihood = function(y, theta){
+    likelihoods = rep(NaN, length(y))
+    
+    for(i in 1:length(y)){
+        likelihoods[i] = dbernouli(y[i], theta)
+    }
+    
+    return(prod(likelihoods))
+    }
+            </pre>
+
+            <p>Meidän ei tosin tarvitse tehdä tätä itse, sillä R:stä löytyy valmiina kaikenlaisia todennäköisyysmassa ja -tiheysfunktioita, joita voimme käyttää malliemme määrittelyssä. Bernoulli-jakaumaa ei R:stä suoraan löydy, mutta R:stä löytyy kyllä Binomijakauma, jonka <em>erikoistapaus</em> Bernoulli-jakauma on.</p>
+
+            <p class="equation">Bernoulli(&theta;) = Binomi(1, &theta;)</p>
+
+            <pre>
+likelihood = function(y, theta){
+    likelihoods = rep(NaN, length(y))
+    
+    for(i in 1:length(y)){
+        likelihoods[i] = dbinom(y[i], 1, theta)
+    }
+    
+    return(prod(likelihoods))
+}</pre>
+
+            <p>Koska R:n dbinom()-funktio on vektoroitu, voimme itse asiassa tiivistää myös silmukan pois:</p>
+                                
+<pre>
+likelihood = function(y, theta){
+    likelihoods = dbinom(y, 1, theta)
+
+    return(prod(likelihoods))
+}</pre>
+
+            <p>Nättiä ja näppärää!</p>
+
+            <h2>Jatkuva kaksiulotteinen hypoteesiavaruus</h2>
+
+            <p>Yleensä tilastollisissa malleissa on enemmän kuin yksi parametri, esimerkiksi kaikille tutussa lineaarisessa regressiossa on kolme parametria. Tutustumme useampiulotteisten uskottavuusfunktioiden ruudukkoapproksimointiin sovittamalla normaalijakauma mallin, jossa on kaksi parametria: tuon jakauman keskiarvo ja keskihajonta.</p>
+
+            <figure>
+                <svg id="aaltoVisualisaatio"></svg><br>
+                <label>Keskiarvo:</label>
+                <input type="range" min="-10" max ="10" value="0" step="0.1" id="aaltoMuSlider"><br>
+                <label>Keskihajonta:</label>
+                <input type="range" min="0.75"" max ="3.0" value="1" step="0.1" id="aaltoSigmaSlider">
+                <p id="aaltoUskottavuusText"></p>
+            </figure>
+
+            <p>Nyt siis jokainen &theta; onkin kahden jäsenen kokoinen <em>vektori</em>, johon siis kuuluu jokin keskiarvo (&mu;) ja keskihajonta (&sigma;): &theta; = {&mu; &sigma;}, esimerkiksi &theta; = {-1.0, 1.5}. Haasteeksi tulee siis se, että meidän täytyy laskea uskottavuus näiden kahden parametrin kaikille kombinaatioille.</p>
+
+            <h3>Mallin määrittely matemaattisesti ja R-ohjelmointikielellä</h3>
+
+
+
+            <h2>Priori-todennäköisyydet</h2>
+
+            <p>Aina mallin yhteensopivuus aineiston kanssa ei tarkoita, että se olisi kaikkein todennäköisin malli. Tämän vuoksi aivan alussa otinkin esille Bayesin kaavan, jossa uskottavuusfunktion antamat "yhteensopivuudet" painotetaan niiden prioritodennäköisyydellä. Käyn läpi pari esimerkkiä kursorisesti.</p>
+
+            <h3>Autojen jarrutusmatkat</h3>
+            
+            <p>R:n <em>cars</em>-datasettiin on mitattu autojen jarrutusmatkoja eri nopeuksilla. Sanotaanpa, että haluaisimme rakentaa tällaisen lineaarisen approksimaation nopeuden ja jarrutusmatkan yhteydestä, vaikkapa jotain peliä varten:</p>
+
+            <figure>
+                <img src="Figs/LineaarinenApproks.png">
+                <caption></caption>
+            </figure>
+
+            <p>Seuraava kuvaaja näyttää tuon datasetin neljään ensimmäiseen havaintoon -- priorin vaikutus on yleensä voimakkain ja selvin kun dataa on vähän -- sopivat kulmakertoimet:</p>
+
+            <figure>
+                <img src="Figs/VauhdinVaikutus.png">
+                <caption></caption>
+            </figure>
+
+            <p>Positiiviset arvot tarkotitavat, että nopeuden lisääntyessä myös jarrutusmatka lisääntyy; negatiiviset arvot tarkoittavat päinvastaista. Jos siis tuijotamme ainoastaan aineiston kanssa yhteensopivia arvoja, voisimme tulla päätelmään, että mitä hitaammin auto ajaa, sitä pidempi jarrutusmatka on! Tiedämme tämän kuitenkin olevan järjenvastaista, ja ehkäpä tahtoisimme painottaa yhteensopivuuksia priorilla, P(H), joka olisi konstruoitu siten, että emme hyväksyisi negatiivisia arvoja. </p>
+
+            <h2>Lopuksi</h2>
+
+            <p>Uskottavuusfunktiot ovat vaikea asia, joiden ymmärtämiseen liittyy monta palasta: todennäköisyydet, todennäköisyysjakaumat, approksimointimenetelmät, ohjelmointi -- älä siis ole huolissasi jos et aivan vielä tunne itseäsi varmaksi niiden suhteen.</p>
+
+        </main>
+
+        <footer>&copy; Joni Pääkkö (2024)</footer>
+    </body>
+    <script src="uskottavuusJS2.js"></script>
+    <script src="../../js/statisticsLibrary/statisticalFunctions.js"></script>
+    <script src="../../js/graphicsLibrary/plotter_v1.js"></script>
+    <script src="normUsk.js"></script>
+</html>

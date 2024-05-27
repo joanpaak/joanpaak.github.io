@@ -1,0 +1,30 @@
+Lyhyt johdatus uskottavuusfunktioon
+
+
+1. Johdanto
+ - Yhteys Bayesiin
+ - Oletamme ruudukkoapproksimoinnin olevan tuttua -> omaan dokumenttiin se Heidille tehty tutoriaali!
+
+2. Ehdollinen todennäköisyys
+ - Onnenpyöräesimerkki
+
+3. Uskottavuus
+  3.1 Diskreetti theta
+   - Jatkoa edelliseen onnenpyöräesimerkkiin
+   - Yksi pyörätys vs. monta pyöräytystä
+     -> Merkintätavat!
+  3.2. Jatkuva theta
+   - Jos jatkuvat jakaumat eivät tuttuja -> tutoriaali jatkuvista jakaumista!
+   - Onnenpyöräesimerkin yleistys
+  
+  VÄLISOITTO: Koontia merkintätavoista!
+  
+  3.3 Kaksiulotteinen theta
+   - Normaalijakaumaesimerkki
+
+4. Priori-jakauma
+  - Käänteisen todennäköisyyden ongelma
+    - cars-datasetin lineaarinen approksimointi: hölmöjä kulmakertoimen arvoja!
+    
+
+
