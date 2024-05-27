@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="../../css/blather.css">
+        <style>
+            #densityDemo, #uniformDemo{
+                width: min(60%, 600px);
+                aspect-ratio: 1.75;
+            }
+
+            #startDensityDemo{
+                border: 1px solid black;
+                padding: 0.75rem 1.25rem;
+                font-variant: small-caps;
+                font-family: serif;
+                font-size: 1.25rem;
+            }
+
+            #startDensityDemo:hover{
+                cursor: pointer;
+                background-color: aliceblue;
+            }
+
+            .centering{
+                text-align: center;
+            }
+
+            /*
+            #densityDemo{
+                margin-left: auto;
+                margin-right: auto;
+            }*/
+
+        </style>
+    </head>
+    <body>
+        <header><h1>Probability density functions in a nutshell</h1></header>
+        <main>
+
+            <h2>Introduction</h2>
+
+            <p>You don't need to wander too deep into the forests of maximum-likelihood estimation or bayesian statistics before you encounter these beasts called Probability Density Functions (PDF's). </p>
+
+            <p>This is a short non-mathematical introduction, the aim of which is to give you some sort of intuition about what PDF's are.  Make sure you are familiar with probability mass functions (probability functions for discrete variables) before reading this text.</p>
+
+            <h2>What is this "density" stuff?</h2>
+
+            <p>Consider the following scene in which a bag of candy has been emptied on the table:</p>
+
+            <figure>
+                <img src="candy_1_png">
+            </figure>
+
+            <p>By just eyeballing the <em>distribution</em> of candy</p>
+
+            <p>But what this has got to do with, say, the following function that describes the probability density function of the normal distribution:</p>
+
+            <figure>
+                <img src="normie.png">
+            </figure>
+            
+            <h2>It's raining samples!</h2>
+
+            <p>Let's make it rain. Take a peek at the figure below. By clicking the "Generate 1000 samples" 1000 samples generated from the standard normal distribution will rain down on to the figure, and after each droplet the density curve (solid line) is updated. So even though the points melt away, be assured that they still contribute to the overall density estimate!</p>
+
+            <!-- Should the samples actually RAIN down on to the figure?! That could be beautiful!!!!  --->
+            
+            <p>As the rain comes falling down, the solid line depicts the density of the rain. You can see that most of the raindrops concentrate near zero. The rain is generated from a standard normal distribution so this is to be expected. If the rain would go on forever, the estimated density of the rain would get closer and closer to the theoretically expected density of it.</p>
+
+            <p>There's a dashed line drawn on to the figure. This is the PDF of the standard normal distribution: the distribution from which the samples are generated from!.</p>
+
+            <p>Density is estimated similarly to the candy example, the difference is that here the different "bins" overlap in order to get a more accurate picture..</p>
+
+            
+            <div class="centering">
+                <button id="startDensityDemo">Generate 1000 samples</button><br>
+                <svg id="densityDemo"></svg>
+            </div>
+
+            <p>It's easy to see that there are more samples near the mean. As more samples are generated, the estimated density curve approaches the theoretical distribution.</p>
+
+            <h2>Density is kind of a probability</h2>
+
+            <p>In the case of proability mass functions it's easy to understand e.g. that the probability of heads or tails is 0.5. But what is the probability of, say, observing the number 1.65 from a (standard) normal distribution? We can observe <em>any</em> (real) number, and there are infinitaly many real numbers, so we can't really proceed by classical logic. </p>
+
+            <p>As we've seen in the simulation, the PDF tells as how many events are near that point; how densely events are packed around that point. So when we are for example writing a model which requires us to define the probability of some measurement given some normal distribution, we can use the value of the PDF at that point. This is a point to which I will return in more detail in another text.</p>
+            
+
+            <h2>Uniform distribution</h2>
+
+            <p>Let's take a peek at the (continuous) uniform distribution.</p>
+
+            <p>When we are talking about probability <em>mass</em> functions in the context of discrete distributions, it is intuitively clear that the probability for any of the events can not exceed one. What might not be intuitively clear is that probability <em>density</em> for a continous distribution <em>can</em> exceed one!</p>
+
+            <p></p>
+
+            <div class="centering">
+                <label>Width:</label>
+                <input type="range" min="0.5" max="2" step="0.01" id="uniformDemoSlider">
+                <span id="uniformDemoWidthText"></span>
+                <br>
+                <svg id="uniformDemo"></svg>
+            </div>
+
+            <p>Since the total are must always equal one, it's easy to see that when width is 0.5 this means that the density must be 2.0. I'm sure the maths is pretty clear, but just to make sure, here it is, laid out:</p>
+
+            <p class="equation">0.5 x = 1.0 <br> x = 1.0 / 0.5 <br> x = 2.0</p>
+
+
+        </main>
+
+        <footer>&copy; Joni Pääkkö</footer>
+    </body>
+    <script src="../../js/graphicsLibrary/plotter_v1.js"></script>
+    <script src="tiheys_alt.js"></script>
+</html>
