@@ -420,6 +420,7 @@ class Plot{
             tmarkText.setAttribute("y", this.transformYCoordinate(tickPlaces[i]));
             tmarkText.setAttribute("text-anchor", "middle");
             tmarkText.setAttribute("dominant-baseline", "middle");
+            tmarkText.setAttribute("font-size", this.opt.tickMarkFontSize);
             tmarkText.setAttribute("transform", 
                `rotate(270 ${this.opt.mar[1] / 1.35} ${this.transformYCoordinate(tickPlaces[i])})`);
             tmarkText.classList.add("tickMarkText");   
