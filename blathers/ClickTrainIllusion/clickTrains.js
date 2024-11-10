@@ -76,14 +76,11 @@ class Player{
                 clickTrain[i] = 1.0 * amplitude;
                 counter = 2;
             } else if(counter === 2){
-                if(attrs.slope > 0){
-                /* I wanted the amplitude change to be logarithmic so that's why this
-                   is done is such a convoluted way */
-                    let curAmplitude = 
-                      (Math.log((1 + i/clickTrainLengthSmpls)) 
-                      / Math.log(2));
-                    clickTrain[i] = 1 * curAmplitude * amplitude;
-                }
+            /* I wanted the amplitude change to be logarithmic so that's why this
+               is done is such a convoluted way */
+                let curAmplitude = Math.log(1 + i/clickTrainLengthSmpls) 
+                  / Math.log(2);
+                clickTrain[i] = 1 * curAmplitude * amplitude
                 counter = 1;
             }
         }
