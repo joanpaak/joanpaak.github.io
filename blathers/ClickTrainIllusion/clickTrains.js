@@ -24,7 +24,7 @@ class Player{
         }
 
         if(isNaN(tempo) || tempo < 1 || tempo > 10000){
-            errMsg += `Tempo was ${tempo} but must be between 1 - 10000 \n`;
+            errMsg += `Speed was ${tempo} but must be between 1 - 10000 \n`;
         }
 
         if(errMsg.length > 0){
