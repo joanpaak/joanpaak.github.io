@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Clicky</title>
+        <style>
+            main{
+                margin: 0 10%;
+            }
+
+            h1{
+                font-weight: 100;
+                font-variant: small-caps;
+                text-align: center;
+                font-size: 3rem;
+            }
+
+            h2{
+                font-weight: 100;
+                font-variant: small-caps;
+                font-size: 2rem;
+            }
+
+            p{
+                text-align: justify;
+                font-size: 1.2rem;
+            }
+
+            footer{
+                margin: 5% 0;
+                text-align: center;
+            }
+
+            img{
+                width: 80%;
+                max-width: 50rem;;
+            }
+
+            .parName{
+                text-align: right;
+            }
+
+            #player{
+                border: 1px solid black;
+                padding: 1rem 0.1rem;
+                text-align: center;
+            }
+
+            table{
+                margin-top: 0.25rem;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            button{
+                font-size: 3rem;
+                width: 4rem;
+                margin: 0 0.25rem;
+            }
+
+            input{
+                width: 5rem;
+            }
+
+            #startBtn{
+                color: green;
+            }
+
+        </style>
+    </head>
+    <body>
+        <header><h1>Intertwined Click Trains</h1></header>
+        <main>
+
+            <p>A click train is a regular sequence of clicks. Kind of like if you tap the table with your finger in a regular rhythm.</p>
+
+            <p>Consider two intertwined click trains in which the amplitude for the second train is gradually increased:</p>
+
+            <figure>
+                <img src="picOfClickTrain.png">
+            </figure>
+
+            <p>How do you think that will sound like? Perhaps a bit suprisingly this sounds like a single click train that's accelerating! It's really hard to hear the 2nd click  train entering.</p>
+
+            <p>Try it yourself! Start or stop the sound from the buttons below:</p>
+
+            <div id="player">
+                <div>
+                    <button id="startBtn">&#9654;</button>
+                    <button id="stopBtn">&#9632;</button>
+                </div>
+
+                <hr>
+    
+                <table>
+                    <tr>
+                        <td class="parName">Length (seconds)</td>
+                        <td><input type="text" id="lengthInput" value="5"></td>
+                    </tr>
+                    <tr>
+                        <td class="parName">Speed (Hz, or clicks per second)</td>
+                        <td><input type="text" id="tempoInput" value="20"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <h2>Why does this happen?</h2>
+
+            <p>If you did not try it yet, try setting speed to something low e.g. 5. Does the illusion persist? It does not seem to: this sounds more like what one would expect, the 2nd click train can be heard entering and the speed seems to double as the 2nd train gets louder.</p>
+
+            <p>What happens if you set the speed to 5000 Hz? Now the clicks blend together and what we hear is just a high tone with a nice electronic timbre. As the 2nd click train is introduced the tone shifts into an octave higher tone, but do take note that we don't hear it sweeping through the different frequencies; it just kind of seems to get brighter.  </p>
+
+            <p>But what about the original example? The often sited heuristic is that humans hear frequencies above 20Hz, but it is not quite that simple. When we use click trains, there's this actually fairly large range during which we hear rhythms (the clicks) and pitches at the same time.</p>
+
+            <p>So when tempo is set to 20Hz, we are entering the lower end of the range where clicks "blend" into pitches. It sounds confusing since the clicks are so distinct: it does sound more like a fast rhythm, but our brain has already begun to integrate them together; begun to experience the click train more like a pitch than rhythm. So when the second click train is introduced, it affects this percept, in which the clicks are blending together -- even though we still hear them as discrete events!</p>
+            
+            <p>But why does it sound like the click train is accelerating? For the higher frequency click trains this does not happen: indeed, the 5000 Hz click train seems to just get brighter; on the other hand in the slower ones we can easily distinguish between the click trains. To be honest, I do not know why the "speeding up" happens at that range! </p>
+
+
+        </main>
+        <footer>&copy; Joni Pääkkö</footer>
+    </body>
+    <script src="clickTrains.js"></script>
+</html>
