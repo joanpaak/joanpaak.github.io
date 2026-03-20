@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fi">
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="../../css/blather.css">
+	</head>
+	<body>
+		<header>
+			<h1>Kun tilastollinen testaaminen on turhaa:<br>esimerkki kausittaisen masennuksen tutkimuksesta</h1>
+		</header>
+		<main>
+			<p>Loistavan esimerkin tilastollisen testaamisen ja p-arvojen tarpeettomasta käytöstä tarjoaa tämä [1] kausittaista masennusta ruotiva tutkimus[2].</p>
+			
+			<p>Tuota m:n kausiluonteisuutta tutkittiin värväämällä 36 ihmistä, ideana oli ilmeisesti, että kunakin vuodenaikana olisi yhdeksän osanottajaa. Heiltä sitten mittailtiin sitä sun tätä, mutta se ei nyt ole aiheenani. Ikävä kyllä kahdeksan osanottajan data oli mennyt teknisten ongelmien vuoksi pilaantuneeksi, joten tutkijoille jäi 28 osanottajaa.</p>
+			
+			<p>Tutkijoilla oli siis ollut ideana - näin uskon - että osanottajia olisi vuoden ympäri tasaisesti. Nyt osan data oli rikki ja lopullisesti osanottajia olikin</p>
+			
+			<ul>
+				<li>6 talvella</li>
+				<li>4 keväällä</li>
+				<li>9 kesällä</li>
+				<li>9 syksyllä</li>
+			</ul>
+			
+			<p>No mitäpä tutkijat tekevät kun harmittaa niin pirusti ettei olekaan enää tasaisesti osanottajia ympäri vuoden? He käyttivät khii toiseen -testiä, ja koska sen p-arvo oli suurempi kuin 0.05, tulivat he siihen tulokseen, että osanottajia on jossain tilastollisessa mielessä kuitenkin tasaisesti.</p>
+			
+			<p>Tässä ei ole mitään järkeä. Miksei ei?</p>
+			
+			<p>No mikä se p-arvo on? Voimme ajatella p-arvoa indeksinä, joka kertoo, miten paljon jokin aineisto näyttää jonkin satunnaislukugeneraattorin tuottamalta. Se voi saada arvoja väliltä 0 - 1.</p>
+			
+			<p>Mutta mennäänpä konkretiaan - joka sitten sitoutuu suoraan tähän käsillä olevaan tapaukseen.</p>
+			
+			<p>Ajatellaanpa nelitahkoista noppaa: voimme saada siitä lukuja väliltä 1-4. (Tällaisia on, niitä käytetään lähinnä pöytäroolipeleissä). Heitämme noppaa esim. 100 kertaa ja otamme joka kerta muistiin minkä silmäluvun saimme. Voimme koota nämä sitten taulukoksi:</p>
+			
+			<ul>
+				<li>ykkösiä: 19</li>
+				<li>kakkosia: 25</li>
+				<li>kolmosia: 26</li>
+				<li>nelosia: 30</li>
+			</ul>
+			
+			<p>Seikka josta varmastikin reilun pelin hengessä olisimme kiinnostuneita on, että näyttääkö tuo silmälukujen jakauma siltä kuin se olisi tullut tasajakaumasta; tai siis että kuinka hyvin tuo tulos sopii yhteen tasajakauman kanssa.</p>
+			
+			<p>Jos tekisimme yllä olevalle taulukolle khii toiseen -testin, sen p-arvo olisi noin 0.47, jolloinka päätelmämme olisi, että nuo taulukoidut arvot muistuttavat aika paljon tasajakaumaa. Peli lienee siis reilu! </p>
+			
+			<p>(Käytännössä tilastollinen päättely on hieman monimutkaisempaa: tarvitsisimme nk. prioritodennäköisyyksiä ja Bayes-tilastotiedettä, mutta vedän tässä nyt mutkia suoriksi).</p>
+			
+			<p>Tässä tapauksessa tilanne on melko selvä. Meillä on satunnaislukugeneraattori &mdash; fyysinen noppa &mdash; ja tutkimme tilastollisella testillä kuinka paljon se muistuttaa erästä teoreettista satunnaislukugeneraattoria.</p>
+			
+			<p>Mutta entäpä kun puhumme osanottajien määrästä neuropsykologisessa tutkimuksessa?</p>
+			
+			<p>Tutkijat käsittelevät osanottajien määrää eri vuodenaikoina ikään kuin ne olisi valittu tuollaista nelitahkoista noppaa heittäen ja tutkivat tilastollisella testillään siis tuon "nopan" reiluutta.</p>
+			
+			<p>Eihän tämä käy mitenkään järkeen.</p>
+			
+			<p>Eri asia olisi, jos osanottajien määrä olisi jotenkin satunnainen; ehkäpä tutkimuksessa tutkittaisiin sitä, onko tutkimukseen ilmoittautumisessa kausittaista vaihtelua. Silloin kävisi järkeen mallintaa osanottajien määrän vaihtelua. Tässä tilanteessa, jossa osan data on vioittunut teknisistä syistä, kyseisenlainen tilastollinen testaaminen ei ole mitenkään mielekästä.</p>
+			
+			<p>Tilastollista testaamista ei voi käyttää siihen, että perustelisi kahden numeron olevan jotenkin metafyysisellä tasolla samoja! Jos ne ovat eri lukuja - ne ovat eri lukuja. Jos osanottajia on pudonnut pois epätasaisesti - se on voi voi. Mutta eipä kyseisenlainen epätasainen tippuminen edes ole ongelma, ainakaan jos käytetään Bayes-tilastotiedettä: silloinhan vain totetaisimme, että vuodenajoista, joina osanottajia on vähemmän, on myös vähemmän informaatiota ja tämä sitten ikään kuin automaattisesti tulisi otettua huomioon.</p>
+			
+			<h2>Lähteet</h2>
+			
+			<p class="bibEntry">[1] https://www.pnas.org/doi/10.1073/pnas.1518129113#sfig02</p>
+			<p class="bibEntry">[2] Andrew Gelmanin blogissa käsiteltiin ko. artikkelissa ollutta hassua kuvaajaa, kirjoitin hänen bloginsa kommentteihin tästä aiheesta nimimerkillä "The person who is not Gregory": https://statmodeling.stat.columbia.edu/2023/07/23/a-time-series-so-great-they-plotted-it-twice-and-heres-a-better-way-to-do-it/</p>
+		</main>
+		<footer>&copy; Joni Pääkkö</footer>
+	</body>
+</html>

@@ -16,35 +16,24 @@ class DerivVis{
         document.getElementById("derivVis").setAttribute("width", 
           Math.min(window.innerWidth * 0.8, 600));
         
-        this.canvas = new SVGVisualization(document.getElementById("derivVis"), 
-          [-1, this.maxVal_x], 
-          [this.minVal_y, this.maxVal_y], 
-          [70, 100, 70, 50]);  
+        this.canvas = new Plot(
+			document.getElementById("derivVis"), 
+			null,
+			{ 
+				xlim : [-1, this.maxVal_x],
+				ylim : [this.minVal_y, this.maxVal_y],
+				ylab : "Constrained",
+				xlab : "Unconstrained"
+			});  
 
+		this.canvas.hline(0, {"stroke-dasharray" : [4, 4], "stroke" : "black"});
+		this.canvas.vline(0, {"stroke-dasharray" : [4, 4], "stroke" : "black"})
         this.drawLogFunction();   
         this.drawDerivative();
     }
 
-    drawOrigo(){
-        this.canvas.drawLine([-1, this.maxVal_x], [0, 0]);
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke", "rgba(0, 0, 0, 0.5)");
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke-dasharray", [5, 3]);
-
-        this.canvas.drawLine([0, 0], [this.minVal_y, this.maxVal_y]);
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke", "rgba(0, 0, 0, 0.5)");
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke-dasharray", [5, 3]);
-    }
-
     drawLogFunction(){
-        this.canvas.clearCanvas();
+		if(this.logFunc) this.logFunc.remove();
         let NPoints = 100;
         let xcoords = new Array(NPoints);
         let ycoords = new Array(NPoints);
@@ -55,28 +44,13 @@ class DerivVis{
             xcoords[i] = this.minVal_x + i * stepSize;
             ycoords[i] = Math.exp(xcoords[i]);
         }
-
-        ///
-
-        this.drawOrigo();
-
-        this.canvas.drawAxes();
         
-        this.canvas.addYLabel("Constrained");
-        this.canvas.addXLabel("Unconstrained");
-        this.canvas.addXTickmarks(5);
-        this.canvas.addYTickmarks(5);
-
-        this.canvas.drawLines(xcoords, ycoords);
+        this.logFunc = this.canvas.drawLines(xcoords, ycoords);
     }
 
     drawDerivative(){
-        if(document.getElementById("derivative") != null) {
-            document.getElementById("derivative").remove();
-        }
-        if(document.getElementById("xline") != null) {
-            document.getElementById("xline").remove();
-        }
+		if(this.tangentLine) this.tangentLine.remove();
+		if(this.xline) this.xline.remove();
 
         let range = 1;
         let current_x = parseFloat(this.xslider.value);
@@ -98,32 +72,23 @@ class DerivVis{
             ycoords[i] = a + slope * xcoords[i];
         }       
 
-        this.canvas.drawLines(xcoords, ycoords);
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].id = "derivative";
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke", "red");
-
-        this.canvas.drawLine(
+        this.tangentLine = this.canvas.drawLines(
+			xcoords, 
+			ycoords,
+			{
+				"stroke" : "black"
+			});
+        this.xline = this.canvas.drawLine(
             [current_x, current_x], 
-            [this.minVal_y, Math.exp(current_x)]);
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].id = "xline";
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke", "red");
-        this.canvas.svgElement.
-            children[this.canvas.svgElement.children.length - 1].
-            setAttribute("stroke-dasharray", [5, 3]);
+            [this.minVal_y, Math.exp(current_x)],
+            {
+				"stroke-dasharray" : [4, 4],
+				"stroke" : "red"
+			});
 
         this.textField.innerText = "When x is " + 
             current_x.toFixed(2) + " the derivative of exp(x) is " + 
             Math.exp(current_x).toFixed(3);
-    }
-
-    drawVisualization(){
-
     }
 }
 

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Logaritminen suora</title>
+        <link rel="stylesheet" href="../../css/blather.css">
+    </head>
+    <body>
+        <header><h1>Suoran sovittaminen logaritmisiin arvoihin</h1></header>
+
+        <main>
+            <p>Toisinaan näemme aineistoon sovitettuja suoria, esimerkiksi sellaisia kuin kuviossa 1. Kuvio esittää gentoo-lajisten pingviinien nokan pituuden ja syvyyden välisen yhteyden. Nokkamittauksiin on sovitettavissa suora, joka näyttäisi ainakin mitattujen arvojen alueella sopivan kuvioon ihan mainiosti. Huomaa, että suoran ympärillä oleva satunnaisvaihtelu on lunnollinen osa mallintamista: nokan pituus ei ole täydellisesti ennustattavissa sen syvyydestä, mutta jonkinmoinen yhteys siinä on.</p>
+
+            <div class="centeredDiv">
+                <a href="Figs/fig_0.png"><img src="Figs/fig_0.png"></a>
+            </div>
+
+            <p>Varsinkin korona-aikana vastaan tuli kuvioita, joissa suoraa ei oltukaan sovitettu mittauksiin sinänsä, kuten gentoo-esimerkissä suora on sovitettu millimetreinä mitattuihin arvoihin, vaan logaritmimuunnettuihin arvoihin.</p>
+
+            <p>Mistä tuossa logaritmimuunnoksessa on kyse? Yritän selventää sitä käsittelemällä asiaa niin kutsutun rekursion kautta. Vaikka tämä kuulostaa ehkä vaikealta, uskon, että se voi silti olla selkeä tapa käsitteellistää, mistä on kyse. Tämä toivottavasti tekee tällaisten logaritmisiin arvoihin sovitettujen suorien tulkinnasta helpompaa, mutta tekstiin on piilotettu myös käytännön vinkkejä heille,  jotka haluavat tulkita noiden suorien kertoimien arvoja.</p>
+
+            <p>Aivan aluksi käyn idean läpi tutun lineaarisen, eli suoraviivaisen kuten gentoo-esimerkissä, mallin yhteydessä &mdash; tässä tulee myös selväksi se, kuinka käytän rekursiota asian selventämiseen.</p>
+
+            <p>Esimerkkini on ehkä hivenen hassunpuoleinen, sen myönnän, mutta toivottavasti sitäkin selkeämpi.</p>
+
+            <p>Sanotaanpa että lastauslaiturilla on kymmenen laatikkoa. Tämä on aloitusarvomme. Tunnin välein kuljetusauto tuo laiturille viisi laatikkoa lisää. Laatikkojen määrä käyttäytyy siis alla kuvatulla tavalla, taulukossa on ensin aika ja sitten kaksoispisteen jälkeen laatikkojen määrä:</p>
+
+            <table>
+                <tr>
+                    <th>Aika</th>
+                    <th>Määrä</th>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>10</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>10 + 5 = 15</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>15 + 5 = 20</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>20 + 5 = 25</td>
+                </tr>
+            </table>
+
+            <p>Tämä on <i>rekursiivinen jono</i>, koska jokainen alkio, ensimmäistä lukuunottamatta, määritellään perustuen edelliseen.</p>
+
+            <p>Tärkeää on huomata se, että määrä lisääntyy pluslaskua käyttäen. Voisimme ilmaista tämän formaalisti näin: y[i] = y[i - 1] + 5, joka luettaisiin niin, että y (laatikkojen määrä) ajanhetkellä i (esimerkiksi neljä) on yhtä kuin laatikkojen määrä ajanhetkellä i - 1 (tässä esimerkissä kolme) plus viisi. Alkutilanne on määriteltävä erikseen, tässä se siis oli kymmenen laatikkoa, jolloin siis y[0] = 10.</p>
+
+            <p>Jos kirjoitamme tuon sulkuihin kätketyn esimerkin auki, niin se olisi siis: y[4] = y[4 - 1] + 5 eli y[4 -1] on y[3] eli 25, joten neljäntenä ajanhetkenä laatikkojen määrä on: 30 = 25 + 5.  Siispä y[4] = 30.</p>
+
+            <p>Tämän esimerkin mukainen suora, sovitettuna pisteisiin, joita olen laskenut muutaman lisää, on esitettynä kuvassa 2.</p>
+
+            <div class="centeredDiv">
+                <a href="Figs/fig_1.png"><img src="Figs/fig_1.png"></a>
+            </div>
+
+            <p>Sovitetun suoran vakiotermi on kymmenen, ja se kuvaa tilannetta ajanhetkellä nolla; suoran kulmakerroin on taasen viisi ja se kuvaa sitä, kuinka paljon mitattava asia, tässä laatikot, lisääntyy kutakin kokonaista ajanhetkeä kohden.</p>
+
+            <p>Tärkeää on huomata, että kulmakerroin, eli lisääntymisen määrä, pysyy vakiona! Määrä lisääntyy aina viidellä &mdash; kunnes aikakin kiehuu pois todellisuudestamme.</p>
+
+            <p>Tavallisesti tietenkin regressioanalyysissa otettaisiin huomioon myös se, että tarkasteltavissa asioissa on satunnaisvaihtelua: tuskin koskaan sovitamme suoraa tällä tavoin täydellisen lineaarisiin pisteisiin, mutta tuon satunnaisvaihtelun huomiottajättäminen helpottanee seuraavaa asiaa, eli sen logaritmisuuden, ymmärtämistä.</p>
+
+            <p>Mennäänpä sitten niiden logaritmien maailmaan.</p>
+
+            <p>Laboratoriossa on bakteerienkasvatusallas. Ajanhetkellä nolla, eli alkutilanteessa, siellä on 100 bakteeria. Tunnissa bakteerien määrä 1.25-kertaistuu. Lasketaanpa muutamia arvoja. Alla olevassa taulukoinnissa aika on jälleen ensin ja sen jälkeen sitä vastaava bakteerien määrä (pyöristettynä kokonaisluvuksi).</p>
+
+            <table>
+                <tr>
+                    <th>Aika</th>
+                    <th>Määrä (pyöristettynä)</th>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>100 * 1.25 = 125</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>125 * 1.25 = 156</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>156 * 1.25 = 195</td>
+                </tr>
+            </table>
+
+            <p>Ensimmäisen tunnin aikana uusia bakteereita syntyy 25, seuraavan tunnin aikana 31, sitten 39... vauhti on  kiihtyvä (oliko tämä joku Matin ja Tepon biisi?)! Rekursiivisesti esitettynä tilanne on siis se, että ajanhetkellä i bakteereita on y[i] = y[i - 1] * 1.25, alkuhetkellä y[0] määrän ollessa 100. Eli jos laskemme tilanteen ajanhetkenä 4, niin saamme (pyöristettynä)</p>
+
+            <div class="centeredDiv">y[4] = y[4-1] * 1.25 eli 244 = 195 * 1.25</div>
+
+            <p>On tärkeää huomata, että tämä kaava on sama kuin aikaisemmin, mutta nyt plusmerkin tilalle on asetettu kertomerkki!</p>
+
+            <p>Toisin kuin lineaarisessa tapauksessa, nyt kulmakerroin, tai lisääntymisen määrä, ei olekaan vakio. Tästä syystä bakteerien määrän kasvu näyttää siltä kuin kuviossa 3. On helppo huomata, että tähän emme voikaan enää sovittaa suoraa &mdash; tai toki voisimme, mutta kovin järkeviä tuloksia emme välttämättä saisi...</p>
+
+            <div class="centeredDiv">
+                <a href="Figs/fig_2.png"><img src="Figs/fig_2.png"></a>
+            </div>
+
+            <p>Yksi mahdollisuus olisi suoran sijaan käyttää jotain sellaista funktiota, joka <i>pystyy</i> mukautumaan bakteereiden kiihtyvään kasvunopeuteen, mutta koska kirjoituksen aihe on mitä se on, emme näin tee, vaan <i>muunnamme</i> bakteereiden määrän, niin, että voimme käyttää suoraa.</p>
+
+            <p>Logaritmifunktion näppärä puoli on se, että se tekee kertolaskuista pluslaskuja. logaritmien maailmassa rekursiosta siis tulee</p>
+
+            <div class="centeredDiv">log(y[i]) = log(y[i - 1]) + log(1.25)</div>
+
+            <p>Painotan vielä tätä tärkeää seikkaa: kertolasku muuttuu pluslaskuksi!</p>
+
+            <p>Logaritmimuunnos on esitetty visuaalisesti kuviossa 4. Vasen paneeli näyttää, että kun jokaisesta mittauksesta otetaan sen logaritmi, funktio ikään kuin litistyy, näyttää melkein kuin siitä tulisi täysin litteä. Oikeanpuolimmainen paneeli näyttää tuon funktion suurennettuna, jolloin huomaamme, että eipä se aivan litteä ollutkaan, vaan se todellakin kipuaa ylöspäin bakteerien määrän kasvaessa &mdash; tällä kertaa täysin lineaarisesti.</p>
+
+            <div class="centeredDiv">
+                <a href="Figs/fig_3.png"><img src="Figs/fig_3.png"></a>
+            </div>
+
+            <p>Logaritmisiin arvoihin sovitetun suoran vakiotermi on nyt noin 4.6. Tämä on seurausta siitä, että ajanhetkellä nolla bakteereita oli 100, ja log(100) on noin 4.6. Kulmakerroin taasen on noin 0.22: tämä on tuon kasvua kuvaavan kertoimen logaritmi, log(1.25) = 0.22. Jos tahdomme alkuperäiset arvot takaisin, meidän tulee käyttää logaritmille käänteistä operaatiota, eli niin sanottua eksponenttifunktiota. Monesta ohjelmasta ja laskimesta se löytyy merkinnän <i>exp</i> alta. Eli exp(0.46) = 100 ja exp(0.22) = 1.25.</p>
+
+            <p>Toisin sanottuna siis näemme logaritmisiin arvoihin sovitetun suoran, jonka kulmakerroin on 0.22, tarkoittaa se, että mitattu asia 1.25-kertaistuu aina kun otamme yhden askeleen eteenpäin.</p>
+
+            <p>Katsotaan nopeasti vielä toinen esimerkki, jossa lisääntymisen sijaan onkin kyse supistumisesta.</p>
+
+            <p>Radioaktiivisen aineen atomit hiljakseen hajoavat toisiksi atomeiksi ja säteilyksi. Tämän seurauksena radioaktiivisen aineen massa vähenee. Sanotaanpa, että alkutilanteessa aineen massa on 100 grammaa, ja se puolittuu vuodessa. Taulukoituna aineen määrä siis olisi:</p>
+
+            <table>
+                <tr>
+                    <th>Aika</th>
+                    <th>Aineen määrä</th>
+                </tr>
+                <tr>
+                    <td>0</td>
+                    <td>100</td>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>100 * 0.5 = 50</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>50 * 0.5 = 25</td>
+                </tr>
+            </table>
+
+            <p>Rekursiivisesti esitettynä aineen massa on siis y[i] = y[i -1] * 0.5, ja y[0] = 100. Kuviossa viisi on vasemmassa paneelissa esitettynä aineen massan kehitys alkuperäisellä asteikolla. Koska määrä puolittuu vuoden välein, tuloksena on hiljalleen laakeammaksi suoristuva käyrä. Kun nyt muunnamme massat ottamalla niistä logaritmin, tuloksena on laskeva suora viiva.</p>
+
+            <p>Huomaa, että logaritmiset arvot voivat olla myös negatiivisia! Tämä johtuu logaritmimuunnoksesta itsestään, eikä tarkoita, että massa jotenkin menisi negatiiviseksi: alkuperäisellä asteikolla olevien arvojen saamiseksi meidän tulisi taas käyttää sitä exp-funktiota.</p>
+
+            <div class="centeredDiv">
+                <a href="Figs/fig_4.png"><img src="Figs/fig_4.png"></a>
+            </div>
+
+            <p>Mitä tästä kaikesta siis tulisi jäädä mieleen?</p>
+
+            <p>Jos näemme johonkin aineistoon sovitetun suoran, ja meille kerrotaan, että muuttuja on logaritmimuunnettu, tiedämme, että kyseessä on ilmiö, jonka lisääntymisvauhti kasvaa; tai suppenemisvauhti vähenee.</p>
+
+            <p>Toisaalta, mallintamisen kannalta, tärkeää on se, että jos meillä on jokin mitattu asia, jonka keskiarvoinen määrä joko kasvaa tai vähenee niin, että edellinen arvo kerrotaan jollain kertoimella, voimme suoristaa nuo käyrät käyttämällä logaritmimuunnosta. Tällöin on tärkeää muistaa, mitä esimerkiksi kulmakerroin todella tarkoittaa &mdash; ja millä asteikolla.</p>
+
+        </main>
+
+        <footer>&copy; Joni Pääkkö</footer>
+
+
+    </body>
+</html>

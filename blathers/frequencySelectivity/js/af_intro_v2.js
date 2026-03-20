@@ -46,8 +46,7 @@ class Demo{
             this.audioCtx.close()
             this.demoActive = false;
             this.toggleButton.innerText = "Start sound";     
-           
-            //this.stopSound();
+            this.stopDemo();
         } else{
             AudioContext = window.AudioContext || window.webkitAudioContext;
             this.audioCtx = new AudioContext();
@@ -55,6 +54,10 @@ class Demo{
             this.toggleButton.innerText = "Stop sound";
             this.startSound();
         }       
+    }
+
+    stopDemo(){
+        console.warn("Stopping demo not implemented!");
     }
 }
 
@@ -74,7 +77,8 @@ class Demo1 extends Demo{
             });
         
         this.freqSlider = document.getElementById("demo1FreqSlider");
-        this.freqSlider.addEventListener("input", e => this.handleFreqChange(), false);
+        this.freqSlider.disabled = true;
+        this.freqSlider.addEventListener("input", () => this.handleFreqChange(), false);
         
         this.drawVisualization();      
     }
@@ -88,6 +92,12 @@ class Demo1 extends Demo{
         this.beeper.start(0);
         this.beeper.connect(this.volumeControl);
         this.volumeControl.connect(this.audioCtx.destination);    
+
+        this.freqSlider.disabled = false;
+    }
+
+    stopDemo(){
+        this.freqSlider.disabled = true;
     }
           
     handleFreqChange(){ 
@@ -118,11 +128,14 @@ class Demo2 extends Demo{
 
         this.freqSlider = document.getElementById("demo2FreqSlider");
         this.QSlider = document.getElementById("demo2QSlider");
+
+        this.freqSlider.disabled = true;
+        this.QSlider.disabled    = true;
         
         this.freqSlider.addEventListener("input", 
-            e => this.handleFreqChange(), false);
+            () => this.handleFreqChange(), false);
         this.QSlider.addEventListener("input", 
-            e => this.handleQChange());
+            () => this.handleQChange());
         
         this.canvas = new Plot(
             document.getElementById("vis_2"),
@@ -164,6 +177,14 @@ class Demo2 extends Demo{
         
         //
         this.drawVisualization();
+
+        this.freqSlider.disabled = false;
+        this.QSlider.disabled    = false;
+    }
+
+    stopDemo(){
+        this.freqSlider.disabled = true;
+        this.QSlider.disabled    = true;
     }
     
     
@@ -226,6 +247,7 @@ class Demo3 extends Demo{
             });
         
         this.CFSlider =  document.getElementById("demo3CFSlider");
+        this.CFSlider.disabled = true;
         this.CFSlider.addEventListener(
             "input", e => this.handleCFChange(), false);
 
@@ -293,7 +315,13 @@ class Demo3 extends Demo{
 
         // 
         this.drawVisualization();   
+
+        this.CFSlider.disabled = false;
     }   
+
+    stopDemo(){
+        this.CFSlider.disabled = true;
+    }
     
     drawVisualization(){
         this.canvas.clearData();
@@ -333,8 +361,7 @@ Noise  -> Noise Filter -/
 */
 
 
-class Demo4 extends Demo{
-    
+class Demo4 extends Demo{  
     constructor(){
         super(document.getElementById("demo4toggle"));
         
@@ -348,6 +375,7 @@ class Demo4 extends Demo{
             });
         
         this.QSlider = document.getElementById("demo4QSlider");
+        this.QSlider.disabled = true;
         this.QSlider.addEventListener(
             "input", e => this.handleQChange(), false);
              
@@ -417,6 +445,12 @@ class Demo4 extends Demo{
         //this.noiseFilter.connect(this.audioCtx.destination);
         this.listeningFilter.connect(this.audioCtx.destination);
         this.drawVisualization();        
+
+        this.QSlider.disabled = false;
+    }
+
+    stopDemo(){
+        this.QSlider.disabled = true;
     }
     
     getQValueFromSlider(){
