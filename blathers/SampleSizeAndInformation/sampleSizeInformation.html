@@ -38,7 +38,7 @@
                 <a href="figs/priorExamples.svg"><img src="figs/priorExamples.svg"></a>
             </figure>
 
-            <p>In the left panel our knowledge of the threshold is less accurate than in the right panel, where the distribution is more concentrated around 50 decibels. In other words, the standard error for the threshold is smaller in the right panel. Generally speaking, we would want our standard errors to be as small as possible: this can be achieved through observations that provide a lot of information about plausible values. </p>
+            <p>In the left panel our knowledge of the threshold is less accurate than in the right panel, where the distribution is more concentrated around 50 decibels. In other words, standard deviation (colloquially: width) of the posterior for the threshold is smaller in the right panel. Generally speaking, we would want the width of the posterior distribution to be as small as possible: this can be achieved through observations that provide a lot of information about plausible values. </p>
 
             <p>An important part of Bayesian statistics is updating information with what has been learned from observations. Let us say that we have observed a correct response to a 50 dB stimulus. We would weight each point of the prior distribution <em>with the probability of observing that data point given that value</em>. In this case, a prior value of 60 dB is unlikely, since if their threshold was 10 dB higher than the stimulus (which they identified correctly), we would expect an incorrect response. So in light of the observed response, threshold values around 60 dB (and greater) can be ruled out.</p>
 
@@ -96,15 +96,15 @@
 
             <p>(R code for the figures in the slideshow: <a href="R/logistic_w_likelihood.R">here</a>)</p>
 
-            <p>The last observation <em>did not change the prior distribution at all</em>, the standard error of the intercept did not change. As in the informal eye exam example, we do not learn anything from observing that the participant can detect a stimulus <em>that we know to be above their detection threshold</em>. Here we can see it formally: no matter how many stimuli we would present to the participant, if the observations have high <em>prior probability</em> (we present them with a stimulus we know to be above their threshold and they do detect it and vice versa), they don't give additional information.</p>
+            <p>The last observation <em>did not change the prior distribution at all</em>, the width of the posterior distribution for the intercept did not change. As in the informal eye exam example, we do not learn anything from observing that the participant can detect a stimulus <em>that we know to be above their detection threshold</em>. Here we can see it formally: no matter how many stimuli we would present to the participant, if the observations have high <em>prior probability</em> (we present them with a stimulus we know to be above their threshold and they do detect it and vice versa), they don't give additional information.</p>
 
             <h2>Range of predictor in linear regression</h2>
 
-            <p>Let us now look how sample size and the range of the predictor affects the standard error of slope estimates in linear regression.</p>
+            <p>Let us now look how sample size and the range of the predictor affects the posterior standard deviation of slope estimates in linear regression.</p>
 
-            <p>I drew simulated data sets with different sample sizes and for two different ranges of the predictor. After each simulation the standard error of the slope estimate was approximated.</p>
+            <p>I drew simulated data sets with different sample sizes and for two different ranges of the predictor. After each simulation the standard deviation of the posterior of the slope estimate was approximated.</p>
 
-            <p>In the figure below standard errors of slope estimates are plotted against sample size. The upper line (dots) plots simulations in which the range of the predictor is narrow whereas the lower line (triangles) plots simulations in which the range of the predictor is wide.</p>
+            <p>In the figure below posterior standard deviations of slope estimates are plotted against sample size. The upper line (dots) plots simulations in which the range of the predictor is narrow whereas the lower line (triangles) plots simulations in which the range of the predictor is wide.</p>
 
             <figure>
                 <a href="figs/linregslopeStdErr.svg"><img src="figs/linregslopeStdErr.svg"></a>
@@ -112,7 +112,7 @@
 
             <p>(R code for the simulation <a href="R/linregRangeAndSlope.R">here</a>)</p>
 
-            <p>In both cases standard error of the slope estimate does go down as the number of observation grows, but it's clear that when the range of the predictor is wide, standard errors are much lower. Why is that? Well, it's not really about the range of the predictor <em>per se</em>, it's about the range of the predictor in relation to the residual standard deviation (variability in the response variable). Look at the figure below. In both panels the slope of the underlying linear function is 0.5. When range of predictor is too small (left panel), the slope is obscured by the noise in the response variable. When the range of the predictor is widened (right panel), the slope becomes clearer:</p>
+            <p>In both cases standard deviation of the slope estimate does go down as the number of observation grows, but it's clear that when the range of the predictor is wide, standard deviations are much lower. Why is that? Well, it's not really about the range of the predictor <em>per se</em>, it's about the range of the predictor in relation to the residual standard deviation (variability in the response variable). Look at the figure below. In both panels the slope of the underlying linear function is 0.5. When range of predictor is too small (left panel), the slope is obscured by the noise in the response variable. When the range of the predictor is widened (right panel), the slope becomes clearer:</p>
 
             <figure>
                 <a href="figs/residualstddev.svg"><img src="figs/residualstddev.svg"></a>
@@ -120,20 +120,20 @@
 
             <h2>Conclusion</h2>
 
-            <p>I hope it is clear from these examples that sample size considerations have to take into account more than just the raw number of observations. The same sample size can lead to different standard errors of the estimates if the information content of the observations is different. At least in these simple cases the "information content" can be understood intuitively/informally &ndash; I hope the selected examples show this &ndash; but using Bayesian statistics one can be a bit more formal about it, and generalize this concept to a wider range of applications (which will be discussed in some later text).</p>
+            <p>I hope it is clear from these examples that sample size considerations have to take into account more than just the raw number of observations. The same sample size can lead to different standard deviations of the estimates if the information content of the observations is different. At least in these simple cases the "information content" can be understood intuitively/informally &ndash; I hope the selected examples show this &ndash; but using Bayesian statistics one can be a bit more formal about it, and generalize this concept to a wider range of applications (which will be discussed in some later text).</p>
 
-            <p>Moreover, as priors and posteriors can be thought to be sequentially linked (as I mentioned when discussing the logistic regression example) we can <em>optimize</em> data collection: during each step of data collection, it's possible to look at current estimates and their standard errors and try to use that to deduce what would be the best way to collect more data. In psychophysics (the study of perception/sensory thresholds etc.) this is done formally by looking one step forward and calculating what stimulus would reduce the standard errors the most[2]; little bit like what the imaginary doctor was doing in the eye exam example: they don't get stuck presenting stimuli that are low in their information content.</p>
+            <p>Moreover, as priors and posteriors can be thought to be sequentially linked (as I mentioned when discussing the logistic regression example) we can <em>optimize</em> data collection: during each step of data collection, it's possible to look at current estimates and their standard deviations and try to use that to deduce what would be the best way to collect more data. In psychophysics (the study of perception/sensory thresholds etc.) this is done formally by looking one step forward and calculating what stimulus would reduce the standard deviations the most[2]; little bit like what the imaginary doctor was doing in the eye exam example: they don't get stuck presenting stimuli that are low in their information content.</p>
 
             <p>This kind of adaptive data collection can be hard to incorporate into Null Hypothesis Significance Testing, since <em>p</em>-values depend on prior intentions, such as pre-selected number of observations. Certainly, it is not part of the standard toolbox.</p>
 
-            <p>A useful tool for exploring the effect of sample size is to, as was done here, simulate data and see what happens. What kind of standard errors you would see.</p>
+            <p>A useful tool for exploring the effect of sample size is to, as was done here, simulate data and see what happens. What kind of standard deviations you would see.</p>
 
             <h2>Notes</h2>
 
             <p>[1] This kind of intercept-only model is used e.g. by Watson and Pelli in their 1983 article "QUEST: A Bayesian adaptive psychometric method", however they do not specifically use the logistic distribution and they incorporate a non-zero probability of correct response (e.g. in the eye exam example there's a 1/4 chance that the participant will guess the correct orientation).</p>
 
 
-            <p>[2] Modern methods look at the reduction of the <em>expected entropy</em> of the posterior distribution, since this is less dependent on the scale of the parameters than standard error, when dealing with multi-dimensional posterior distributions.</p>
+            <p>[2] Modern methods look at the reduction of the <em>expected entropy</em> of the posterior distribution, since this is less dependent on the scale of the parameters than standard deviation, when dealing with multi-dimensional posterior distributions.</p>
 
         </main>
 
