@@ -1,9 +1,8 @@
-"use strict;"
+"use strict";
 
 /* This is the... well, examplar table, that the user can 
    update by clicking the "Add Observation" button. */
 class ExampleTable{
-    
     constructor(){
         this.N = 0;
         this.NParticles = 20;

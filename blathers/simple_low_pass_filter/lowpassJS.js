@@ -15,7 +15,6 @@ function normalize(x){
 }
 
 class SamplingVis{
-    
     constructor(){
         this.res  = 20; // The low resolution sampled signal
         this.res2 = 200; // High resolution true signal
@@ -30,7 +29,6 @@ class SamplingVis{
             {
                 xlim : [1, this.res],
                 ylim : [-1, 1],
-                mar : [80, 110, 10, 30],
                 xlab : "Time",
                 ylab : "Amplitude"
             }
