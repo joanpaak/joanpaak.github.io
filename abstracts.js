@@ -1,5 +1,4 @@
 /* 
-
 <abstract>
 <title></title>
 <language></language>
@@ -93,8 +92,63 @@ Ikävä kyllä tuo kysely oli toteutettu ala-arvoisesti.
 `;
 
 let abstracts = `
+<abstract>
+<title>Suoran sovittaminen logaritmisiin arvoihin</title>
+<language>Suomi</language>
+<tags>statistics, methodology, general audience</tags>
+<text>Varsinkin korona-aikana uutisiin pulpahti kuvaajia, joissa jokin suure oli esitetty logaritmisella asteikolla.
 
+Mitä tarkoittaa se, että jokin käyttäytyy suoraviivaisesti logaritmisella asteikolla? Lue tämä teksti niin saat tietää!
+</text>
+<link>blathers/LogRegression/logRegression.html</link>
+<image>logCurve.png</image>
+</abstract>
 
+<abstract>
+<title>Kun tilastollinen testaaminen on turhaa: esimerkki kausittaisen masennuksen tutkimuksesta</title>
+<language>Suomi</language>
+<tags>statistics, methodology, general audience, critique</tags>
+<text>Tilastollinen testaaminen on tullut tutkimukseen jäädäkseen: tutkijat laskeskelevat mittaamistaan asioista ovatko ne tilastollisesti merkitseviä. Toisinaan liiankin hanakasti! Tässä eräs esimerkki tapauksesta, jossa tilastollisen merkitsevyyden laskeminen on täysin turhaa - ja ehkäpä jopa harhaanjohtavaa.
+</text>
+<link>blathers/EiTarpeellinenP/eiTarpeellinenP.html</link>
+<image>fieldHole.png</image>
+</abstract>
+
+<abstract>
+<title>Sinkun ruokatottumukset: Lidlin mainoksen mukaan...</title>
+<language>Suomi</language>
+<tags>statistics, methodology, general audience, critique</tags>
+<text>Välillä eri kauppaketjut mainostavat omaansa tekemällä jonkinsorttisia tutkimuksia, joiden mukaan heidän ketjunsa on sen-ja-sen verran halvempi kuin kilpailijan.
+
+Katsotaanpa miltä sinkun ruokakassi näyttää, jos otamme kyseisenlaisen tutkimusken tulokset tosissaan.
+</text>
+<link>blathers/LidlinRuokakassi/lidlinRuokakassi.html</link>
+<image>ruokakassi.png</image>
+</abstract>
+
+<abstract>
+<title>Unit transform</title>
+<language>English</language>
+<tags>statistics, bayes, mcmc</tags>
+<text>In Bayesian statistics, one often transforms samples from the unconstrained scale to some constrained scale. For example, when sampling scale parameters for most distributions, samples from the unconstrained scale have to be transformed so that they are always positive.
+
+In this repository I present an easy-to-understand method for transforming vectors so that they sum to one.
+</text>
+<link>https://github.com/joanpaak/UnitTransform</link>
+<image>unitTransform.png</image>
+</abstract>
+
+<abstract>
+<title>Mistä luvut tulevat: kuinka usein kännykkää vilkuillaan</title>
+<language>Suomi</language>
+<tags>general audience, blather</tags>
+<text>Mediassa vilisee jos jonkinmoisia numeroita. Ylen kolumnisti oli löytänyt järkyttävän luvun: ihmiset vilkaisevat kännykkäänsä seitsemän minuutin välein. 
+
+Selvitetäänpä hieman tämän luvun historiaa.
+</text>
+<link>blathers/KannykanVilkuilu/kannykanVilkuilu.html</link>
+<image>kannykka.png</image>
+</abstract>
 
 <abstract>
 <title>ShortR: Bayesian adaptive estimation of threshold and slope</title>
@@ -417,7 +471,6 @@ En välttämättä itse hyppäisi sellaiseen johtopäätökseen. Lue enemmän ko
 <image>choroFig.png</image>
 </abstract>
 
-
 <abstract>
 <title>Hevibändien klusterointi</title>
 <language>Suomi</language>
@@ -430,4 +483,31 @@ Tässä kirjoituksessa tuota dataa katsotaan hieman kieli poskessa ja puhutaan h
 <link>blathers/NummenmaaKlusterointi/nummenmaa_klusterointi.html</link>
 <image>clustFig.png</image>
 </abstract>
+
+<abstract>
+<title>Auditory illusion with two click trains</title>
+<language>English</language>
+<tags>psychoacoustics, general audience, psychology</tags>
+<text>
+In this auditory illusion there are two intertwining click trains, and the amplitude (colloquially volume) of one of them is gradually increased. Because the click trains are experienced as a unified whole, the sensations is that of a single click train that is getting faster. 
+</text>
+<link>blathers/ClickTrainIllusion/clickTrains.html</link>
+<image>picOfClickTrain.png</image>
+</abstract>
+
+<abstract>
+<title>Critique of Field  & Hole</title>
+<language>English</language>
+<tags>critique, statistics</tags>
+<text>
+The book "How to Design Experiments" is an introductory book on frequentist statistics, written by Field & Hole. 
+
+Unfortunately, I think this book contains many misconceptions about some central concepts, such as p-values and confidence intervals.
+
+In this text I take a look at some problematic points of the book.
+</text>
+<link>blathers/CritiqueOfFieldHole/critique_v3.html</link>
+<image>fieldHole.png</image>
+</abstract>
+
 `;

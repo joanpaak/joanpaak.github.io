@@ -1,8 +1,8 @@
 :root{
     --bodyBackgroundColor: rgb(255, 255, 246);
     --highlightColor: rgb(235, 50, 25); /* rgb(235, 50, 25) Mainly for links*/
+    font-size: 24px;
 }
-
 
 main{
     margin-left:  10%;
@@ -58,16 +58,26 @@ h3{
     margin: 1rem 5rem;
 }
 
-
 p{
     text-align: justify;
 }
+
+blockquote{
+    font-style: italic;
+}
+
+/* .description is the description text on the main page*/
+p, td, th, input, a, blockquote, .description, pre{
+    font-size: 1.0rem;
+} 
 
 
 table{
     margin-left: auto;
     margin-right: auto;
     border-collapse: collapse;
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
 }
 
 table th{
@@ -80,6 +90,98 @@ table td{
     padding: 0 1rem;
 }
 
+.centeredDiv{
+	text-align: center;
+}
+
+img{
+    max-width: 70%;
+}
+
+/* 
+    STYLES SPECIFIC FOR THE INDEX PAGE 
+   
+*/
+
+.blogTitle{
+    font-family: "Times New Roman", Times, serif;
+    font-variant: small-caps;
+    text-align: center;
+    font-weight: 100;
+    font-size: 2rem;
+}
+
+.blogTitle span{
+    vertical-align: middle;
+    font-size: 5rem;
+}
+
+.abstractMainDiv{
+    margin-top: 4rem;
+}
+
+.description{
+    margin: 0 10%;
+    hyphens: auto;
+    text-align: justify;
+    overflow: auto;
+}
+
+.thumbnail{
+    float: left;
+    max-width: 200px;
+    max-height: 200px;
+    padding: 10px;
+}
+
+.title{
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 1.75rem;
+    text-align: center;
+}
+
+.tags{
+    text-align: center;
+}
+
+.tags::before{
+    content: "Tags: ";
+}
+
+.link{
+    font-size: 1.25rem;
+    text-align: center;
+    font-variant: small-caps;
+    display: block;
+    margin: 10px 0;
+    color: black;
+}
+
+.verticalSpacer{
+    height: 2rem;
+}
+
+.filterContainer{
+    border: 1px solid black;
+    
+    position: relative;
+    margin-bottom: 2rem;
+    padding: 1rem 1.5rem;
+}
+
+.filterContainer h2{
+    font-weight: 100;
+    position: absolute;
+    top: -1.75rem;
+    left: 2rem;
+    background-color: white;
+    font-size: 1.25rem;
+}
+
+.tagCBContainer{
+    display: inline-block;
+    margin-right: 1rem;
+}
 
 /* 
 
@@ -132,7 +234,6 @@ where the div element is taken to be a caption for the image.
 }
 
 pre{
-    font-size: 1.0rem;
     background-color: darkslategray;
     color:rgb(255, 255, 245);
     overflow: auto;
@@ -141,7 +242,7 @@ pre{
     padding-bottom: 5px;
 }
 
-
+/* TODO: WHAT IS R_eq? */
 .R_eq{
     text-align: center;
     width:fit-content;
@@ -153,7 +254,25 @@ pre{
 /* For limits of integration
 &int; <span class="lims"><sub>0</sub><sup>1</sup></span>
 */
+
 .lims{
+    position: relative;
+    margin-right: 0.5rem;
+}
+
+.lims sub{
+    position: absolute;
+    bottom: -1rem;
+    left: -0.2rem;
+}
+
+.lims sup{
+    position: absolute;
+    top: -1rem;
+    left: -0.0rem;
+}
+
+/*.lims{
 
 }
 
@@ -166,7 +285,7 @@ pre{
     position: relative;
     top: -0.2rem;
     left: -0.3rem;
-}
+}*/
 
 .bibEntry{
     margin-left: 2rem;
@@ -182,6 +301,10 @@ pre{
     text-align: center;
 }
 
+.interactiveFigure *{
+	margin: 0.15rem 0rem;
+}
+
 .controlSlice{
     display: block;
 }
@@ -190,7 +313,10 @@ pre{
     display: inline-block;
 }
 
-.interactiveFigure button{
+/* These used to be specific for buttons included as parts of interactive figures */
+
+
+button{
     border: 1px solid black;
     font-size: 1rem;
     font-variant: petite-caps;
@@ -199,12 +325,12 @@ pre{
     background-color: floralwhite;
 }
 
-.interactiveFigure button:hover{
+button:hover{
     cursor: pointer;
     background-color: beige;
 }
 
-.interactiveFigure button:active{
+button:active{
     background-color: var(--highlightColor);
 }
 

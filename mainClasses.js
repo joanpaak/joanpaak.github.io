@@ -44,6 +44,7 @@ class Abstract{
         tagDiv.classList.add("tags");
         linkDiv.classList.add("link");
         descriptionDiv.classList.add("description");
+        imageDiv.classList.add("thumbnail");
 
         titleDiv.innerText = Functions.parseTag(string, "title");
         tagDiv.innerText   = Functions.parseTag(string, "tags");
@@ -110,7 +111,10 @@ class AbstractCollection{
             });
         }
     }
-
+	
+	/**
+	 * The argument called string is the string containing ALL of the abstracts. 
+	 * */
     parse(string){
         let abstracts = Functions.parseAbstracts(string);
 
@@ -136,6 +140,7 @@ class AbstractCollection{
                     newTagLabel = newAbstract.tags[j];
                     newCheckBox.type = "checkbox";
                     newCheckBox.checked = true;
+                    newCheckBox.id = newAbstract.tags[j];
 
                     newCheckBox.addEventListener("change", e => {
                         this.tagMap.get(newAbstract.tags[j]).forEach(id => {

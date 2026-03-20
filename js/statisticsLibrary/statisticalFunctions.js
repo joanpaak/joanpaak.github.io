@@ -89,6 +89,16 @@ function genSTDNormalRand() {
 	return Math.pow(-2.0 * Math.log(U1), 0.5) * Math.cos(2.0 * Math.PI * U2);
 }
 
+function rnorm(n, mu, sigma){
+	let x = new Array(n);
+	
+	for(let i = 0; i < n; i++){
+	    x[i] = genSTDNormalRand() * sigma + mu;
+	}
+	
+	return x;
+}
+
 
 /// https://en.wikipedia.org/wiki/Stirling%27s_approximation#Versions_suitable_for_calculators
 /// 
