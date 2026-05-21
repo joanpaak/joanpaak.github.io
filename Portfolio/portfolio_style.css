@@ -1,0 +1,123 @@
+:root {
+    --highlight-color: rgb(180, 55, 55);
+    font-size: 12px;
+}
+
+html {
+    background-color: rgb(255, 251, 240);
+}
+
+p,
+.entryContents {
+    font-size: 1.5rem;
+    text-align: justify;
+}
+
+.entryContents {
+    margin: 2% 5%;
+}
+
+h1,
+h2 {
+    font-weight: 100;
+    font-variant: small-caps;
+    margin: 0;
+    /*font-size: 8rem;*/
+}
+
+h2 {
+    font-size: 3.5rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.subtitle {
+    font-size: 5rem;
+    font-variant: normal;
+    font-style: italic;
+}
+
+footer {
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+main {
+    margin: 2% 10%;
+}
+
+.entryTitle {
+    margin-top: 0.75rem;
+    font-size: 2rem;
+    font-weight: 100;
+    font-variant: small-caps;
+}
+
+.entryTitle:hover {
+    cursor: pointer;
+    color: var(--highlight-color);
+}
+
+a {
+    color: black;
+}
+
+a:hover {
+    cursor: pointer;
+    color: var(--highlight-color);
+}
+
+a:active {
+    color: red;
+}
+
+.entryTitle:active {
+    color: red;
+}
+
+.entryTitle::before {
+    content: "∾ ";
+}
+
+footer {
+    margin: 5% 0;
+}
+
+img {
+    width: 50%;
+    border-radius: 50%;
+    filter: sepia(50%);
+}
+
+header {
+    text-align: center;
+}
+
+.headerRow {
+    /*height: 8rem;*/
+    text-align: center;
+    display: inline-block;
+    height: fit-content;
+}
+
+.row1 {
+    letter-spacing: 12px;
+    font-weight: 100;
+    font-variant: small-caps;
+    margin: 0;
+    font-size: 6rem;
+    display: block;
+}
+
+.row2 {
+    font-size: 4rem;
+    font-variant: normal;
+    font-style: italic;
+    display: block;
+    letter-spacing: 20px;
+}
+
+.row3 {
+    margin-top: 2rem;
+    /*display: inline-block;*/
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Joni's Portfolio</title>
+        <link rel="stylesheet" href="portfolio_style.css">
+    </head>
+    <body>
+        <header>
+            <div class="headerRow row1">Joni Pääkkö</div>
+            <div class="headerRow row2">portfolio</div>
+            <div class="headerRow row3"><img src="turunJoenVarrella.jpg"></div>
+        </header>
+        
+        <main> 
+            <p>How nice of you to visit my portfolio! I am Joni Pääkkö, musician, personal assistant and an aspiring musicologist.</p>
+
+            <p>In the field of music resarch my interests include psychoacoustics, statistics and measurement. I have studied history and theory of music, and also statistics and programming. </p>
+
+            <p>Below you can find a collection of my projects, related to both music and science &mdash; and science of music. Click on any of the headers and you will find a more detailed explanation and links to the relevant materials if such exist.</p>
+
+            <h2>Science related projects</h2>
+
+            <div class="entry">
+                <div class="entryTitle">Master's thesis: generalizing Bayesian adaptive estimation</div>
+                <div class="entryContents">
+
+                    <p>In my master's thesis I researched <i>adaptive estimation</i>, that is, the choice of covariates in a sttatistical model in optimal way. This technique is widely used e.g. in psychophysics where the intensity of a test tone is adapted to a participant's responses in order to quickly determine their hearing threshold.</p>
+
+                    <p>In my theoretical study I showed that the existing Bayesian adaptive estimatation methods can be generalized to e.g. simulation-based models. This generalized version is applicable to wide variety of contexts, far beyond the usual applications of adaptive testing. In the practical section of my thesis I show how to apply it to estimation of auditory filters (ROEX) and to a drift-diffusion model of reaction times. </p>
+
+                    <p>You can find the work on the Univeristy of Jyväskylä's digital repository. Link is below.</p>
+
+                    <a href="https://jyx.jyu.fi/jyx/Record/jyx_123456789_104415?sid=402853238" target="_blank">Link to Jyx.</a>
+                </div>
+            </div>
+
+            <div class="entry">
+                <div class="entryTitle">Novel algorithm for finding the prime form of a pitch class set</div>
+                <div class="entryContents">
+
+                    <p>In the musical set theory pitch-class sets are often abstracted to their prime form, that is, into the most "compact" form. These are easily found by usign visual methods, but computationally finding them is usually based on rather brute forceish methods.</p>
+
+                    <p>Here I show how to use a simple matrix-based method for finding prime froms of pitch class sets. This method is fast and easy to implement in all common programming languages.</p>
+
+                    <p>You can find the project on GitHub.</p>
+
+                    <a href="https://github.com/joanpaak/PrimeFormFinder" target="_blank">The algorithm on Github.</a>
+                </div>
+            </div>
+
+            <div class="entry">
+                <div class="entryTitle">Science blog</div>
+                <div class="entryContents">
+                    <p>Science-related topics are close to my heart so I sometimes write about them on my blog. Texts include tutorials on topics such as auditory filtering or importance sampling, criticism of science journalism but also more light-hearted pieces on e.g. on what assumptions Lidl's marketing campaing makes about what people consume (a lot of liverwurst!).</p>
+
+                    <p>If you are interested in music resarch or psychophysics, you might find the following posts interesting:</p>
+                    
+                    <p>An introduction to auditory filtering. This tutorial tries to explain the phenomenon of inner ear filtering in a (relatively) accessible way.</p>
+
+                    <a href="https://joanpaak.github.io/blathers/frequencySelectivity/intro_eng.html" target="_blank">Click here to access the intro to auditory filtering.</a>
+
+                    <p>Or maybe a tutorial on Bayesian inference for a 2-parameter ROEX filter used to model aforementioned auditory filtering:</p>
+
+                    <a href="https://joanpaak.github.io/blathers/ROEX_pr/roex_pr_statistics.html" target="_blank">Click here to access the tutorial.</a>
+
+                    <p>And feel free to browse all of the materials:</p>
+
+                    <a href="https://joanpaak.github.io" target="_blank">Link to the blog itself.</a>
+                </div>
+            </div>
+
+            <div class="entry">
+                <div class="entryTitle">JavaScript Implementation of a Ranking Task</div>
+                <div class="entryContents">
+                    <p>I have implemented several psychophysical tasks in a few programming languages. Here I showcase my implementation of a ranking task for estimating detection thresolds for frequency differenes.</p>
+
+                    <p>The task itself is implemented in JavaScript, but the package includes a Stan program for doing Bayesian inference for a Signal Detection Theory based model of ranking as well as R scripts for analyzing the data and doing posterior predictive checks</p>
+
+                    <p>Please feel free to browse the GitHub repository:</p>
+
+                    <a href="https://github.com/joanpaak/rankingTaskJS">Link to the GitHub repository</a>
+                </div>
+            </div>
+
+            <div class="entry">
+                <div class="entryTitle">Bachelor's thesis: separability of pitch and timbre in sensorimotor synchronization</div>
+                <div class="entryContents">
+                    <p>Does timbre (in this case: brightness) of a sound influence how we perceive its pitch and vice versa? This question has been probed with traditional psyhcophysical methods, but here I wanted to develop a methdod based on measuring how well participants are able to synchronize their tapping to stimuli that have congruent or incongruent metrical sructures as implied by the stimuli's pitch and timbre.</p> 
+                    
+                    <p>The aim was to develop measurements that would free the participant from the constraints of a standard rather passive psychophysical task.</p>
+
+                    <p>You can find the thesis in Finnish from JyX:</p>
+
+                    <a href="https://jyx.jyu.fi/jyx/Record/jyx_123456789_46749?sid=402853238" target="_blank">Link to JyX.</a>
+                </div>
+            </div>
+
+            <div class="entry">
+                <div class="entryTitle">Bayesian model for multi-dimensional signal detection theory</div>
+                <div class="entryContents">
+                    <p>This project shows how to implement a simple multi-dimensional signal detection theory model (also know as generalized recognition theory) in the stochastic programming language <i>Stan</i>.</p>
+
+                    <a href="https://github.com/joanpaak/General_Recognition_Theory_Bayes" target="_blank">Link to GitHub repository</a>
+                </div>
+            </div>
+
+            <h2>Music related projects</h2>
+
+            <div class="entry">
+                <div class="entryTitle">Siskot &mdash; alternative rock</div>
+                <div class="entryContents">
+                    <p>I played the guitar in and composed and arranged songs for the band Siskot. I was also responsible for recording the EP <em>Lähes vuoden myöhässä</em>.</p>
+
+                    <a href="https://siskot.bandcamp.com" target="_blank">Siskot on bandcamp</a>
+                </div>
+            </div>
+
+            <div class="entry">
+                <div class="entryTitle">Tone-Row Fiddle for 12-tone Composition</div>
+                <div class="entryContents">
+                    <p>Sometimes I analyze or compose 12-tone music. I programmed this tool in JavaScript to help me in these hobbies. You can input your tone row, which does not need to be a 12-tone row, and the application will give you the 12-tone matrix. That's standard stuff, but you an also input a <em>row fragment</em> and the application will highlight the rows which contain that fragment &mdash; making it faster to match pitch sets to rows.</p>
+
+                    <p>As a bonus, for more general analysis of atonal music, there is a prime form finder, which implements the algorithm that is mentioned among the <em>Science related projects</em> above.</p>
+
+                    <p>You can find the application from GitHub:</p>
+                    <a href="https://github.com/joanpaak/ToneRowFiddle" target="_blank">Click here!</a>
+                </div>
+            </div>
+            
+
+            <div class="entry">
+                <div class="entryTitle">Classical compositions</div>
+                <div class="entryContents">
+                    <p>To my delight sampled instruments of acceptable quality are available for free nowadays. I've dabbled in composition, and below you can find some that are, indeed, realized with computer using sampled instruments. The links go to Facebook and might require logging in.</p>
+
+                    <ul>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/17qLLA2egg/" target="_blank">Piece for cembalo, celesta, piano and strings TODO CHECK</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/1DL6qpa9Sm/" target="_blank">Piece for two violins and piano TODO CHECK</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/18o8nwNMgD/" target="_blank">Piece for orchestra</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/1F3fNrJWMT/" target="_blank">String quartet in A minor</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/1bRtutHg1k/" target="_blank">My melody for the hymn 124, here arranged for string quartet</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/1HcAWVBKYu/" target="_blank">Piece for two violins and piano</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/1DXKAsWKti/" target="_blank">Epiphany for orchestra</a>
+                        </li>
+                    </ul>
+
+
+                    <!--p>And here are some extras:</p>
+
+                    <ul>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/18BEC1McUd/" target="_blank">Imaginary song for Doom's soundtrack</a>
+                        </li>
+                        <li>
+                            <a href="https://www.facebook.com/share/v/1CAN6aQ7cG/" target="_blank">Fern Bartley &amp; I perform our arrangement of a tune by Alfred Schnittke</a>
+                        </li-->
+                    </ul>
+                </div>
+            </div>
+        </main>
+
+        <footer>&copy; Joni Pääkkö</footer>
+
+        <script>
+            let entries = document.getElementsByClassName("entry");
+
+            for(let i = 0; i < entries.length; i++){
+                let curEntry = entries[i].getElementsByClassName("entryContents")[0];
+                curEntry.style.display = "none";
+                
+                entries[i].getElementsByClassName("entryTitle")[0].addEventListener("click", (e) => {
+                    if(curEntry.style.display === "none"){
+                        curEntry.style.display = "block";
+                    } else if(curEntry.style.display === "block"){
+                        curEntry.style.display = "none";
+                    } else {
+                        console.warn("Can not change display mode of element");
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
