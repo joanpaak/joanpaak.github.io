@@ -105,6 +105,18 @@ Mitä tarkoittaa se, että jokin käyttäytyy suoraviivaisesti logaritmisella as
 </abstract>
 
 <abstract>
+<title>Parlamenttipuheista ja ilmaston lämpenemisestä multiversumissa</title>
+<language>Suomi</language>
+<tags>statistics, methodology, critique</tags>
+<text>Elon ja Karimäen artikkelissa on tutkittu Suomen parlamentissa käytyjä keskusteluita tekstinlouhintamenetelmillä. Eipä siinä mitään, se on oikeinkin asiallista, mutta ikävä kyllä heidän artikkeliin on päässyt mukaan pari analyysia/argumenttia, jotka eivät kestä tarkempaa tarkastelua.
+
+Tekstissäni kytken tämän niin kutsuttuun multiversumianalyysiin, eli siis sellaiseen, jossa tilastollisia analyyseja katsotaan sen valossa mitenkä niiden lähtöoletukset vaikuttavat loppupäätelmiin. 
+</text>
+<link>blathers/Parlamenttipuheet/parlamenttipuheet.html</link>
+<image>cor_tn.png</image>
+</abstract>
+
+<abstract>
 <title>Kun tilastollinen testaaminen on turhaa: esimerkki kausittaisen masennuksen tutkimuksesta</title>
 <language>Suomi</language>
 <tags>statistics, methodology, general audience, critique</tags>
