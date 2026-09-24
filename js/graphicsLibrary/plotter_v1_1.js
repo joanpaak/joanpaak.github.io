@@ -611,13 +611,20 @@ class Plot{
         return rect;
     }
 
-    drawPoint(x, y, addTooltip){
+    drawPoint(x, y, opt, addTooltip){
         const point = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         point.setAttribute("cx", this.transformXCoordinate(x));
         point.setAttribute("cy", this.transformYCoordinate(y));
         point.setAttribute("r", this.opt.pointSize);
-        point.setAttribute("fill", this.opt.pointColor);
         
+        if(opt != undefined){
+            Object.keys(opt).forEach(key => {
+                point.setAttribute(key, opt[key]);
+            })
+        } else {
+            point.setAttribute("fill", this.opt.pointColor);
+        }
+
         if(addTooltip){
             const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
             title.textContent = "X: " + x + " | Y: " + y;
