@@ -93,6 +93,17 @@ Ikävä kyllä tuo kysely oli toteutettu ala-arvoisesti.
 
 let abstracts = `
 <abstract>
+<title>There is no robust regression</title>
+<language>English</language>
+<tags>statistics, methodology, elementary level, beginner text</tags>
+<text>Robust regression models are offered as an alternative in the case in which the data contains outliers. 
+
+But what if I told you that there are no robust models? Well, that's obviously just a bit of a click-bait, but there is a point: robustness is not just something we can tack on to a model; different robust models encode very different assumptions about the data and predictions from different models look very different.</text>
+<link>blathers/RobustRegression/robustReg.html</link>
+<image>robustThumb.png</image>
+</abstract>
+
+<abstract>
 <title>Suoran sovittaminen logaritmisiin arvoihin</title>
 <language>Suomi</language>
 <tags>statistics, methodology, general audience</tags>
